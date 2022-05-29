@@ -34,11 +34,35 @@ func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
 }
 
 func ExampleFinder_GetTimezoneName() {
-	fmt.Println(f.GetTimezoneName(116.6386, 40.0786))
+	input := &pb.Timezones{}
+
+	// Lite data, about 16.7MB
+	dataFile := tzfrel.LiteData
+
+	// Full data, about 83.5MB
+	// dataFile := tzfrel.FullData
+
+	if err := proto.Unmarshal(dataFile, input); err != nil {
+		panic(err)
+	}
+	finder, _ := tzf.NewFinderFromPB(input)
+	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
 	// Output: Asia/Shanghai
 }
 
 func ExampleFinder_GetTimezoneLoc() {
-	fmt.Println(f.GetTimezoneLoc(116.6386, 40.0786))
+	input := &pb.Timezones{}
+
+	// Lite data, about 16.7MB
+	dataFile := tzfrel.LiteData
+
+	// Full data, about 83.5MB
+	// dataFile := tzfrel.FullData
+
+	if err := proto.Unmarshal(dataFile, input); err != nil {
+		panic(err)
+	}
+	finder, _ := tzf.NewFinderFromPB(input)
+	fmt.Println(finder.GetTimezoneLoc(116.6386, 40.0786))
 	// Output: Asia/Shanghai <nil>
 }
