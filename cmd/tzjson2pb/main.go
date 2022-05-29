@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/ringsaturn/tzf/convert"
-	"github.com/ringsaturn/tzf/pb"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -25,8 +24,10 @@ func main() {
 		panic(err)
 	}
 
-	output := &pb.Timezones{}
-	output.Timezones = convert.Do(boundaryFile)
+	output, err := convert.Do(boundaryFile)
+	if err != nil {
+		panic(err)
+	}
 	outputPath := strings.Replace(jsonFilePath, ".json", ".pb", 1)
 	outputBin, _ := proto.Marshal(output)
 

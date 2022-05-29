@@ -32,8 +32,10 @@ type Finder struct {
 }
 
 func NewFinderFromRawJSON(input *convert.BoundaryFile) (*Finder, error) {
-	timezones := &pb.Timezones{}
-	timezones.Timezones = convert.Do(input)
+	timezones, err := convert.Do(input)
+	if err != nil {
+		return nil, err
+	}
 	return NewFinderFromPB(timezones)
 }
 

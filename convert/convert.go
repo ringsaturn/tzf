@@ -1,7 +1,7 @@
 package convert
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/ringsaturn/tzf/pb"
@@ -24,14 +24,14 @@ type FeatureItem struct {
 	Properties struct {
 		Tzid string `json:"tzid"`
 	} `json:"properties"`
-	Type string `json:"type"` // Polygon
+	Type string `json:"type"`
 }
 
 type BoundaryFile struct {
 	Features []*FeatureItem `json:"features"`
 }
 
-func Do(input *BoundaryFile) []*pb.Timezone {
+func Do(input *BoundaryFile) (*pb.Timezones, error) {
 	output := make([]*pb.Timezone, 0)
 
 	for _, item := range input.Features {
@@ -41,35 +41,45 @@ func Do(input *BoundaryFile) []*pb.Timezone {
 
 		var coordinates MultiPolygonCoordinates
 
-		MultiPolygonTypeHandler := func() {
+		MultiPolygonTypeHandler := func() error {
 			if err := mapstructure.Decode(item.Geometry.Coordinates, &coordinates); err != nil {
-				panic(err)
+				return err
 			}
+			return nil
 		}
-		PolygonTypeHandler := func() {
+		PolygonTypeHandler := func() error {
 			var polygonCoordinates PolygonCoordinates
 			if err := mapstructure.Decode(item.Geometry.Coordinates, &polygonCoordinates); err != nil {
-				panic(err)
+				return err
 			}
 			coordinates = append(coordinates, polygonCoordinates)
+			return nil
 		}
 
 		switch item.Type {
 		case MultiPolygonType:
-			MultiPolygonTypeHandler()
+			if err := MultiPolygonTypeHandler(); err != nil {
+				return nil, err
+			}
 		case PolygonType:
-			PolygonTypeHandler()
+			if err := PolygonTypeHandler(); err != nil {
+				return nil, err
+			}
 		case FeatureType:
 			switch item.Geometry.Type {
 			case MultiPolygonType:
-				MultiPolygonTypeHandler()
+				if err := MultiPolygonTypeHandler(); err != nil {
+					return nil, err
+				}
 			case PolygonType:
-				PolygonTypeHandler()
+				if err := PolygonTypeHandler(); err != nil {
+					return nil, err
+				}
 			default:
-				log.Panicf("unknown type %v", item.Type)
+				return nil, fmt.Errorf("unknown type %v", item.Type)
 			}
 		default:
-			log.Panicf("unknown type %v", item.Type)
+			return nil, fmt.Errorf("unknown type %v", item.Type)
 		}
 
 		polygons := make([]*pb.Polygon, 0)
@@ -93,5 +103,7 @@ func Do(input *BoundaryFile) []*pb.Timezone {
 		output = append(output, pbtzItem)
 	}
 
-	return output
+	return &pb.Timezones{
+		Timezones: output,
+	}, nil
 }
