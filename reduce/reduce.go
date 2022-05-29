@@ -7,12 +7,7 @@ import (
 	"github.com/ringsaturn/tzf/pb"
 )
 
-const (
-	SKIP        int     = 5     // At least skip how many point
-	PRECISE     float64 = 10000 // round float precise
-	MINDISTENCE float64 = 10    // min dist to previous point, except begin&end point
-	RADIUES             = 6371  // km, for distance computing
-)
+const RADIUES = 6371 // km, for distance computing
 
 func radians(degree float64) float64 {
 	return degree * math.Pi / 180
@@ -30,7 +25,7 @@ func geoDistance(lat1, long1, lat2, long2 float64) float64 {
 	return 2 * RADIUES * math.Asin(radical) * 1000
 }
 
-func Do(input *pb.Timezones) *pb.Timezones {
+func Do(input *pb.Timezones, skip int, precise float64, minist float64) *pb.Timezones {
 	output := &pb.Timezones{}
 	for _, timezone := range input.Timezones {
 		reducedTimezone := &pb.Timezone{
@@ -42,22 +37,22 @@ func Do(input *pb.Timezones) *pb.Timezones {
 			for index, point := range polygon.Points {
 				if index == maxIndex || index == 0 {
 					newPoly.Points = append(newPoly.Points, &pb.Point{
-						Lng: float32(math.Round(float64(point.Lng)*PRECISE) / PRECISE),
-						Lat: float32(math.Round(float64(point.Lat)*PRECISE) / PRECISE),
+						Lng: float32(math.Round(float64(point.Lng)*precise) / precise),
+						Lat: float32(math.Round(float64(point.Lat)*precise) / precise),
 					})
 					continue
 				}
-				if index%SKIP != 0 {
+				if index%skip != 0 {
 					continue
 				}
 				previousPoint := newPoly.Points[len(newPoly.Points)-1]
 				dist := geoDistance(float64(point.Lat), float64(point.Lng), float64(previousPoint.Lat), float64(previousPoint.Lng))
-				if dist < MINDISTENCE {
+				if dist < minist {
 					continue
 				}
 				newPoly.Points = append(newPoly.Points, &pb.Point{
-					Lng: float32(math.Round(float64(point.Lng)*PRECISE) / PRECISE),
-					Lat: float32(math.Round(float64(point.Lat)*PRECISE) / PRECISE),
+					Lng: float32(math.Round(float64(point.Lng)*precise) / precise),
+					Lat: float32(math.Round(float64(point.Lat)*precise) / precise),
 				})
 			}
 			reducedTimezone.Polygons = append(reducedTimezone.Polygons, newPoly)
