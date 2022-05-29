@@ -10,19 +10,6 @@ func init() {
 	_, _ = time.LoadLocation("Asia/Shanghai")
 }
 
-type BoundaryFile struct {
-	Features []struct {
-		Geometry struct {
-			Coordinates [][][2]float64 `json:"coordinates"`
-			Type        string         `json:"type"`
-		} `json:"geometry"`
-		Properties struct {
-			Tzid string `json:"tzid"`
-		} `json:"properties"`
-		Type string `json:"type"`
-	} `json:"features"`
-}
-
 func GetTimezoneName(lng float64, lat float64) string {
 	return ""
 }

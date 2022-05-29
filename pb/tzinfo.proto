@@ -4,18 +4,18 @@ package pb;
 
 option go_package = "github.com/ringsaturn/tzf/pb;pb";
 
-message Polygon {
-    double lng = 1;
-    double lat = 2;
+message Point {
+    float lng = 1;
+    float lat = 2;
 }
 
-message Polygons {
-    repeated Polygon polygon = 1;
+message Polygon {
+    repeated Point points = 1;
 }
 
 message Timezone {
-    repeated Polygons polygons = 1;
-    string tzid = 2;
+    repeated Polygon polygons = 1;
+    string name = 2;
 }
 
 message Timezones {
