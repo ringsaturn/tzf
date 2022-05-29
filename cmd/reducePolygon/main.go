@@ -1,3 +1,4 @@
+// CLI tool to reduce polygon filesize
 package main
 
 import (
