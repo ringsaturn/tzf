@@ -5,8 +5,8 @@ graph TD
     C[H3 Based Approximation file]
     D[Probuf based Bin file]
     H[Polygon search component]
-    D --> |Reduce resolution and precise|D
-    A[Raw timezone boundary JSON file] --> |Convert|D
+    D --> |Reduce via cmd/reducePolygon|D
+    A[Raw timezone boundary JSON file] --> |Convert via cmd/tzjson2pb|D
     D --> |Uber H3 Polyfill|C
     D --> H
     C --> GetTimezone
