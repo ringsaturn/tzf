@@ -4,16 +4,82 @@
 // fast python package for finding the timezone of any point on earth (coordinates) offline.
 package tzf
 
-import "time"
+import (
+	"encoding/json"
+	"os"
+	"time"
+
+	"github.com/ringsaturn/tzf/pb"
+	"github.com/tidwall/geometry"
+)
 
 func init() {
 	_, _ = time.LoadLocation("Asia/Shanghai")
 }
 
-func GetTimezoneName(lng float64, lat float64) string {
-	return ""
+type item struct {
+	pbtz  *pb.Timezone
+	polys []*geometry.Poly
 }
 
-func GetTimezone(lng float64, lat float64) (*time.Location, error) {
-	return time.LoadLocation(GetTimezoneName(lng, lat))
+func (i *item) ContainsPoint(p geometry.Point) bool {
+	for _, poly := range i.polys {
+		if poly.ContainsPoint(p) {
+			return true
+		}
+	}
+	return false
+}
+
+type Finder struct {
+	items []*item
+}
+
+func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
+	items := make([]*item, 0)
+	for _, timezone := range input.Timezones {
+		newItem := &item{
+			pbtz: timezone,
+		}
+		if timezone.Name == "Asia/Shanghai" {
+			// For debug
+			func() {
+				outputJSONB, _ := json.MarshalIndent(timezone, "", "  ")
+				f, err := os.Create("asia_shangha.json")
+				if err != nil {
+					panic(err)
+				}
+				f.Write(outputJSONB)
+			}()
+		}
+		for _, polygon := range timezone.Polygons {
+
+			newPoints := make([]geometry.Point, 0)
+			for _, point := range polygon.Points {
+				newPoints = append(newPoints, geometry.Point{
+					X: float64(point.Lng),
+					Y: float64(point.Lat),
+				})
+			}
+			newPoly := geometry.NewPoly(newPoints, nil, nil)
+			newItem.polys = append(newItem.polys, newPoly)
+		}
+		items = append(items, newItem)
+	}
+	finder := &Finder{}
+	finder.items = items
+	return finder, nil
+}
+
+func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
+	p := geometry.Point{
+		X: float64(lng),
+		Y: float64(lat),
+	}
+	for _, item := range f.items {
+		if item.ContainsPoint(p) {
+			return item.pbtz.Name
+		}
+	}
+	return ""
 }
