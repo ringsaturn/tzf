@@ -27,6 +27,12 @@ func BenchmarkGetTimezoneName(b *testing.B) {
 	}
 }
 
+func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
+	for i := 0; i <= b.N; i++ {
+		_ = f.GetTimezoneName(110.8571, 43.1483)
+	}
+}
+
 func ExampleFinder_GetTimezoneName() {
 	fmt.Println(f.GetTimezoneName(116.6386, 40.0786))
 	// Output: Asia/Shanghai
