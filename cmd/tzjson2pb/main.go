@@ -89,17 +89,19 @@ func ConvertBoundfileToPbTimezones(input *BoundaryFile) []*pb.Timezone {
 
 		polygons := make([]*pb.Polygon, 0)
 
-		for _, geoPoly := range coordinates[0] {
-			newpbPoly := &pb.Polygon{
-				Points: make([]*pb.Point, 0),
+		for _, subcoordinates := range coordinates {
+			for _, geoPoly := range subcoordinates {
+				newpbPoly := &pb.Polygon{
+					Points: make([]*pb.Point, 0),
+				}
+				for _, rawCoords := range geoPoly {
+					newpbPoly.Points = append(newpbPoly.Points, &pb.Point{
+						Lng: float32(rawCoords[0]),
+						Lat: float32(rawCoords[1]),
+					})
+				}
+				polygons = append(polygons, newpbPoly)
 			}
-			for _, rawCoords := range geoPoly {
-				newpbPoly.Points = append(newpbPoly.Points, &pb.Point{
-					Lng: float32(rawCoords[0]),
-					Lat: float32(rawCoords[1]),
-				})
-			}
-			polygons = append(polygons, newpbPoly)
 		}
 
 		pbtzItem.Polygons = polygons
