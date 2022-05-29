@@ -27,8 +27,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var f *tzf.Finder
-
 func main() {
 	input := &pb.Timezones{}
 
