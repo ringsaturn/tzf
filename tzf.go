@@ -5,15 +5,12 @@
 package tzf
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ringsaturn/tzf/pb"
 	"github.com/tidwall/geometry"
 )
-
-func init() {
-	_, _ = time.LoadLocation("Asia/Shanghai")
-}
 
 type item struct {
 	pbtz  *pb.Timezone
@@ -69,4 +66,12 @@ func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
 		}
 	}
 	return ""
+}
+
+func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error) {
+	name := f.GetTimezoneName(lng, lat)
+	if name == "" {
+		return nil, fmt.Errorf("not found for %v,%v", lng, lat)
+	}
+	return time.LoadLocation(name)
 }

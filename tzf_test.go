@@ -31,3 +31,8 @@ func ExampleFinder_GetTimezoneName() {
 	fmt.Println(f.GetTimezoneName(116.6386, 40.0786))
 	// Output: Asia/Shanghai
 }
+
+func ExampleFinder_GetTimezoneLoc() {
+	fmt.Println(f.GetTimezoneLoc(116.6386, 40.0786))
+	// Output: Asia/Shanghai <nil>
+}
