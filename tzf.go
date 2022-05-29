@@ -5,8 +5,6 @@
 package tzf
 
 import (
-	"encoding/json"
-	"os"
 	"time"
 
 	"github.com/ringsaturn/tzf/pb"
@@ -40,17 +38,6 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 	for _, timezone := range input.Timezones {
 		newItem := &item{
 			pbtz: timezone,
-		}
-		if timezone.Name == "Asia/Shanghai" {
-			// For debug
-			func() {
-				outputJSONB, _ := json.MarshalIndent(timezone, "", "  ")
-				f, err := os.Create("asia_shangha.json")
-				if err != nil {
-					panic(err)
-				}
-				f.Write(outputJSONB)
-			}()
 		}
 		for _, polygon := range timezone.Polygons {
 
