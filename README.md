@@ -15,8 +15,8 @@ graph TD
 
 TODO:
 
-- [ ] POC: polygon search based
-- [ ] Reduce Polygon size option
-  - [ ] Reduce float precise
-  - [ ] Reduce line numbers
+- [x] POC: polygon search based
+- [x] Reduce Polygon size option
+  - [x] Reduce float precise
+  - [x] Reduce line numbers
 - [ ] H3 Based Approximation, something like Placekey
