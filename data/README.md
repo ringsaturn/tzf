@@ -2,4 +2,4 @@
 
 Original data download from <https://github.com/evansiroky/timezone-boundary-builder>
 
-- [ ] Publish processed data to <https://github.com/ringsaturn/tzf-rel> with Go's `embed` support.
+Preprocess probuf data can get from <https://github.com/ringsaturn/tzf-rel> which has Go's `embed` support.
