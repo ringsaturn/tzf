@@ -2,15 +2,13 @@
 
 ```mermaid
 graph TD
-    B[Reduced JSON]
-    C[H3 Based Approximation]
-    D[Probuf Based]
-    H[Polygon Search]
-    RawJSON --> |Reduce|B
-    RawJSON --> |Provider|D
-    B --> |Provider|D
+    C[H3 Based Approximation file]
+    D[Probuf based Bin file]
+    H[Polygon search component]
+    D --> |Reduce resolution and precise|D
+    A[Raw timezone boundary JSON file] --> |Convert|D
     D --> |Uber H3 Polyfill|C
-    D --> |Point in Polygon Search Algo|H
+    D --> H
     C --> GetTimezone
     H --> GetTimezone
 ```
