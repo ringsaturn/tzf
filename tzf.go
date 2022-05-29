@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ringsaturn/tzf/convert"
 	"github.com/ringsaturn/tzf/pb"
 	"github.com/tidwall/geometry"
 )
@@ -28,6 +29,12 @@ func (i *item) ContainsPoint(p geometry.Point) bool {
 
 type Finder struct {
 	items []*item
+}
+
+func NewFinderFromRawJSON(input *convert.BoundaryFile) (*Finder, error) {
+	timezones := &pb.Timezones{}
+	timezones.Timezones = convert.Do(input)
+	return NewFinderFromPB(timezones)
 }
 
 func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
