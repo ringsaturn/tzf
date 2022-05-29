@@ -123,7 +123,6 @@ func main() {
 	if err := json.Unmarshal(rawFile, boundaryFile); err != nil {
 		panic(err)
 	}
-	log.Println(len(boundaryFile.Features))
 
 	output := &pb.Timezones{}
 	output.Timezones = ConvertBoundfileToPbTimezones(boundaryFile)
