@@ -31,17 +31,6 @@ type FeatureItem struct {
 	Type string `json:"type"` // Polygon
 }
 
-type MultiPolygonFeatureItem struct {
-	Geometry struct {
-		Coordinates MultiPolygonCoordinates `json:"coordinates"`
-		Type        string                  `json:"type"`
-	} `json:"geometry"`
-	Properties struct {
-		Tzid string `json:"tzid"`
-	} `json:"properties"`
-	Type string `json:"type"` // Polygon
-}
-
 type BoundaryFile struct {
 	Features []*FeatureItem `json:"features"`
 }
@@ -133,5 +122,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	f.Write(outputBin)
+	_, _ = f.Write(outputBin)
 }

@@ -89,7 +89,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	f.Write(outputBin)
+	_, _ = f.Write(outputBin)
 
 	// For debug
 	// func() {
