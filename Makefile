@@ -16,6 +16,7 @@ fmt:
 .PHONY:pb
 pb:
 	protoc  --proto_path=. \
+			--proto_path=./thirdparty \
 			--go_out=paths=source_relative:. \
 			--go-errors_out=paths=source_relative:. \
 			$(PROTO_FILES)

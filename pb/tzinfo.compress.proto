@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/ringsaturn/tzf/pb;pb";
+
+import "slimarray/slimarray.proto";
+
+message CompressPolygon {
+  slimarray.SlimArray LngSlimArray = 1;
+  slimarray.SlimArray LatSlimArray = 2;
+}
+
+message CompressTimezone {
+    repeated CompressPolygon compressPolygons = 1;
+    string name = 2;
+}
+
+message CompressTimezones {
+    repeated CompressTimezone compressTimezones = 1;
+    int32 precise = 2;
+}

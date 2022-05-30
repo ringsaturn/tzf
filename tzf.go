@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ringsaturn/tzf/compress"
 	"github.com/ringsaturn/tzf/convert"
 	"github.com/ringsaturn/tzf/pb"
 	"github.com/tidwall/geometry"
@@ -66,6 +67,10 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 	finder := &Finder{}
 	finder.items = items
 	return finder, nil
+}
+
+func NewFinderFromCompressPB(input *pb.CompressTimezones) (*Finder, error) {
+	return NewFinderFromPB(compress.ToNormalPB(input))
 }
 
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
