@@ -18,6 +18,10 @@ type item struct {
 	polys []*geometry.Poly
 }
 
+func newNotFoundErr(lng float64, lat float64) error {
+	return fmt.Errorf("tzf: not found for %v,%v", lng, lat)
+}
+
 func (i *item) ContainsPoint(p geometry.Point) bool {
 	for _, poly := range i.polys {
 		if poly.ContainsPoint(p) {
@@ -80,7 +84,20 @@ func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
 func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error) {
 	name := f.GetTimezoneName(lng, lat)
 	if name == "" {
-		return nil, fmt.Errorf("not found for %v,%v", lng, lat)
+		return nil, newNotFoundErr(lng, lat)
 	}
 	return time.LoadLocation(name)
+}
+
+func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
+	p := geometry.Point{
+		X: float64(lng),
+		Y: float64(lat),
+	}
+	for _, item := range f.items {
+		if item.ContainsPoint(p) {
+			return item.pbtz, nil
+		}
+	}
+	return nil, newNotFoundErr(lng, lat)
 }
