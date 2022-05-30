@@ -16,15 +16,19 @@ const (
 type PolygonCoordinates [][][2]float64
 type MultiPolygonCoordinates []PolygonCoordinates
 
+type GeometryDefine struct {
+	Coordinates interface{} `json:"coordinates"`
+	Type        string      `json:"type"`
+}
+
+type PropertiesDefine struct {
+	Tzid string `json:"tzid"`
+}
+
 type FeatureItem struct {
-	Geometry struct {
-		Coordinates interface{} `json:"coordinates"`
-		Type        string      `json:"type"`
-	} `json:"geometry"`
-	Properties struct {
-		Tzid string `json:"tzid"`
-	} `json:"properties"`
-	Type string `json:"type"`
+	Geometry   GeometryDefine   `json:"geometry"`
+	Properties PropertiesDefine `json:"properties"`
+	Type       string           `json:"type"`
 }
 
 type BoundaryFile struct {
