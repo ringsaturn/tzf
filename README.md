@@ -80,6 +80,11 @@ Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> wh
   - [x] Reduce line numbers
 - [ ] H3 Based Approximation, something like Placekey
 
+## Related Repos
+
+- <https://github.com/ringsaturn/tzf-rel>: Preprocessed probuf data release repo
+- <https://github.com/ringsaturn/tzf-server>: HTTP Server for debug
+
 ## Thanks
 
 - <https://github.com/tidwall/geometry>
