@@ -7,6 +7,7 @@ install:
 build:
 	cd cmd/reducePolygon;go build
 	cd cmd/tzjson2pb;go build
+	cd cmd/tzkey;go build
 
 fmt:
 	find pb/ -iname *.proto | xargs clang-format -i --style=Google
