@@ -6,14 +6,20 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+  deployments: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
       GOPROXY: https://proxy.golang.org
+
     strategy:
       matrix:
         go: ["1.17", "1.18"]
+
     steps:
       - uses: actions/checkout@v2
 
@@ -47,4 +53,18 @@ jobs:
 
       - name: Bench
         run: |
-          make bench
+          make bench | tee ${{ matrix.go }}_benchmark_result.txt
+
+      - name: Continuous Benchmark
+        uses: benchmark-action/github-action-benchmark@v1.14.0
+        with:
+          name: Go Benchmark
+          tool: 'go'
+          output-file-path: ${{ matrix.go }}_benchmark_result.txt
+          github-token: ${{ secrets.CI_TOKEN }}
+          gh-repository: 'github.com/ringsaturn/tzf'
+          auto-push: true
+          alert-threshold: '150%'
+          comment-on-alert: true
+          fail-on-alert: true
+          alert-comment-cc-users: '@ringsatrun'
