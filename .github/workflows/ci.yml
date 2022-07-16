@@ -67,4 +67,6 @@ jobs:
           alert-threshold: '150%'
           comment-on-alert: true
           fail-on-alert: true
+          # gh-pages-branch: "master"
+          benchmark-data-dir-path: "docs/"
           alert-comment-cc-users: '@ringsatrun'
