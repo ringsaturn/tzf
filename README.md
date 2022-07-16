@@ -2,14 +2,11 @@
 
 ```mermaid
 graph TD
-    C[H3 Based Approximation file]
     D[Probuf based Bin file]
     H[Polygon search component]
     D --> |Reduce via cmd/reducePolygon|D
     A[Raw timezone boundary JSON file] --> |Convert via cmd/tzjson2pb|D
-    D --> |Uber H3 Polyfill|C
     D --> H
-    C --> GetTimezone
     H --> GetTimezone
 ```
 
@@ -80,8 +77,9 @@ Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> wh
   - [x] Reduce line numbers
 - [ ] H3 Based Approximation, something like Placekey
 
-## Related Repos
+## Related Links
 
+- <https://ringsaturn.github.io/tzf/>: Continuous Benchmark Result
 - <https://github.com/ringsaturn/tzf-rel>: Preprocessed probuf data release repo
 - <https://github.com/ringsaturn/tzf-server>: HTTP Server for debug
 
