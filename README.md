@@ -87,6 +87,6 @@ Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> wh
 
 ## Thanks
 
-- <https://github.com/tidwall/geometry>
+- <https://github.com/tidwall/geojson>
 - <https://github.com/jannikmi/timezonefinder>
 - <https://github.com/evansiroky/timezone-boundary-builder>

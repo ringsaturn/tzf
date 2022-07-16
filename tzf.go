@@ -10,7 +10,7 @@ import (
 
 	"github.com/ringsaturn/tzf/convert"
 	"github.com/ringsaturn/tzf/pb"
-	"github.com/tidwall/geometry"
+	"github.com/tidwall/geojson/geometry"
 )
 
 type item struct {
