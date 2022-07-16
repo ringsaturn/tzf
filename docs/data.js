@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1657960561581,
+  "lastUpdate": 1657962413006,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -164,6 +164,42 @@ window.BENCHMARK_DATA = {
             "value": 8350,
             "unit": "ns/op",
             "extra": "142917 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "25ad4418dc2885b24dd8d8581547969c6b7466d9",
+          "message": "replace geometry repo (#6)",
+          "timestamp": "2022-07-16T17:06:04+08:00",
+          "tree_id": "1149e9e68db7718772e943e69594be260bafb1c9",
+          "url": "https://github.com/ringsaturn/tzf/commit/25ad4418dc2885b24dd8d8581547969c6b7466d9"
+        },
+        "date": 1657962412784,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 7686,
+            "unit": "ns/op",
+            "extra": "155284 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 8467,
+            "unit": "ns/op",
+            "extra": "143235 times\n2 procs"
           }
         ]
       }
