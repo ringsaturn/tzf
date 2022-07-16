@@ -10,26 +10,26 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var f *tzf.Finder
+var finder *tzf.Finder
 
 func init() {
 	input := &pb.Timezones{}
 	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
 		panic(err)
 	}
-	finder, _ := tzf.NewFinderFromPB(input)
-	f = finder
+	_finder, _ := tzf.NewFinderFromPB(input)
+	finder = _finder
 }
 
 func BenchmarkGetTimezoneName(b *testing.B) {
 	for i := 0; i <= b.N; i++ {
-		_ = f.GetTimezoneName(116.6386, 40.0786)
+		_ = finder.GetTimezoneName(116.6386, 40.0786)
 	}
 }
 
 func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
 	for i := 0; i <= b.N; i++ {
-		_ = f.GetTimezoneName(110.8571, 43.1483)
+		_ = finder.GetTimezoneName(110.8571, 43.1483)
 	}
 }
 
