@@ -16,17 +16,13 @@ jobs:
     env:
       GOPROXY: https://proxy.golang.org
 
-    strategy:
-      matrix:
-        go: ["1.17", "1.18"]
-
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go }}
+          go-version: 1.18
 
       - uses: actions/cache@v2
         with:
@@ -53,14 +49,14 @@ jobs:
 
       - name: Bench
         run: |
-          make bench | tee ${{ matrix.go }}_benchmark_result.txt
+          make bench | tee benchmark_result.txt
 
       - name: Continuous Benchmark
         uses: benchmark-action/github-action-benchmark@v1.14.0
         with:
           name: Go Benchmark
           tool: 'go'
-          output-file-path: ${{ matrix.go }}_benchmark_result.txt
+          output-file-path: benchmark_result.txt
           github-token: ${{ secrets.CI_TOKEN }}
           gh-repository: 'github.com/ringsaturn/tzf'
           auto-push: true
