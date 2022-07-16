@@ -65,4 +65,4 @@ jobs:
           fail-on-alert: true
           # gh-pages-branch: "master"
           benchmark-data-dir-path: "docs/"
-          alert-comment-cc-users: '@ringsatrun'
+          alert-comment-cc-users: '@ringsaturn'
