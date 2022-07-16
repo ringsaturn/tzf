@@ -101,3 +101,12 @@ func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
 	}
 	return nil, newNotFoundErr(lng, lat)
 }
+
+func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
+	for _, item := range f.items {
+		if item.pbtz.Name == name {
+			return item.pbtz, nil
+		}
+	}
+	return nil, fmt.Errorf("timezone=%v not found", name)
+}
