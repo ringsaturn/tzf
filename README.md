@@ -69,19 +69,11 @@ Original data download from <https://github.com/evansiroky/timezone-boundary-bui
 
 Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> which has Go's `embed` support.
 
-## TODO
-
-- [x] POC: polygon search based
-- [x] Reduce Polygon size option
-  - [x] Reduce float precise
-  - [x] Reduce line numbers
-- [ ] H3 Based Approximation, something like Placekey
-
-## Which dataset should I use
+### Which dataset should I use
 
 The lite data(16.7MB) doesn't work well in oceans but works well in most lands.
 
-The full data(83.5MB) could work any where bu requires more more memory usage.
+The full data(83.5MB) could work anywhere but requires more memory usage.
 
 You can see ranges that results diff in this [gist][points_not_equal].
 
