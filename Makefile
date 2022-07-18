@@ -27,5 +27,8 @@ test:
 cover: test
 	go tool cover -html=coverage.out -o=coverage.html
 
+compare_lite_full:
+	go run cmd/compare-lite-full/main.go
+
 bench:
 	go test -bench=. ./...

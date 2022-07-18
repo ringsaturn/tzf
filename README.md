@@ -77,6 +77,16 @@ Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> wh
   - [x] Reduce line numbers
 - [ ] H3 Based Approximation, something like Placekey
 
+## Which dataset should I use
+
+The lite data(16.7MB) doesn't work well in oceans but works well in most lands.
+
+The full data(83.5MB) could work any where bu requires more more memory usage.
+
+You can see ranges that results diff in this [gist][points_not_equal].
+
+[points_not_equal]: https://gist.github.com/ringsaturn/8e1614146127cb25bf4d1325df347d22
+
 ## Related Links
 
 - <https://ringsaturn.github.io/tzf/>: Continuous Benchmark Result
