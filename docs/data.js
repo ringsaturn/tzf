@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1658593582704,
+  "lastUpdate": 1658593840139,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -2451,6 +2451,37 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000027111741588903057",
             "extra": "mean: 67.36326101639197 usec\nrounds: 5015"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e28781a88ef6e7a4d0298cccde7b0067b3e4c899",
+          "message": "build(python): replace poetry with setup.py (#15)",
+          "timestamp": "2022-07-24T00:29:42+08:00",
+          "tree_id": "08cb9b6559905a3e63f688a1ebec81bfe2cdd025",
+          "url": "https://github.com/ringsaturn/tzf/commit/e28781a88ef6e7a4d0298cccde7b0067b3e4c899"
+        },
+        "date": 1658593839566,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tz",
+            "value": 18390.494687850376,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004684084138183106",
+            "extra": "mean: 54.375916307495906 usec\nrounds: 5568"
           }
         ]
       }
