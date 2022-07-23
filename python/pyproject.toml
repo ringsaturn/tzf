@@ -1,0 +1,23 @@
+[tool.poetry]
+authors = ["ringsaturn <ringsaturn.me@gmail.com>"]
+description = "tzf's Python binding"
+keywords = ['timezone']
+license = "MIT"
+name = "tzfpy"
+repository = "https://github.com/ringsaturn/tzf"
+version = "0.5.0-rc1"
+
+include = [
+  {path = "tzfpy/tzf.so", format = "wheel"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+pytest-benchmark = "^3.4.1"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]
