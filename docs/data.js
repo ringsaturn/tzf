@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1658595921449,
+  "lastUpdate": 1658596117598,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -3320,6 +3320,37 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000022601686456650874",
             "extra": "mean: 54.61436781836252 usec\nrounds: 5239"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "distinct": true,
+          "id": "c80789bfb19459c98e1e2404659b86ad36cb5c54",
+          "message": "fix macos wheel",
+          "timestamp": "2022-07-24T01:07:27+08:00",
+          "tree_id": "b6af8176b57f0d8d03167e90021e504bfafbf25a",
+          "url": "https://github.com/ringsaturn/tzf/commit/c80789bfb19459c98e1e2404659b86ad36cb5c54"
+        },
+        "date": 1658596117095,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tz",
+            "value": 19034.827920749885,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000028736709746905238",
+            "extra": "mean: 52.53527923464436 usec\nrounds: 4652"
           }
         ]
       }
