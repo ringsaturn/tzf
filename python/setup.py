@@ -4,7 +4,13 @@ import sysconfig
 from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
 
-version = os.popen("git describe --tags --always").read().split("-")[0]
+version = (
+    os.popen("git describe --tags --always")
+    .read()
+    .replace("-", "")
+    .replace("alpha", "a")
+    .replace("beta", "b")
+)
 
 
 def get_ext_paths(root_dir, exclude_files):
@@ -46,7 +52,7 @@ class build_py(_build_py):
 setup(
     name="tzfpy",
     version=version,
-    description="The uWSGI server",
+    description="tzf's Python binding",
     author="ringsaturn",
     author_email="ringsaturn.me@gmail.com",
     license="MIT",
