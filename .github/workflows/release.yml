@@ -9,6 +9,9 @@ on:
 jobs:
   Linux:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
 
     steps:
       - uses: actions/checkout@v2
@@ -16,14 +19,24 @@ jobs:
         id: tag
         run: |
           echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
-      - name: Building release
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install and set up Poetry
         run: |
+          curl -fsS -o get-poetry.py https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py
+          python get-poetry.py -y
+      - name: Build distributions
+        run: |
+          source $HOME/.poetry/env
           cd python;make pkg
-      - name: Upload distributions artifacts
+      - name: Upload distribution artifacts
         uses: actions/upload-artifact@v1
         with:
           name: tzfpy-dist
           path: dist
+
 
   macOS:
     runs-on: macos-latest
