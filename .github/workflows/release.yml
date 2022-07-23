@@ -18,12 +18,12 @@ jobs:
           echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
       - name: Building release
         run: |
-          make linux_release
+          cd python;make pkg
       - name: Upload distributions artifacts
         uses: actions/upload-artifact@v1
         with:
           name: tzfpy-dist
-          path: dist/wheelhouse
+          path: dist
 
   macOS:
     runs-on: macos-latest
@@ -48,7 +48,7 @@ jobs:
       - name: Build distributions
         run: |
           source $HOME/.poetry/env
-          poetry build -vvv
+          cd python;make pkg
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v1
         with:
