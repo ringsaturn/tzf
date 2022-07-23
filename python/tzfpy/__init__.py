@@ -1,6 +1,7 @@
+import os
 from ctypes import CDLL, POINTER, c_char_p, c_float
 
-c_lib = CDLL("./tzf.so")
+c_lib = CDLL(os.path.join(os.path.dirname(__file__), "tzf.so"))
 
 _get = c_lib.GetTZ
 _get.argtypes = [POINTER(c_float), POINTER(c_float)]
