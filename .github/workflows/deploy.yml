@@ -36,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip whell twine
+          python -m pip install --upgrade pip wheel twine
 
       - name: Build wheels
         run: cd python;python setup.py bdist_wheel
