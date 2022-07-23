@@ -55,17 +55,36 @@ jobs:
         uses: benchmark-action/github-action-benchmark@v1.14.0
         with:
           name: Go Benchmark
-          tool: 'go'
+          tool: "go"
           output-file-path: benchmark_result.txt
           github-token: ${{ secrets.CI_TOKEN }}
-          gh-repository: 'github.com/ringsaturn/tzf'
+          gh-repository: "github.com/ringsaturn/tzf"
           auto-push: true
-          alert-threshold: '150%'
+          alert-threshold: "150%"
           comment-on-alert: true
           fail-on-alert: true
           # gh-pages-branch: "master"
           benchmark-data-dir-path: "docs/"
-          alert-comment-cc-users: '@ringsaturn'
+          alert-comment-cc-users: "@ringsaturn"
+
+  build-tzfpy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -74,5 +93,20 @@ jobs:
 
       - name: tzfpy
         run: |
-          pip install pytest
-          cd python;make build;cd tzfpy;pytest tests.py
+          pip install pytest pytest-benchmark
+          cd python;make build;cd tzfpy;pytest tests.py --benchmark-json output.json
+
+      - name: Continuous Benchmark
+        uses: benchmark-action/github-action-benchmark@v1.14.0
+        with:
+          name: tzf-py Benchmark
+          tool: "pytest"
+          output-file-path: python/tzfpy/output.json
+          github-token: ${{ secrets.CI_TOKEN }}
+          gh-repository: "github.com/ringsaturn/tzf"
+          auto-push: true
+          alert-threshold: "150%"
+          comment-on-alert: true
+          fail-on-alert: true
+          benchmark-data-dir-path: "docs/"
+          alert-comment-cc-users: "@ringsaturn"
