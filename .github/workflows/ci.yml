@@ -66,3 +66,13 @@ jobs:
           # gh-pages-branch: "master"
           benchmark-data-dir-path: "docs/"
           alert-comment-cc-users: '@ringsaturn'
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8.12
+
+      - name: tzfpy
+        run: |
+          pip install pytest
+          cd python;make build;cd tzfpy;pytest tests.py
