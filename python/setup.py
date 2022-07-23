@@ -1,8 +1,4 @@
 import os
-
-from setuptools import setup
-
-import os
 import sysconfig
 
 from setuptools import setup
