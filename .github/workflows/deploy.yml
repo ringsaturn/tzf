@@ -62,15 +62,15 @@ jobs:
         if: github.event.action == 'published'
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.pypi_password }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: twine upload --skip-existing dist/*.whl
 
       - name: Publish package to TestPyPI
         if: |
-          github.repository == 'ultrajson/ultrajson' &&
+          github.repository == 'ringsaturn/tzf' &&
           github.ref == 'refs/heads/main'
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.test_pypi_password }}
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
         run: |
           twine upload --repository-url https://test.pypi.org/legacy/ --skip-existing dist/*.whl
