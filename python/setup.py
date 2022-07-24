@@ -74,6 +74,8 @@ setup(
     packages=[""],
     package_dir={"": "."},
     package_data={"": ["tzfpy/tzf.so"]},
+    include_package_data=True,
+    ext_modules=[Extension("tzfpy.tzf", [])],
     cmdclass={"bdist_wheel": bdist_wheel, "build_ext": build_ext},
     distclass=BinaryDistribution,
 )
