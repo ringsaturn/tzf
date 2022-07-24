@@ -3,11 +3,9 @@ name: deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    paths:
-      - ".github/workflows/deploy.yml"
+    branches: [main]
   release:
     types:
       - published
@@ -17,10 +15,14 @@ env:
   FORCE_COLOR: 1
 
 jobs:
-  build-linux-wheel:
-    runs-on: "ubuntu-latest"
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, windows-2019, macos-11]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: git fetch --prune --unshallow
 
       - name: Set up Go
@@ -47,75 +49,32 @@ jobs:
           cache: pip
           cache-dependency-path: ".github/workflows/deploy.yml"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip wheel twine
-
       - name: Build wheels
-        run: cd python;python setup.py bdist_wheel --plat-name=manylinux1_x86_64
-
-      - name: Upload as build artifacts
-        uses: actions/upload-artifact@v2
+        uses: pypa/cibuildwheel@v2.8.1
         with:
-          name: tzfpy-dist
-          path: python/dist/*.whl
+          package-dir: python
+          output-dir: python/dist
 
-  build-macos-wheel:
-    runs-on: "macos-11"
-    steps:
-      - uses: actions/checkout@v2
-      - run: git fetch --prune --unshallow
-
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.18
-
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: build so
-        run: |
-          cd python;make build
-
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          cache: pip
-          cache-dependency-path: ".github/workflows/deploy.yml"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip wheel twine
-
-      - name: Build wheels
-        run: cd python;python setup.py bdist_wheel --plat-name=macosx-11-x86_64
-
-      - name: Upload as build artifacts
-        uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: tzfpy-dist
           path: python/dist/*.whl
 
   publish:
-    needs: [build-linux-wheel, build-macos-wheel]
+    needs: [build_wheels]
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
       - name: Get tag
         id: tag
         run: |
           echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+
       - name: Download distribution artifact
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v3
         with:
           name: tzfpy-dist
           path: python/dist
@@ -131,7 +90,7 @@ jobs:
           python -m pip install --upgrade pip wheel twine
 
       - name: Publish package to PyPI
-        if: github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
