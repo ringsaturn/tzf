@@ -2,6 +2,7 @@ import os
 import sysconfig
 
 from setuptools import setup
+from setuptools.extension import Extension
 from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.dist import Distribution
 from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -73,6 +74,6 @@ setup(
     packages=[""],
     package_dir={"": "."},
     package_data={"": ["tzfpy/tzf.so"]},
-    cmdclass={"build_ext": build_ext, "bdist_wheel": bdist_wheel},
+    cmdclass={"bdist_wheel": bdist_wheel, "build_ext": build_ext},
     distclass=BinaryDistribution,
 )
