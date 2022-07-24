@@ -4,6 +4,7 @@ import sysconfig
 from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
 from setuptools.dist import Distribution
+from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
 version = (
     os.popen("git describe --tags --always")
@@ -12,6 +13,12 @@ version = (
     .replace("alpha", "a")
     .replace("beta", "b")
 )
+
+
+class bdist_wheel(_bdist_wheel):
+    def finalize_options(self):
+        _bdist_wheel.finalize_options(self)
+        self.root_is_pure = False
 
 
 class BinaryDistribution(Distribution):
@@ -67,6 +74,6 @@ setup(
     packages=[""],
     package_dir={"": "."},
     package_data={"": ["tzfpy/tzf.so"]},
-    cmdclass={"build_py": build_py},
+    cmdclass={"build_py": build_py, "bdist_wheel": bdist_wheel},
     distclass=BinaryDistribution,
 )
