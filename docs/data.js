@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1658651180275,
+  "lastUpdate": 1658651261625,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -2776,6 +2776,54 @@ window.BENCHMARK_DATA = {
             "value": 12085,
             "unit": "ns/op",
             "extra": "103556 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "distinct": true,
+          "id": "beabc27c8a58b76baa2088bd0d0b093a0149b2ee",
+          "message": "fix build cls",
+          "timestamp": "2022-07-24T16:25:21+08:00",
+          "tree_id": "51c548558c58e95ff039a5e80fc9c45a0bdb4550",
+          "url": "https://github.com/ringsaturn/tzf/commit/beabc27c8a58b76baa2088bd0d0b093a0149b2ee"
+        },
+        "date": 1658651260437,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 9262,
+            "unit": "ns/op",
+            "extra": "133867 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 10050,
+            "unit": "ns/op",
+            "extra": "116503 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9405,
+            "unit": "ns/op",
+            "extra": "127177 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 10335,
+            "unit": "ns/op",
+            "extra": "107755 times\n2 procs"
           }
         ]
       }
