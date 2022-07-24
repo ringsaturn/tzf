@@ -39,9 +39,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: build so
-        run: |
-          cd python;make build
+      # - name: build so
+      #   run: |
+      #     cd python;make build
 
       - name: Set up Python
         uses: actions/setup-python@v3

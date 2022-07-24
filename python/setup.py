@@ -1,9 +1,17 @@
 import os
 import sysconfig
+from distutils.command.install_data import install_data
 
 from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
 from setuptools.dist import Distribution
+
+
+class post_install(install_data):
+    def run(self):
+        install_data.run(self)
+        os.open("make build")
+
 
 version = (
     os.popen("git describe --tags --always")
@@ -38,7 +46,6 @@ def get_ext_paths(root_dir, exclude_files):
     return paths
 
 
-# noinspection PyPep8Naming
 class build_py(_build_py):
     def find_package_modules(self, package, package_dir):
         ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
@@ -67,6 +74,6 @@ setup(
     packages=[""],
     package_dir={"": "."},
     package_data={"": ["tzfpy/tzf.so"]},
-    cmdclass={"build_py": build_py},
+    cmdclass={"install_data": post_install, "build_py": build_py},
     distclass=BinaryDistribution,
 )
