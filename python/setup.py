@@ -2,7 +2,7 @@ import os
 import sysconfig
 
 from setuptools import setup
-from setuptools.command.build_py import build_py as _build_py
+from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.dist import Distribution
 from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
@@ -45,8 +45,7 @@ def get_ext_paths(root_dir, exclude_files):
     return paths
 
 
-# noinspection PyPep8Naming
-class build_py(_build_py):
+class build_ext(_build_ext):
     def find_package_modules(self, package, package_dir):
         ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
         modules = super().find_package_modules(package, package_dir)
@@ -74,6 +73,6 @@ setup(
     packages=[""],
     package_dir={"": "."},
     package_data={"": ["tzfpy/tzf.so"]},
-    cmdclass={"build_py": build_py, "bdist_wheel": bdist_wheel},
+    cmdclass={"build_ext": build_ext, "bdist_wheel": bdist_wheel},
     distclass=BinaryDistribution,
 )
