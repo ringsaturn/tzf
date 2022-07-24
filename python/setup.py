@@ -3,6 +3,7 @@ import sysconfig
 
 from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
+from setuptools.dist import Distribution
 
 version = (
     os.popen("git describe --tags --always")
@@ -11,6 +12,13 @@ version = (
     .replace("alpha", "a")
     .replace("beta", "b")
 )
+
+
+class BinaryDistribution(Distribution):
+    """Distribution which always forces a binary package with platform name"""
+
+    def has_ext_modules(foo):
+        return True
 
 
 def get_ext_paths(root_dir, exclude_files):
@@ -60,4 +68,5 @@ setup(
     package_dir={"": "."},
     package_data={"": ["tzfpy/tzf.so"]},
     cmdclass={"build_py": build_py},
+    distclass=BinaryDistribution,
 )
