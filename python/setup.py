@@ -2,6 +2,7 @@ import os
 import sysconfig
 
 from setuptools import setup
+from setuptools.extension import Extension
 from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.dist import Distribution
 from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -40,7 +41,7 @@ def get_ext_paths(root_dir, exclude_files):
     """get filepaths for compilation"""
     paths = []
 
-    for root, _, files in os.walk(root_dir):
+    for root, dirs, files in os.walk(root_dir):
         for filename in files:
             if os.path.splitext(filename)[1] != ".py":
                 continue
@@ -77,12 +78,12 @@ setup(
     description="tzf's Python binding",
     author="ringsaturn",
     author_email="ringsaturn.me@gmail.com",
-    url="https://github.com/ringsaturn/tzf",
     license="MIT",
     packages=["tzfpy"],
     package_dir={"tzfpy": "tzfpy"},
     package_data={"so": ["tzfpy/tzf.so"]},
     include_package_data=True,
+    # ext_modules=[Extension("tzfpy.tzf", [])],
     cmdclass={"bdist_wheel": bdist_wheel, "build_ext": build_ext},
     distclass=BinaryDistribution,
 )
