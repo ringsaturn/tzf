@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1659277790310,
+  "lastUpdate": 1659277853374,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -3544,6 +3544,54 @@ window.BENCHMARK_DATA = {
             "value": 8597,
             "unit": "ns/op",
             "extra": "139462 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "distinct": true,
+          "id": "43b9e1e5c42585ff56c2e4f64de6799e39bed75f",
+          "message": "fix linux wheel image",
+          "timestamp": "2022-07-31T22:28:38+08:00",
+          "tree_id": "066b87481e5fd577e9917f1d7ff093590108bb29",
+          "url": "https://github.com/ringsaturn/tzf/commit/43b9e1e5c42585ff56c2e4f64de6799e39bed75f"
+        },
+        "date": 1659277852745,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 10012,
+            "unit": "ns/op",
+            "extra": "118652 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 10793,
+            "unit": "ns/op",
+            "extra": "103674 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9591,
+            "unit": "ns/op",
+            "extra": "109009 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 11169,
+            "unit": "ns/op",
+            "extra": "104334 times\n2 procs"
           }
         ]
       }
