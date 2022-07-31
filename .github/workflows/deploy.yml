@@ -83,7 +83,7 @@ jobs:
 
       - name: build so
         run: |
-          cd python;make build-linux
+          cd python;make build
 
       - name: Set up Python
         uses: actions/setup-python@v3
@@ -125,7 +125,7 @@ jobs:
 
       - name: build so
         run: |
-          cd python;make build-macos
+          cd python;make build
 
       - name: Set up Python
         uses: actions/setup-python@v3
