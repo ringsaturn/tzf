@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1659276678757,
+  "lastUpdate": 1659277790310,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -5168,6 +5168,37 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000015754647930062215",
             "extra": "mean: 46.73533262254056 usec\nrounds: 6566"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "distinct": true,
+          "id": "43b9e1e5c42585ff56c2e4f64de6799e39bed75f",
+          "message": "fix linux wheel image",
+          "timestamp": "2022-07-31T22:28:38+08:00",
+          "tree_id": "066b87481e5fd577e9917f1d7ff093590108bb29",
+          "url": "https://github.com/ringsaturn/tzf/commit/43b9e1e5c42585ff56c2e4f64de6799e39bed75f"
+        },
+        "date": 1659277789701,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tz",
+            "value": 21105.604571577536,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010835233650511323",
+            "extra": "mean: 47.38077966961811 usec\nrounds: 5873"
           }
         ]
       }
