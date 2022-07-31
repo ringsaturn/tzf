@@ -79,7 +79,7 @@ setup(
     author="ringsaturn",
     author_email="ringsaturn.me@gmail.com",
     license="MIT",
-    # packages=["tzfpy"],
+    packages=["tzfpy"],
     package_dir={"": "."},
     package_data={"": ["tzfpy/*.so"]},
     include_package_data=True,
