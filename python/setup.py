@@ -32,6 +32,9 @@ class bdist_wheel(_bdist_wheel):
 class BinaryDistribution(Distribution):
     """Distribution which always forces a binary package with platform name"""
 
+    def is_pure(self):
+        return False
+
     def has_ext_modules(foo):
         return True
 
