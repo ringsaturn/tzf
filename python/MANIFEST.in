@@ -1,1 +1,1 @@
-include tzfpy/*.so
+include tzfpy/tzf.so
