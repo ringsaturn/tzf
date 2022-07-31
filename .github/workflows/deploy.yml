@@ -15,6 +15,9 @@ on:
   push:
     tags:
       - "*.*.*"
+  release:
+    types:
+      - published
 
 env:
   FORCE_COLOR: 1
