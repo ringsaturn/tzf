@@ -7,13 +7,21 @@ from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.dist import Distribution
 from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
-version = (
-    os.popen("git describe --tags --always")
-    .read()
-    .replace("-", "")
-    .replace("alpha", "a")
-    .replace("beta", "b")
-)
+
+def get_version_from_git() -> str:
+    version = (
+        os.popen("git describe --tags --always")
+        .read()
+        .replace("-", "")
+        .replace("alpha", "a")
+        .replace("beta", "b")
+    )
+    if version[0] == "v":
+        version = version[1:]
+    return version
+
+
+version = get_version_from_git()
 
 
 class bdist_wheel(_bdist_wheel):
@@ -71,7 +79,7 @@ setup(
     author="ringsaturn",
     author_email="ringsaturn.me@gmail.com",
     license="MIT",
-    packages=[""],
+    packages=["tzfpy"],
     package_dir={"": "."},
     package_data={"": ["tzfpy/tzf.so"]},
     include_package_data=True,
