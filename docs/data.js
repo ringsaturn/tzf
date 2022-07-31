@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1659274055540,
+  "lastUpdate": 1659274122836,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -3448,6 +3448,54 @@ window.BENCHMARK_DATA = {
             "value": 8524,
             "unit": "ns/op",
             "extra": "139038 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "distinct": true,
+          "id": "06454d28d051226abf746470a01b24f65e2280af",
+          "message": "try to fix purelib bug",
+          "timestamp": "2022-07-31T21:24:57+08:00",
+          "tree_id": "c2f59e68ce7d089723d18053e11e936af5298a04",
+          "url": "https://github.com/ringsaturn/tzf/commit/06454d28d051226abf746470a01b24f65e2280af"
+        },
+        "date": 1659274122075,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 7936,
+            "unit": "ns/op",
+            "extra": "150868 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 8570,
+            "unit": "ns/op",
+            "extra": "139539 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 8292,
+            "unit": "ns/op",
+            "extra": "144381 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 9014,
+            "unit": "ns/op",
+            "extra": "133630 times\n2 procs"
           }
         ]
       }
