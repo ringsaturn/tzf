@@ -95,6 +95,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.8.1
         env:
           CIBW_BUILD_FRONTEND: "build"
+          CIBW_REPAIR_WHEEL_COMMAND: ""  # disable audit
         with:
           package-dir: python
           output-dir: python/dist
