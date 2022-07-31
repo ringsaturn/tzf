@@ -1,8 +1,19 @@
 # WIP: TZF's Python Binding
 
-## Compile on macOS
+## Usage
+
+```py
+from tzfpy import get_tz
+
+print(get_tz(121.4737, 31.2305))
+```
+
+## For dev
 
 ```bash
-go build -o tzf.so -buildmode=c-shared main.go
-python3 __init__.py
+# local install
+pip install -e . 
+
+# lcoal wheel
+python -m build --wheel .
 ```
