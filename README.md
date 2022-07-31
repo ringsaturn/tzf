@@ -1,4 +1,4 @@
-# TZF: a timezone finder for Go.
+# TZF: a timezone finder for Go&Python.
 
 ```mermaid
 graph TD
@@ -11,6 +11,8 @@ graph TD
 ```
 
 ## Quick Start
+
+### Go
 
 ```go
 package main
@@ -62,6 +64,10 @@ Etc/GMT
 Asia/Shanghai
 Etc/GMT+5
 ```
+
+### Python
+
+Check <https://github.com/ringsaturn/tzf/tree/main/python>
 
 ## Data
 
