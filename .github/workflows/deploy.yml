@@ -1,15 +1,20 @@
 # Copy&paste from https://github.com/ultrajson/ultrajson/blob/main/.github/workflows/deploy.yml
 name: deploy
 
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+#   release:
+#     types:
+#       - published
+#   workflow_dispatch:
+
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  release:
-    types:
-      - published
-  workflow_dispatch:
+    tags:
+      - "*.*.*"
 
 env:
   FORCE_COLOR: 1
