@@ -1,12 +1,16 @@
 from unittest import TestCase, main
 
 import numpy as np
-from tzfpy import get_tz
+from pytz import timezone
+from tzfpy import get_tz, timezone_names
 
 
 class TestTZF(TestCase):
     def test_shanghai(self):
         self.assertEqual(get_tz(121.4737, 31.2305), "Asia/Shanghai")
+
+    def test_names_in_pytz(self):
+        list(map(timezone, timezone_names()))
 
 
 lng_ranges = np.arange(-180, 180, 0.5)
