@@ -94,6 +94,7 @@ jobs:
       - name: tzfpy
         run: |
           pip install pytest pytest-benchmark
+          pip install -r python/requirements_dev.txt
           cd python;make build;cd tzfpy;pytest tests.py --benchmark-json output.json
 
       - name: Continuous Benchmark
