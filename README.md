@@ -88,7 +88,7 @@ You can see ranges that results diff in this [gist][points_not_equal].
 ## Related Links
 
 - <https://ringsaturn.github.io/tzf/>: Continuous Benchmark Result
-  - <https://ringsaturn.github.io/tz-benchmark/> Continuous Benchmark Compared with [`evanoberholster/timezoneLookup`](https://github.com/evanoberholster/timezoneLookup) Result
+  - <https://ringsaturn.github.io/tz-benchmark/> Continuous Benchmark Compared with other packages
 - <https://github.com/ringsaturn/tzf-rel>: Preprocessed probuf data release repo
 - <https://github.com/ringsaturn/tzf-server>: HTTP Server for debug
 
