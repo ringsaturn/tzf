@@ -1,5 +1,6 @@
 from unittest import TestCase, main
 
+import numpy as np
 from pytz import timezone
 from tzfpy import get_tz, timezone_names
 
@@ -12,14 +13,21 @@ class TestTZF(TestCase):
         list(map(timezone, timezone_names()))
 
 
-def _test_get_tz():
-    _ = get_tz(lng=13.358, lat=52.5061)
-    _ = get_tz(lng=116, lat=39)
-    _ = get_tz(lng=0.1276, lat=51.5073)
+lng_ranges = np.arange(-180, 180, 0.5)
+lat_ranges = np.arange(-60, 60, 0.5)
 
 
-def test_tz(benchmark):
-    benchmark(_test_get_tz)
+def random_point():
+    return np.random.choice(lng_ranges), np.random.choice(lat_ranges)
+
+
+def _test_tzfpy_random():
+    lng, lat = random_point()
+    _ = get_tz(lng, lat)
+
+
+def test_tzfpy_random(benchmark):
+    benchmark(_test_tzfpy_random)
 
 
 if __name__ == "__main__":
