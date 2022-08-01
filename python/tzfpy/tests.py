@@ -30,5 +30,15 @@ def test_tzfpy_random(benchmark):
     benchmark(_test_tzfpy_random)
 
 
+def _test_iter_global():
+    for lng in lng_ranges:
+        for lat in lat_ranges:
+            _ = get_tz(lng, lat)
+
+
+def test_iter_global(benchmark):
+    benchmark(_test_iter_global)
+
+
 if __name__ == "__main__":
     main()
