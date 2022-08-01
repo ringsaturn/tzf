@@ -35,6 +35,7 @@ func (i *tzitem) ContainsPoint(p geometry.Point) bool {
 
 type Finder struct {
 	items []*tzitem
+	names []string
 }
 
 func NewFinderFromRawJSON(input *convert.BoundaryFile) (*Finder, error) {
@@ -48,7 +49,9 @@ func NewFinderFromRawJSON(input *convert.BoundaryFile) (*Finder, error) {
 func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 	now := time.Now()
 	items := make([]*tzitem, 0)
+	names := make([]string, 0)
 	for _, timezone := range input.Timezones {
+		names = append(names, timezone.Name)
 		location, err := time.LoadLocation(timezone.Name)
 		if err != nil {
 			return nil, err
@@ -76,6 +79,7 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 	}
 	finder := &Finder{}
 	finder.items = items
+	finder.names = names
 	return finder, nil
 }
 
@@ -141,4 +145,8 @@ func (f *Finder) GetTimezoneShapeByShift(shift int) ([]*pb.Timezone, error) {
 		return nil, fmt.Errorf("shift=%v not found", shift)
 	}
 	return res, nil
+}
+
+func (f *Finder) TimezoneNames() []string {
+	return f.names
 }

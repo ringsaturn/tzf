@@ -1,11 +1,15 @@
 from unittest import TestCase, main
 
-from tzfpy import get_tz
+from pytz import timezone
+from tzfpy import get_tz, timezone_names
 
 
 class TestTZF(TestCase):
     def test_shanghai(self):
         self.assertEqual(get_tz(121.4737, 31.2305), "Asia/Shanghai")
+
+    def test_names_in_pytz(self):
+        list(map(timezone, timezone_names()))
 
 
 def _test_get_tz():
