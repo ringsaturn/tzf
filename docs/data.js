@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1659354580550,
+  "lastUpdate": 1659495464819,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6321,6 +6321,33 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0006696015890658391",
             "extra": "mean: 4.088280766600008 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "id": "f340e96ea1282f86d2491686505f3533cb037d38",
+          "message": "feat(finder): add RTree based finder",
+          "timestamp": "2022-08-02T12:26:32Z",
+          "url": "https://github.com/ringsaturn/tzf/pull/19/commits/f340e96ea1282f86d2491686505f3533cb037d38"
+        },
+        "date": 1659495464511,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 21499.65931526693,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006795599727244474",
+            "extra": "mean: 46.51236493268053 usec\nrounds: 3787"
           }
         ]
       }
