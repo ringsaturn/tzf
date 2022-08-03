@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1659495464819,
+  "lastUpdate": 1659495570947,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -4280,6 +4280,56 @@ window.BENCHMARK_DATA = {
             "value": 8765,
             "unit": "ns/op",
             "extra": "136504 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "id": "f340e96ea1282f86d2491686505f3533cb037d38",
+          "message": "feat(finder): add RTree based finder",
+          "timestamp": "2022-08-02T12:26:32Z",
+          "url": "https://github.com/ringsaturn/tzf/pull/19/commits/f340e96ea1282f86d2491686505f3533cb037d38"
+        },
+        "date": 1659495570270,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkFinderByRTree_GetTimezoneName",
+            "value": 32698,
+            "unit": "ns/op",
+            "extra": "35785 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 9702,
+            "unit": "ns/op",
+            "extra": "125180 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 10168,
+            "unit": "ns/op",
+            "extra": "116727 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9875,
+            "unit": "ns/op",
+            "extra": "122438 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 11044,
+            "unit": "ns/op",
+            "extra": "109069 times\n2 procs"
           }
         ]
       }
