@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660311074299,
+  "lastUpdate": 1660311078816,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6859,6 +6859,33 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000013590412565065907",
             "extra": "mean: 44.53960296844492 usec\nrounds: 3773"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "id": "71f0f2a70a5d206fa950bd0d906a7e7bee9fc879",
+          "message": "bump tzf-rel version",
+          "timestamp": "2022-08-02T12:26:32Z",
+          "url": "https://github.com/ringsaturn/tzf/pull/22/commits/71f0f2a70a5d206fa950bd0d906a7e7bee9fc879"
+        },
+        "date": 1660311078352,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 22278.386317086784,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000057253403647749694",
+            "extra": "mean: 44.886554428452165 usec\nrounds: 3647"
           }
         ]
       }
