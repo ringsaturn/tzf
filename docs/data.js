@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660308648533,
+  "lastUpdate": 1660308708001,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -4330,6 +4330,50 @@ window.BENCHMARK_DATA = {
             "value": 11044,
             "unit": "ns/op",
             "extra": "109069 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "id": "e385bfd04952d061d848e1dddaf083a47c41c439",
+          "message": "feat(tool): reduce use Douglas-Peucker",
+          "timestamp": "2022-08-02T12:26:32Z",
+          "url": "https://github.com/ringsaturn/tzf/pull/21/commits/e385bfd04952d061d848e1dddaf083a47c41c439"
+        },
+        "date": 1660308707615,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 8940,
+            "unit": "ns/op",
+            "extra": "139098 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 9525,
+            "unit": "ns/op",
+            "extra": "121212 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9485,
+            "unit": "ns/op",
+            "extra": "126208 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 9903,
+            "unit": "ns/op",
+            "extra": "119281 times\n2 procs"
           }
         ]
       }
