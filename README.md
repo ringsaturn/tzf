@@ -29,7 +29,7 @@ import (
 func main() {
 	input := &pb.Timezones{}
 
-	// Lite data, about 16.7MB
+	// Lite data, about 11MB
 	dataFile := tzfrel.LiteData
 
 	// Full data, about 83.5MB
