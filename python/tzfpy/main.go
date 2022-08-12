@@ -17,7 +17,7 @@ var (
 
 func init() {
 	input := &pb.Timezones{}
-	if err := proto.Unmarshal(tzfrel.FullData, input); err != nil {
+	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
 		panic(err)
 	}
 	_finder, _ := tzf.NewFinderFromPB(input)

@@ -77,7 +77,7 @@ Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> wh
 
 ### Which dataset should I use
 
-The lite data(16.7MB) doesn't work well in oceans but works well in most lands.
+The lite data(11MB) doesn't work well in some edge places.
 
 The full data(83.5MB) could work anywhere but requires more memory usage.
 

@@ -62,7 +62,7 @@ jobs:
           auto-push: true
           alert-threshold: "150%"
           comment-on-alert: true
-          fail-on-alert: true
+          fail-on-alert: false
           # gh-pages-branch: "master"
           benchmark-data-dir-path: "docs/"
           alert-comment-cc-users: "@ringsaturn"
@@ -108,6 +108,6 @@ jobs:
           auto-push: true
           alert-threshold: "150%"
           comment-on-alert: true
-          fail-on-alert: true
+          fail-on-alert: false
           benchmark-data-dir-path: "docs/"
           alert-comment-cc-users: "@ringsaturn"
