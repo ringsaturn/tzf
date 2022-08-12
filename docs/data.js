@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660308708001,
+  "lastUpdate": 1660309190095,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6469,6 +6469,37 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000311429724787863",
             "extra": "mean: 55.3229807049837 usec\nrounds: 3887"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3923570c1266622944d4a0408bdf37ad0aaef389",
+          "message": "feat(tool): reduce use Douglas-Peucker (#21)",
+          "timestamp": "2022-08-12T20:58:46+08:00",
+          "tree_id": "87a0cab22fc05335fc4f0911a37eb0729fd3f8b9",
+          "url": "https://github.com/ringsaturn/tzf/commit/3923570c1266622944d4a0408bdf37ad0aaef389"
+        },
+        "date": 1660309188995,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 21346.361874589344,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006987845027799545",
+            "extra": "mean: 46.84639030646237 usec\nrounds: 3528"
           }
         ]
       }
