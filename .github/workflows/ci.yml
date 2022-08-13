@@ -95,7 +95,7 @@ jobs:
         run: |
           pip install pytest pytest-benchmark pytest-memray
           pip install -r python/requirements_dev.txt
-          cd python;make build;
+          cd python;make build
           export PYTHONPATH=`pwd`
           cd tzfpy
           pytest tests.py --memray --benchmark-json output.json
