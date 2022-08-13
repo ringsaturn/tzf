@@ -99,9 +99,8 @@ jobs:
           export PYTHONPATH=`pwd`
           cd tzfpy
           pytest tests.py --memray --benchmark-json output.json
-          pwd
-          ls
-          fil-profile --no-browser run __init__.py
+          cd ..
+          fil-profile --no-browser run tzfpy/__init__.py
 
       - name: Continuous Benchmark
         uses: benchmark-action/github-action-benchmark@v1.14.0
