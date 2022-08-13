@@ -18,7 +18,7 @@ Asia/Shanghai
 
 ```bash
 # local install
-pip install -e . 
+pip install -e .
 
 # lcoal wheel
 python -m build --wheel .
@@ -26,8 +26,9 @@ python -m build --wheel .
 
 ## Performance
 
-tzfpy is fast and stable, test under *2.3 GHz 8-Core Intel Core i9*:
+`tzfpy` is fast and stable but requires more memory compared to other packages.
 
+Test under _2.3 GHz 8-Core Intel Core i9_:
 
 ```
 tzfpy/tests.py ..                                                                                                                                                      [100%]
@@ -42,4 +43,10 @@ test_tzfpy_random     31.3690  220.0310  45.5814  11.6420  44.7730  3.7180   366
 Legend:
   Outliers: 1 Standard Deviation from Mean; 1.5 IQR (InterQuartile Range) from 1st Quartile and 3rd Quartile.
   OPS: Operations Per Second, computed as 1 / Mean
+```
+
+`tzfpy` use about 700MB memory because `tzf` store all polygon in memory.
+
+```bash
+fil-profile run tzfpy/tests.py
 ```
