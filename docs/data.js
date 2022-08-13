@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660403483864,
+  "lastUpdate": 1660403698704,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -8437,6 +8437,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0020988627372254326",
             "extra": "mean: 3.3781797482000058 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "882c44bcfd1e1cf541dccf57e4dc2ade9fa1e3bf",
+          "message": "fix missing hole process (#26)",
+          "timestamp": "2022-08-13T23:13:27+08:00",
+          "tree_id": "3dfec66751c86ec9b9fbe3f2e15b85378735f4d5",
+          "url": "https://github.com/ringsaturn/tzf/commit/882c44bcfd1e1cf541dccf57e4dc2ade9fa1e3bf"
+        },
+        "date": 1660403698343,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 17065.98055600633,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009611590176945578",
+            "extra": "mean: 58.596105668716035 usec\nrounds: 3634"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.24834202187433002,
+            "unit": "iter/sec",
+            "range": "stddev: 0.007944798657300696",
+            "extra": "mean: 4.026704753600001 sec\nrounds: 5"
           }
         ]
       }
