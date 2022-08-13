@@ -7,6 +7,22 @@ import (
 	"github.com/ringsaturn/tzf/pb"
 )
 
+func ReducePoints(points []*pb.Point) []*pb.Point {
+	original := orb.LineString{}
+	for _, point := range points {
+		original = append(original, orb.Point{float64(point.Lng), float64(point.Lat)})
+	}
+	reduced := simplify.DouglasPeucker(0.001).Simplify(original.Clone()).(orb.LineString)
+	res := make([]*pb.Point, 0)
+	for _, orbPoint := range reduced {
+		res = append(res, &pb.Point{
+			Lng: float32(orbPoint.Lon()),
+			Lat: float32(orbPoint.Lat()),
+		})
+	}
+	return res
+}
+
 func Do(input *pb.Timezones, skip int, precise float64, minist float64) *pb.Timezones {
 	output := &pb.Timezones{}
 	for _, timezone := range input.Timezones {
@@ -14,21 +30,15 @@ func Do(input *pb.Timezones, skip int, precise float64, minist float64) *pb.Time
 			Name: timezone.Name,
 		}
 		for _, polygon := range timezone.Polygons {
-			newPoly := &pb.Polygon{}
-
-			original := orb.LineString{}
-			for _, point := range polygon.Points {
-				original = append(original, orb.Point{float64(point.Lng), float64(point.Lat)})
+			newPoly := &pb.Polygon{
+				Points: ReducePoints(polygon.Points),
+				Holes:  make([]*pb.Polygon, 0),
 			}
-			reduced := simplify.DouglasPeucker(0.001).Simplify(original.Clone()).(orb.LineString)
-			for _, orbPoint := range reduced {
-				newPoly.Points = append(newPoly.Points, &pb.Point{
-					Lng: float32(orbPoint.Lon()),
-					Lat: float32(orbPoint.Lat()),
+			for _, hole := range polygon.Holes {
+				newPoly.Holes = append(newPoly.Holes, &pb.Polygon{
+					Points: ReducePoints(hole.Points),
 				})
 			}
-			// TODO(ringsaturn): simplify holes
-			newPoly.Holes = polygon.Holes
 			reducedTimezone.Polygons = append(reducedTimezone.Polygons, newPoly)
 		}
 		output.Timezones = append(output.Timezones, reducedTimezone)
