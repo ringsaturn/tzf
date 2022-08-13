@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660403433074,
+  "lastUpdate": 1660403483864,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -5598,6 +5598,50 @@ window.BENCHMARK_DATA = {
             "value": 8541,
             "unit": "ns/op",
             "extra": "139398 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "id": "6602fd11c9b35997f8e05cb5d4f90ce273adc276",
+          "message": "fix missing hole process",
+          "timestamp": "2022-08-02T12:26:32Z",
+          "url": "https://github.com/ringsaturn/tzf/pull/26/commits/6602fd11c9b35997f8e05cb5d4f90ce273adc276"
+        },
+        "date": 1660403483282,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 10451,
+            "unit": "ns/op",
+            "extra": "125197 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 10223,
+            "unit": "ns/op",
+            "extra": "115866 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 10111,
+            "unit": "ns/op",
+            "extra": "113007 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 10614,
+            "unit": "ns/op",
+            "extra": "112988 times\n2 procs"
           }
         ]
       }
