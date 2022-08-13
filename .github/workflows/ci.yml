@@ -96,8 +96,9 @@ jobs:
           pip install pytest pytest-benchmark pytest-memray
           pip install -r python/requirements_dev.txt
           cd python;make build;
-          cd python/tzfpy;pytest tests.py --memray --benchmark-json output.json
-          cd python/tzfpy;fil-profile --no-browser run tzfpy/__init__.py
+          cd tzfpy
+          pytest tests.py --memray --benchmark-json output.json
+          fil-profile --no-browser run tzfpy/__init__.py
 
       - name: Continuous Benchmark
         uses: benchmark-action/github-action-benchmark@v1.14.0
