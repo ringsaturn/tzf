@@ -102,7 +102,6 @@ func Do(input *BoundaryFile) (*pb.Timezones, error) {
 							Lat: float32(rawCoords[1]),
 						})
 					}
-					polygons = append(polygons, newpbPoly)
 					continue
 				}
 
@@ -118,6 +117,7 @@ func Do(input *BoundaryFile) (*pb.Timezones, error) {
 				newpbPoly.Holes = append(newpbPoly.Holes, holePoly)
 
 			}
+			polygons = append(polygons, newpbPoly)
 		}
 
 		pbtzItem.Polygons = polygons

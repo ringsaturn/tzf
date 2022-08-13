@@ -21,7 +21,6 @@ func FromPbPolygonToGeoMultipolygon(pbpoly []*pb.Polygon) MultiPolygonCoordinate
 			newGeoPoly = append(newGeoPoly, holepolyCoords)
 		}
 		res = append(res, newGeoPoly)
-
 	}
 	return res
 }

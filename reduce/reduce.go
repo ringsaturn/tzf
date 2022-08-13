@@ -27,6 +27,8 @@ func Do(input *pb.Timezones, skip int, precise float64, minist float64) *pb.Time
 					Lat: float32(orbPoint.Lat()),
 				})
 			}
+			// TODO(ringsaturn): simplify holes
+			newPoly.Holes = polygon.Holes
 			reducedTimezone.Polygons = append(reducedTimezone.Polygons, newPoly)
 		}
 		output.Timezones = append(output.Timezones, reducedTimezone)
