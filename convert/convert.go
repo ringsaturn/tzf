@@ -32,6 +32,7 @@ type FeatureItem struct {
 }
 
 type BoundaryFile struct {
+	Type     string         `json:"type"`
 	Features []*FeatureItem `json:"features"`
 }
 
@@ -88,18 +89,37 @@ func Do(input *BoundaryFile) (*pb.Timezones, error) {
 
 		polygons := make([]*pb.Polygon, 0)
 
+		fmt.Println("coordinates", len(coordinates))
 		for _, subcoordinates := range coordinates {
-			for _, geoPoly := range subcoordinates {
-				newpbPoly := &pb.Polygon{
+			fmt.Println("subcoordinates", len(subcoordinates))
+			newpbPoly := &pb.Polygon{
+				Points: make([]*pb.Point, 0),
+				Holes:  make([]*pb.Polygon, 0),
+			}
+			for index, geoPoly := range subcoordinates {
+				fmt.Println("geoPoly", geoPoly)
+				if index == 0 {
+					for _, rawCoords := range geoPoly {
+						newpbPoly.Points = append(newpbPoly.Points, &pb.Point{
+							Lng: float32(rawCoords[0]),
+							Lat: float32(rawCoords[1]),
+						})
+					}
+					polygons = append(polygons, newpbPoly)
+					continue
+				}
+
+				holePoly := &pb.Polygon{
 					Points: make([]*pb.Point, 0),
 				}
 				for _, rawCoords := range geoPoly {
-					newpbPoly.Points = append(newpbPoly.Points, &pb.Point{
+					holePoly.Points = append(holePoly.Points, &pb.Point{
 						Lng: float32(rawCoords[0]),
 						Lat: float32(rawCoords[1]),
 					})
 				}
-				polygons = append(polygons, newpbPoly)
+				newpbPoly.Holes = append(newpbPoly.Holes, holePoly)
+
 			}
 		}
 
