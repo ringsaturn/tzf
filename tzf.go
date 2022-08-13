@@ -72,7 +72,20 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 					Y: float64(point.Lat),
 				})
 			}
-			newPoly := geometry.NewPoly(newPoints, nil, nil)
+
+			holes := [][]geometry.Point{}
+			for _, holePoly := range polygon.Holes {
+				newHolePoints := make([]geometry.Point, 0)
+				for _, point := range holePoly.Points {
+					newHolePoints = append(newHolePoints, geometry.Point{
+						X: float64(point.Lng),
+						Y: float64(point.Lat),
+					})
+				}
+				holes = append(holes, newHolePoints)
+			}
+
+			newPoly := geometry.NewPoly(newPoints, holes, nil)
 			newItem.polys = append(newItem.polys, newPoly)
 		}
 		items = append(items, newItem)

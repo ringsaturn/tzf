@@ -89,15 +89,12 @@ func Do(input *BoundaryFile) (*pb.Timezones, error) {
 
 		polygons := make([]*pb.Polygon, 0)
 
-		fmt.Println("coordinates", len(coordinates))
 		for _, subcoordinates := range coordinates {
-			fmt.Println("subcoordinates", len(subcoordinates))
 			newpbPoly := &pb.Polygon{
 				Points: make([]*pb.Point, 0),
 				Holes:  make([]*pb.Polygon, 0),
 			}
 			for index, geoPoly := range subcoordinates {
-				fmt.Println("geoPoly", geoPoly)
 				if index == 0 {
 					for _, rawCoords := range geoPoly {
 						newpbPoly.Points = append(newpbPoly.Points, &pb.Point{
