@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660373957351,
+  "lastUpdate": 1660374006604,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -5194,6 +5194,54 @@ window.BENCHMARK_DATA = {
             "value": 10400,
             "unit": "ns/op",
             "extra": "118052 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bb001af603b5a1fc7c3d5791aa472e1f951b3d95",
+          "message": "Bump google.golang.org/protobuf from 1.28.0 to 1.28.1 (#23)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-08-13T14:58:11+08:00",
+          "tree_id": "8a546f0cd755689becef4230c1b4c720967f61ff",
+          "url": "https://github.com/ringsaturn/tzf/commit/bb001af603b5a1fc7c3d5791aa472e1f951b3d95"
+        },
+        "date": 1660374005649,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 9514,
+            "unit": "ns/op",
+            "extra": "128770 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 10351,
+            "unit": "ns/op",
+            "extra": "117675 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9816,
+            "unit": "ns/op",
+            "extra": "121873 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 10468,
+            "unit": "ns/op",
+            "extra": "114295 times\n2 procs"
           }
         ]
       }
