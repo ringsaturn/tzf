@@ -45,7 +45,7 @@ Legend:
   OPS: Operations Per Second, computed as 1 / Mean
 ```
 
-`tzfpy` use about 700MB memory because `tzf` store all polygon in memory.
+`tzfpy` use about 130MB memory because `tzf` store all polygon in memory.
 
 ```bash
 fil-profile run tzfpy/tests.py
