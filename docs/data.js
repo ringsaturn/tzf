@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660471771955,
+  "lastUpdate": 1660471822762,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -5782,6 +5782,50 @@ window.BENCHMARK_DATA = {
             "value": 9680,
             "unit": "ns/op",
             "extra": "123981 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "id": "2c5c6a7c228e7ba22c5163b78a88bfdb238df9c5",
+          "message": "fix macos wheel build os",
+          "timestamp": "2022-08-02T12:26:32Z",
+          "url": "https://github.com/ringsaturn/tzf/pull/28/commits/2c5c6a7c228e7ba22c5163b78a88bfdb238df9c5"
+        },
+        "date": 1660471822377,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6714,
+            "unit": "ns/op",
+            "extra": "179061 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7420,
+            "unit": "ns/op",
+            "extra": "163162 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7147,
+            "unit": "ns/op",
+            "extra": "167938 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7801,
+            "unit": "ns/op",
+            "extra": "154215 times\n2 procs"
           }
         ]
       }
