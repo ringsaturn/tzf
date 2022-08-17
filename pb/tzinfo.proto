@@ -5,20 +5,43 @@ package pb;
 option go_package = "github.com/ringsaturn/tzf/pb;pb";
 
 message Point {
-    float lng = 1;
-    float lat = 2;
+  float lng = 1;
+  float lat = 2;
 }
 
 message Polygon {
-    repeated Point points = 1;
-    repeated Polygon holes = 2;
+  repeated Point points = 1;
+  repeated Polygon holes = 2;
 }
 
 message Timezone {
-    repeated Polygon polygons = 1;
-    string name = 2;
+  repeated Polygon polygons = 1;
+  string name = 2;
 }
 
 message Timezones {
-    repeated Timezone timezones = 1;
+  repeated Timezone timezones = 1;
+  bool reuced = 2;  // Reduced data will toggle neighbor search as plan b
+}
+
+enum CompressMethod {
+  Unknown = 0;
+  Polyline =
+      1;  // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+}
+
+message CompressedPolygon {
+  bytes points = 1;
+  repeated CompressedPolygon holes = 2;
+}
+
+// CompressedTimezonesItem designed for binary file as small as possible.
+message CompressedTimezone {
+  repeated CompressedPolygon data = 1;
+  string name = 2;
+}
+
+message CompressedTimezones {
+  CompressMethod method = 1;
+  repeated CompressedTimezone timezones = 2;
 }

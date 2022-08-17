@@ -3,6 +3,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -36,4 +37,5 @@ func main() {
 		panic(err)
 	}
 	_, _ = f.Write(outputBin)
+	fmt.Println(outputPath)
 }

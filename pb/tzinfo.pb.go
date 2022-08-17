@@ -20,6 +20,52 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type CompressMethod int32
+
+const (
+	CompressMethod_Unknown  CompressMethod = 0
+	CompressMethod_Polyline CompressMethod = 1 // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+)
+
+// Enum value maps for CompressMethod.
+var (
+	CompressMethod_name = map[int32]string{
+		0: "Unknown",
+		1: "Polyline",
+	}
+	CompressMethod_value = map[string]int32{
+		"Unknown":  0,
+		"Polyline": 1,
+	}
+)
+
+func (x CompressMethod) Enum() *CompressMethod {
+	p := new(CompressMethod)
+	*p = x
+	return p
+}
+
+func (x CompressMethod) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CompressMethod) Descriptor() protoreflect.EnumDescriptor {
+	return file_pb_tzinfo_proto_enumTypes[0].Descriptor()
+}
+
+func (CompressMethod) Type() protoreflect.EnumType {
+	return &file_pb_tzinfo_proto_enumTypes[0]
+}
+
+func (x CompressMethod) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CompressMethod.Descriptor instead.
+func (CompressMethod) EnumDescriptor() ([]byte, []int) {
+	return file_pb_tzinfo_proto_rawDescGZIP(), []int{0}
+}
+
 type Point struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -191,6 +237,7 @@ type Timezones struct {
 	unknownFields protoimpl.UnknownFields
 
 	Timezones []*Timezone `protobuf:"bytes,1,rep,name=timezones,proto3" json:"timezones,omitempty"`
+	Reuced    bool        `protobuf:"varint,2,opt,name=reuced,proto3" json:"reuced,omitempty"` // Reduced data will toggle neighbor search as plan b
 }
 
 func (x *Timezones) Reset() {
@@ -232,6 +279,179 @@ func (x *Timezones) GetTimezones() []*Timezone {
 	return nil
 }
 
+func (x *Timezones) GetReuced() bool {
+	if x != nil {
+		return x.Reuced
+	}
+	return false
+}
+
+type CompressedPolygon struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Points []byte               `protobuf:"bytes,1,opt,name=points,proto3" json:"points,omitempty"`
+	Holes  []*CompressedPolygon `protobuf:"bytes,2,rep,name=holes,proto3" json:"holes,omitempty"`
+}
+
+func (x *CompressedPolygon) Reset() {
+	*x = CompressedPolygon{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pb_tzinfo_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CompressedPolygon) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedPolygon) ProtoMessage() {}
+
+func (x *CompressedPolygon) ProtoReflect() protoreflect.Message {
+	mi := &file_pb_tzinfo_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedPolygon.ProtoReflect.Descriptor instead.
+func (*CompressedPolygon) Descriptor() ([]byte, []int) {
+	return file_pb_tzinfo_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CompressedPolygon) GetPoints() []byte {
+	if x != nil {
+		return x.Points
+	}
+	return nil
+}
+
+func (x *CompressedPolygon) GetHoles() []*CompressedPolygon {
+	if x != nil {
+		return x.Holes
+	}
+	return nil
+}
+
+// CompressedTimezonesItem designed for binary file as small as possible.
+type CompressedTimezone struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Data []*CompressedPolygon `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
+	Name string               `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (x *CompressedTimezone) Reset() {
+	*x = CompressedTimezone{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pb_tzinfo_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CompressedTimezone) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedTimezone) ProtoMessage() {}
+
+func (x *CompressedTimezone) ProtoReflect() protoreflect.Message {
+	mi := &file_pb_tzinfo_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedTimezone.ProtoReflect.Descriptor instead.
+func (*CompressedTimezone) Descriptor() ([]byte, []int) {
+	return file_pb_tzinfo_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CompressedTimezone) GetData() []*CompressedPolygon {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *CompressedTimezone) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type CompressedTimezones struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Method    CompressMethod        `protobuf:"varint,1,opt,name=method,proto3,enum=pb.CompressMethod" json:"method,omitempty"`
+	Timezones []*CompressedTimezone `protobuf:"bytes,2,rep,name=timezones,proto3" json:"timezones,omitempty"`
+}
+
+func (x *CompressedTimezones) Reset() {
+	*x = CompressedTimezones{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pb_tzinfo_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CompressedTimezones) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedTimezones) ProtoMessage() {}
+
+func (x *CompressedTimezones) ProtoReflect() protoreflect.Message {
+	mi := &file_pb_tzinfo_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedTimezones.ProtoReflect.Descriptor instead.
+func (*CompressedTimezones) Descriptor() ([]byte, []int) {
+	return file_pb_tzinfo_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CompressedTimezones) GetMethod() CompressMethod {
+	if x != nil {
+		return x.Method
+	}
+	return CompressMethod_Unknown
+}
+
+func (x *CompressedTimezones) GetTimezones() []*CompressedTimezone {
+	if x != nil {
+		return x.Timezones
+	}
+	return nil
+}
+
 var File_pb_tzinfo_proto protoreflect.FileDescriptor
 
 var file_pb_tzinfo_proto_rawDesc = []byte{
@@ -248,13 +468,36 @@ var file_pb_tzinfo_proto_rawDesc = []byte{
 	0x27, 0x0a, 0x08, 0x70, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
 	0x0b, 0x32, 0x0b, 0x2e, 0x70, 0x62, 0x2e, 0x50, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x52, 0x08,
 	0x70, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x37, 0x0a, 0x09,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x4f, 0x0a, 0x09,
 	0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x12, 0x2a, 0x0a, 0x09, 0x74, 0x69, 0x6d,
 	0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x70,
 	0x62, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
-	0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x42, 0x21, 0x5a, 0x1f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x72, 0x69, 0x6e, 0x67, 0x73, 0x61, 0x74, 0x75, 0x72, 0x6e, 0x2f, 0x74,
-	0x7a, 0x66, 0x2f, 0x70, 0x62, 0x3b, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x75, 0x63, 0x65, 0x64, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x72, 0x65, 0x75, 0x63, 0x65, 0x64, 0x22, 0x58, 0x0a,
+	0x11, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x50, 0x6f, 0x6c, 0x79, 0x67,
+	0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0c, 0x52, 0x06, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x12, 0x2b, 0x0a, 0x05, 0x68, 0x6f,
+	0x6c, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70, 0x62, 0x2e, 0x43,
+	0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x50, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e,
+	0x52, 0x05, 0x68, 0x6f, 0x6c, 0x65, 0x73, 0x22, 0x53, 0x0a, 0x12, 0x43, 0x6f, 0x6d, 0x70, 0x72,
+	0x65, 0x73, 0x73, 0x65, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x12, 0x29, 0x0a,
+	0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70, 0x62,
+	0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x50, 0x6f, 0x6c, 0x79, 0x67,
+	0x6f, 0x6e, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x77, 0x0a, 0x13,
+	0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f,
+	0x6e, 0x65, 0x73, 0x12, 0x2a, 0x0a, 0x06, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0e, 0x32, 0x12, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73,
+	0x73, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x52, 0x06, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12,
+	0x34, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x16, 0x2e, 0x70, 0x62, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73,
+	0x65, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x2a, 0x2b, 0x0a, 0x0e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73,
+	0x73, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x0b, 0x0a, 0x07, 0x55, 0x6e, 0x6b, 0x6e, 0x6f,
+	0x77, 0x6e, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x50, 0x6f, 0x6c, 0x79, 0x6c, 0x69, 0x6e, 0x65,
+	0x10, 0x01, 0x42, 0x21, 0x5a, 0x1f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x72, 0x69, 0x6e, 0x67, 0x73, 0x61, 0x74, 0x75, 0x72, 0x6e, 0x2f, 0x74, 0x7a, 0x66, 0x2f,
+	0x70, 0x62, 0x3b, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -269,23 +512,32 @@ func file_pb_tzinfo_proto_rawDescGZIP() []byte {
 	return file_pb_tzinfo_proto_rawDescData
 }
 
-var file_pb_tzinfo_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_pb_tzinfo_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_pb_tzinfo_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_pb_tzinfo_proto_goTypes = []interface{}{
-	(*Point)(nil),     // 0: pb.Point
-	(*Polygon)(nil),   // 1: pb.Polygon
-	(*Timezone)(nil),  // 2: pb.Timezone
-	(*Timezones)(nil), // 3: pb.Timezones
+	(CompressMethod)(0),         // 0: pb.CompressMethod
+	(*Point)(nil),               // 1: pb.Point
+	(*Polygon)(nil),             // 2: pb.Polygon
+	(*Timezone)(nil),            // 3: pb.Timezone
+	(*Timezones)(nil),           // 4: pb.Timezones
+	(*CompressedPolygon)(nil),   // 5: pb.CompressedPolygon
+	(*CompressedTimezone)(nil),  // 6: pb.CompressedTimezone
+	(*CompressedTimezones)(nil), // 7: pb.CompressedTimezones
 }
 var file_pb_tzinfo_proto_depIdxs = []int32{
-	0, // 0: pb.Polygon.points:type_name -> pb.Point
-	1, // 1: pb.Polygon.holes:type_name -> pb.Polygon
-	1, // 2: pb.Timezone.polygons:type_name -> pb.Polygon
-	2, // 3: pb.Timezones.timezones:type_name -> pb.Timezone
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	1, // 0: pb.Polygon.points:type_name -> pb.Point
+	2, // 1: pb.Polygon.holes:type_name -> pb.Polygon
+	2, // 2: pb.Timezone.polygons:type_name -> pb.Polygon
+	3, // 3: pb.Timezones.timezones:type_name -> pb.Timezone
+	5, // 4: pb.CompressedPolygon.holes:type_name -> pb.CompressedPolygon
+	5, // 5: pb.CompressedTimezone.data:type_name -> pb.CompressedPolygon
+	0, // 6: pb.CompressedTimezones.method:type_name -> pb.CompressMethod
+	6, // 7: pb.CompressedTimezones.timezones:type_name -> pb.CompressedTimezone
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_pb_tzinfo_proto_init() }
@@ -342,19 +594,56 @@ func file_pb_tzinfo_proto_init() {
 				return nil
 			}
 		}
+		file_pb_tzinfo_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CompressedPolygon); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pb_tzinfo_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CompressedTimezone); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pb_tzinfo_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CompressedTimezones); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_pb_tzinfo_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   4,
+			NumEnums:      1,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_pb_tzinfo_proto_goTypes,
 		DependencyIndexes: file_pb_tzinfo_proto_depIdxs,
+		EnumInfos:         file_pb_tzinfo_proto_enumTypes,
 		MessageInfos:      file_pb_tzinfo_proto_msgTypes,
 	}.Build()
 	File_pb_tzinfo_proto = out.File
