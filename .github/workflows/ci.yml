@@ -40,9 +40,6 @@ jobs:
       - name: Install test related deps
         run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
 
-      - name: Build
-        run: make build
-
       - name: Test
         run: |
           make test
