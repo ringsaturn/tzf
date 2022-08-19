@@ -69,7 +69,7 @@ jobs:
       - name: Convert GeoJSON to pb
         run: |
           geojson2tzpb data/combined-with-oceans.json | xargs reducetzpb | xargs compresstzpb
-          ls -al data/
+          ls -alh data/
 
       - name: Bench
         run: |
