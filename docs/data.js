@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660925290125,
+  "lastUpdate": 1660925341488,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6138,6 +6138,54 @@ window.BENCHMARK_DATA = {
             "value": 7891,
             "unit": "ns/op",
             "extra": "154046 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0bd89dc0644c9d4b9dbe4a58d1e26ce3a7d83a57",
+          "message": "feat: use polyline compress polygon (#29)",
+          "timestamp": "2022-08-20T00:06:58+08:00",
+          "tree_id": "f0025482eee1eeeff91f4f64dc1713b1f2ff04c9",
+          "url": "https://github.com/ringsaturn/tzf/commit/0bd89dc0644c9d4b9dbe4a58d1e26ce3a7d83a57"
+        },
+        "date": 1660925341042,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6702,
+            "unit": "ns/op",
+            "extra": "178683 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7309,
+            "unit": "ns/op",
+            "extra": "163472 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7063,
+            "unit": "ns/op",
+            "extra": "168940 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7764,
+            "unit": "ns/op",
+            "extra": "153938 times\n2 procs"
           }
         ]
       }
