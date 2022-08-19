@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660925077661,
+  "lastUpdate": 1660925290125,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -9523,6 +9523,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.05536114545051077",
             "extra": "mean: 4.198808842800003 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0bd89dc0644c9d4b9dbe4a58d1e26ce3a7d83a57",
+          "message": "feat: use polyline compress polygon (#29)",
+          "timestamp": "2022-08-20T00:06:58+08:00",
+          "tree_id": "f0025482eee1eeeff91f4f64dc1713b1f2ff04c9",
+          "url": "https://github.com/ringsaturn/tzf/commit/0bd89dc0644c9d4b9dbe4a58d1e26ce3a7d83a57"
+        },
+        "date": 1660925289457,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 20855.83736267623,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007922706925799823",
+            "extra": "mean: 47.94820666321497 usec\nrounds: 3692"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.34460183552436435,
+            "unit": "iter/sec",
+            "range": "stddev: 0.011970699244651243",
+            "extra": "mean: 2.901899807000004 sec\nrounds: 5"
           }
         ]
       }
