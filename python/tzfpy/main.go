@@ -16,11 +16,11 @@ var (
 )
 
 func init() {
-	input := &pb.Timezones{}
-	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
+	compressedInput := &pb.CompressedTimezones{}
+	if err := proto.Unmarshal(tzfrel.LiteCompressData, compressedInput); err != nil {
 		panic(err)
 	}
-	_finder, _ := tzf.NewFinderFromPB(input)
+	_finder, _ := tzf.NewFinderFromCompressed(compressedInput)
 	finder = _finder
 }
 
