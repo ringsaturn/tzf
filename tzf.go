@@ -10,6 +10,7 @@ import (
 
 	"github.com/ringsaturn/tzf/convert"
 	"github.com/ringsaturn/tzf/pb"
+	"github.com/ringsaturn/tzf/reduce"
 	"github.com/tidwall/geojson/geometry"
 )
 
@@ -33,9 +34,14 @@ func (i *tzitem) ContainsPoint(p geometry.Point) bool {
 	return false
 }
 
+// Finder is based on point-in-polygon search algo.
+//
+// Memeory will use about 100MB if lite data and 1G if full data.
+// Performance is very stable and very accuate.
 type Finder struct {
-	items []*tzitem
-	names []string
+	items   []*tzitem
+	names   []string
+	reduced bool
 }
 
 func NewFinderFromRawJSON(input *convert.BoundaryFile) (*Finder, error) {
@@ -93,7 +99,16 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 	finder := &Finder{}
 	finder.items = items
 	finder.names = names
+	finder.reduced = input.Reuced
 	return finder, nil
+}
+
+func NewFinderFromCompressed(input *pb.CompressedTimezones) (*Finder, error) {
+	tzs, err := reduce.Decompress(input)
+	if err != nil {
+		return nil, err
+	}
+	return NewFinderFromPB(tzs)
 }
 
 func (f *Finder) getItem(lng float64, lat float64) (*tzitem, error) {
