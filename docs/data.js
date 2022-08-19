@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1660927308919,
+  "lastUpdate": 1660927385895,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6322,6 +6322,54 @@ window.BENCHMARK_DATA = {
             "value": 10160,
             "unit": "ns/op",
             "extra": "112160 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0b4ef4e37d0a29c387423d91922ed33a67f7f65f",
+          "message": "Update ci.yml",
+          "timestamp": "2022-08-20T00:40:38+08:00",
+          "tree_id": "09ce04f7728d8ca5553e05f91f81cf5f1764da57",
+          "url": "https://github.com/ringsaturn/tzf/commit/0b4ef4e37d0a29c387423d91922ed33a67f7f65f"
+        },
+        "date": 1660927385114,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 8424,
+            "unit": "ns/op",
+            "extra": "155707 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 8049,
+            "unit": "ns/op",
+            "extra": "152367 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7586,
+            "unit": "ns/op",
+            "extra": "164884 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 8780,
+            "unit": "ns/op",
+            "extra": "138177 times\n2 procs"
           }
         ]
       }
