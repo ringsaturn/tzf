@@ -5,14 +5,9 @@ install:
 	go install github.com/mfridman/tparse@latest
 	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
 
-build:
-	cd cmd/reducePolygon;go build
-	cd cmd/tzjson2pb;go build
-
 fmt:
 	find pb/ -iname *.proto | xargs clang-format -i --style=Google
 	go fmt ./...
-
 
 .PHONY:pb
 pb:
@@ -22,14 +17,15 @@ pb:
 			$(PROTO_FILES)
 
 test:
-	golangci-lint run ./...
+	# golangci-lint run ./...
 	go test -json -race ./... -v -coverprofile=coverage.out  | tparse -all
 
 cover: test
 	go tool cover -html=coverage.out -o=coverage.html
 
-compare_lite_full:
-	go run cmd/compare-lite-full/main.go
+comparetzpb_gen:
+	go install github.com/ringsaturn/tzf/cmd/comparetzpb@latest
+	comparetzpb
 
 bench:
 	go test -bench=. ./...
