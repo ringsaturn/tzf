@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1661609674845,
+  "lastUpdate": 1661609692223,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6610,6 +6610,54 @@ window.BENCHMARK_DATA = {
             "value": 7410,
             "unit": "ns/op",
             "extra": "160116 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e8ace37b9cd3185bb8ddb0588b6d0976d840f731",
+          "message": "Bump actions/setup-go from 2 to 3 (#33)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-08-27T22:12:38+08:00",
+          "tree_id": "24a202e61bacb22829ac31b65a7b0860cdd865bc",
+          "url": "https://github.com/ringsaturn/tzf/commit/e8ace37b9cd3185bb8ddb0588b6d0976d840f731"
+        },
+        "date": 1661609691653,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6698,
+            "unit": "ns/op",
+            "extra": "178420 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7280,
+            "unit": "ns/op",
+            "extra": "163926 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 6233,
+            "unit": "ns/op",
+            "extra": "188491 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 6780,
+            "unit": "ns/op",
+            "extra": "154875 times\n2 procs"
           }
         ]
       }
