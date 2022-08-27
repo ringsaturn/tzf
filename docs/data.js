@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1661608846383,
+  "lastUpdate": 1661608895167,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6418,6 +6418,54 @@ window.BENCHMARK_DATA = {
             "value": 9257,
             "unit": "ns/op",
             "extra": "129210 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1c28947a8b8dd2522d15c04e2db1ea41a0785151",
+          "message": "Update dependabot.yml",
+          "timestamp": "2022-08-27T21:59:05+08:00",
+          "tree_id": "1266be080870e4870b66c8b0c38ee266cf9befcb",
+          "url": "https://github.com/ringsaturn/tzf/commit/1c28947a8b8dd2522d15c04e2db1ea41a0785151"
+        },
+        "date": 1661608893854,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 8545,
+            "unit": "ns/op",
+            "extra": "132291 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 9604,
+            "unit": "ns/op",
+            "extra": "114435 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9000,
+            "unit": "ns/op",
+            "extra": "133023 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 10278,
+            "unit": "ns/op",
+            "extra": "103419 times\n2 procs"
           }
         ]
       }
