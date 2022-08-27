@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1661609649379,
+  "lastUpdate": 1661609674845,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6562,6 +6562,54 @@ window.BENCHMARK_DATA = {
             "value": 9440,
             "unit": "ns/op",
             "extra": "125772 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b91f626e23f8da5f5f162a95d610304c73c77d1c",
+          "message": "Bump actions/cache from 2 to 3 (#34)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-08-27T22:12:30+08:00",
+          "tree_id": "5dea72d156b9ebbe310241ed827f2196182a4ed1",
+          "url": "https://github.com/ringsaturn/tzf/commit/b91f626e23f8da5f5f162a95d610304c73c77d1c"
+        },
+        "date": 1661609674487,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6389,
+            "unit": "ns/op",
+            "extra": "189339 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 6986,
+            "unit": "ns/op",
+            "extra": "173422 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 6728,
+            "unit": "ns/op",
+            "extra": "177036 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7410,
+            "unit": "ns/op",
+            "extra": "160116 times\n2 procs"
           }
         ]
       }
