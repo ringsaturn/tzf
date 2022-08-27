@@ -52,7 +52,7 @@ jobs:
   #         cd python;make build
 
   #     - name: Set up Python
-  #       uses: actions/setup-python@v3
+  #       uses: actions/setup-python@v4
   #       with:
   #         cache: pip
   #         cache-dependency-path: ".github/workflows/deploy.yml"
@@ -94,7 +94,7 @@ jobs:
           cd python;make build
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           cache: pip
           cache-dependency-path: ".github/workflows/deploy.yml"
@@ -141,7 +141,7 @@ jobs:
           cd python;make build
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           cache: pip
           cache-dependency-path: ".github/workflows/deploy.yml"
@@ -177,7 +177,7 @@ jobs:
           path: python/dist
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           cache: pip
           cache-dependency-path: ".github/workflows/deploy.yml"
