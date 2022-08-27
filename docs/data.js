@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1661609641833,
+  "lastUpdate": 1661609647824,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6514,6 +6514,54 @@ window.BENCHMARK_DATA = {
             "value": 7390,
             "unit": "ns/op",
             "extra": "162188 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6a7fde66bc1b82b5cc9f6a33d980709014faf999",
+          "message": "Bump pypa/cibuildwheel from 2.8.1 to 2.9.0 (#32)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-08-27T22:11:51+08:00",
+          "tree_id": "571c7718ab1e89dfffc0828850c28ed2fc74c477",
+          "url": "https://github.com/ringsaturn/tzf/commit/6a7fde66bc1b82b5cc9f6a33d980709014faf999"
+        },
+        "date": 1661609647093,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 8306,
+            "unit": "ns/op",
+            "extra": "150327 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 8865,
+            "unit": "ns/op",
+            "extra": "135542 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 8500,
+            "unit": "ns/op",
+            "extra": "140224 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 9440,
+            "unit": "ns/op",
+            "extra": "125772 times\n2 procs"
           }
         ]
       }
