@@ -47,7 +47,7 @@ jobs:
         if: ${{ github.ref_name == 'main' }}
         with:
           name: "Probuf HTML File"
-          path: "pb/index_pb.html"
+          path: "pb/pb.html"
 
   push-doc:
     needs: build-doc
@@ -66,7 +66,7 @@ jobs:
 
       - name: Push file update
         run: |
-          git add ./docs/index_pb.html
+          git add ./docs/pb.html
           git config user.name github-actions
           git config user.email github-actions@github.com
           git commit -m "Update Probuf HTML doc"

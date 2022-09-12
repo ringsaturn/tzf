@@ -13,7 +13,7 @@ fmt:
 .PHONY:pb
 pb:
 	protoc  --proto_path=. \
-			--doc_out=. --doc_opt=html,index_pb.html,source_relative \
+			--doc_out=. --doc_opt=html,pb.html,source_relative \
 			--go_out=paths=source_relative:. \
 			$(PROTO_FILES)
 
