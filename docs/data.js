@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1661609692223,
+  "lastUpdate": 1663002264450,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -10529,6 +10529,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.11011444261100602",
             "extra": "mean: 4.302362404000002 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "34bc009bebac93d95cf0b23a704ea8db946b7147",
+          "message": "build html doc in ci and push to gh-pages (#37)",
+          "timestamp": "2022-09-13T01:02:59+08:00",
+          "tree_id": "90ecaafd74a52e61e2932628fdff880b2f9bd884",
+          "url": "https://github.com/ringsaturn/tzf/commit/34bc009bebac93d95cf0b23a704ea8db946b7147"
+        },
+        "date": 1663002264098,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 20398.38981220617,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008662468131277149",
+            "extra": "mean: 49.023477304155215 usec\nrounds: 3503"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.3400523806009477,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0024190465997368455",
+            "extra": "mean: 2.9407234209999613 sec\nrounds: 5"
           }
         ]
       }
