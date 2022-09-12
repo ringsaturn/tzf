@@ -3,6 +3,7 @@ PROTO_FILES=$(shell find pb -name *.proto)
 install:
 	go mod download
 	go install github.com/mfridman/tparse@latest
+	go install github.com/golang/protobuf/protoc-gen-go@latest
 	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
 
 fmt:
@@ -12,7 +13,7 @@ fmt:
 .PHONY:pb
 pb:
 	protoc  --proto_path=. \
-			--doc_out=. --doc_opt=html,index.html,source_relative \
+			--doc_out=. --doc_opt=html,pb.html,source_relative \
 			--go_out=paths=source_relative:. \
 			$(PROTO_FILES)
 
