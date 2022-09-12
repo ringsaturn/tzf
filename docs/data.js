@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1663002264450,
+  "lastUpdate": 1663002320412,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6658,6 +6658,54 @@ window.BENCHMARK_DATA = {
             "value": 6780,
             "unit": "ns/op",
             "extra": "154875 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "34bc009bebac93d95cf0b23a704ea8db946b7147",
+          "message": "build html doc in ci and push to gh-pages (#37)",
+          "timestamp": "2022-09-13T01:02:59+08:00",
+          "tree_id": "90ecaafd74a52e61e2932628fdff880b2f9bd884",
+          "url": "https://github.com/ringsaturn/tzf/commit/34bc009bebac93d95cf0b23a704ea8db946b7147"
+        },
+        "date": 1663002319761,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 11641,
+            "unit": "ns/op",
+            "extra": "105286 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 4940,
+            "unit": "ns/op",
+            "extra": "238080 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 4800,
+            "unit": "ns/op",
+            "extra": "247315 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 5329,
+            "unit": "ns/op",
+            "extra": "225686 times\n2 procs"
           }
         ]
       }
