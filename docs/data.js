@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1663002320412,
+  "lastUpdate": 1663589236253,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -10615,6 +10615,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0024190465997368455",
             "extra": "mean: 2.9407234209999613 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2033fb32952d0aa1690eeee2b46c4fec1ee3981b",
+          "message": "Bump github.com/tidwall/geojson from 1.3.5 to 1.3.6 (#38)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-09-19T20:05:57+08:00",
+          "tree_id": "29a5989ed78a7682a8dddd747ddbe936e6aa3796",
+          "url": "https://github.com/ringsaturn/tzf/commit/2033fb32952d0aa1690eeee2b46c4fec1ee3981b"
+        },
+        "date": 1663589235597,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 21039.423579891507,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007986290964528482",
+            "extra": "mean: 47.52981925587319 usec\nrounds: 3978"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.34297679846241524,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0018260799660992546",
+            "extra": "mean: 2.9156491181999997 sec\nrounds: 5"
           }
         ]
       }
