@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1663589236253,
+  "lastUpdate": 1663589275842,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6706,6 +6706,54 @@ window.BENCHMARK_DATA = {
             "value": 5329,
             "unit": "ns/op",
             "extra": "225686 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2033fb32952d0aa1690eeee2b46c4fec1ee3981b",
+          "message": "Bump github.com/tidwall/geojson from 1.3.5 to 1.3.6 (#38)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-09-19T20:05:57+08:00",
+          "tree_id": "29a5989ed78a7682a8dddd747ddbe936e6aa3796",
+          "url": "https://github.com/ringsaturn/tzf/commit/2033fb32952d0aa1690eeee2b46c4fec1ee3981b"
+        },
+        "date": 1663589275416,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6723,
+            "unit": "ns/op",
+            "extra": "178858 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7254,
+            "unit": "ns/op",
+            "extra": "154225 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7074,
+            "unit": "ns/op",
+            "extra": "168565 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7742,
+            "unit": "ns/op",
+            "extra": "156537 times\n2 procs"
           }
         ]
       }
