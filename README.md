@@ -1,14 +1,6 @@
 # TZF: a timezone finder for Go&Python. [![Go Reference](https://pkg.go.dev/badge/github.com/ringsaturn/tzf.svg)](https://pkg.go.dev/github.com/ringsaturn/tzf) [![PyPI](https://img.shields.io/pypi/v/tzfpy)](https://pypi.org/project/tzfpy/)
 
-```mermaid
-graph TD
-    D[Probuf based Bin file]
-    H[Polygon search component]
-    D --> |Reduce via cmd/reducePolygon|D
-    A[Raw timezone boundary JSON file] --> |Convert via cmd/tzjson2pb|D
-    D --> H
-    H --> GetTimezone
-```
+![](https://github.com/ringsaturn/tzf/blob/gh-pages/docs/tzf-social-media.png?raw=true)
 
 ## Quick Start
 
@@ -74,6 +66,16 @@ Check <https://github.com/ringsaturn/tzf/tree/main/python>
 Original data download from <https://github.com/evansiroky/timezone-boundary-builder>.
 
 Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> which has Go's `embed` support.
+
+```mermaid
+graph TD
+    D[Probuf based Bin file]
+    H[Polygon search component]
+    D --> |Reduce via cmd/reducePolygon|D
+    A[Raw timezone boundary JSON file] --> |Convert via cmd/tzjson2pb|D
+    D --> H
+    H --> GetTimezone
+```
 
 ### Which dataset should I use
 
