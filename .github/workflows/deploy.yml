@@ -58,7 +58,7 @@ jobs:
   #         cache-dependency-path: ".github/workflows/deploy.yml"
 
   #     - name: Build wheels
-  #       uses: pypa/cibuildwheel@v2.9.0
+  #       uses: pypa/cibuildwheel@v2.10.2
   #       with:
   #         package-dir: python
   #         output-dir: python/dist
@@ -100,7 +100,7 @@ jobs:
           cache-dependency-path: ".github/workflows/deploy.yml"
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
+        uses: pypa/cibuildwheel@v2.10.2
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
@@ -147,7 +147,7 @@ jobs:
           cache-dependency-path: ".github/workflows/deploy.yml"
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
+        uses: pypa/cibuildwheel@v2.10.2
         with:
           package-dir: python
           output-dir: python/dist
