@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1665329583643,
+  "lastUpdate": 1665329612309,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6802,6 +6802,54 @@ window.BENCHMARK_DATA = {
             "value": 9158,
             "unit": "ns/op",
             "extra": "131212 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3136722aa3300f1607875dd93c9c745ab6366c4a",
+          "message": "Bump pypa/cibuildwheel from 2.9.0 to 2.10.2 (#39)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-10-09T23:31:07+08:00",
+          "tree_id": "22ea2c5efc5e74e6407e248ad082e26b4c9fa3e7",
+          "url": "https://github.com/ringsaturn/tzf/commit/3136722aa3300f1607875dd93c9c745ab6366c4a"
+        },
+        "date": 1665329610801,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 8101,
+            "unit": "ns/op",
+            "extra": "144481 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 9093,
+            "unit": "ns/op",
+            "extra": "127438 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 8816,
+            "unit": "ns/op",
+            "extra": "137095 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 9799,
+            "unit": "ns/op",
+            "extra": "121604 times\n2 procs"
           }
         ]
       }
