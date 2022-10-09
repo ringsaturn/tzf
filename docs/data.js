@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1665329569869,
+  "lastUpdate": 1665329583643,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -10825,6 +10825,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0010960687428968505",
             "extra": "mean: 2.924042214199994 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3136722aa3300f1607875dd93c9c745ab6366c4a",
+          "message": "Bump pypa/cibuildwheel from 2.9.0 to 2.10.2 (#39)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-10-09T23:31:07+08:00",
+          "tree_id": "22ea2c5efc5e74e6407e248ad082e26b4c9fa3e7",
+          "url": "https://github.com/ringsaturn/tzf/commit/3136722aa3300f1607875dd93c9c745ab6366c4a"
+        },
+        "date": 1665329582236,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 9994.367581731445,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003193000610169443",
+            "extra": "mean: 100.05635592469952 usec\nrounds: 2169"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.17364271676255302,
+            "unit": "iter/sec",
+            "range": "stddev: 0.05274927201804235",
+            "extra": "mean: 5.7589515912000255 sec\nrounds: 5"
           }
         ]
       }
