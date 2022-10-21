@@ -22,8 +22,11 @@ github.com/stretchr/objx v0.3.0/go.mod h1:qt09Ya8vawLte6SNmTgCsAVtYtaKzEcn8ATUoH
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/tidwall/cities v0.1.0 h1:CVNkmMf7NEC9Bvokf5GoSsArHCKRMTgLuubRTHnH0mE=
 github.com/tidwall/cities v0.1.0/go.mod h1:lV/HDp2gCcRcHJWqgt6Di54GiDrTZwh1aG2ZUPNbqa4=
 github.com/tidwall/geoindex v1.4.4/go.mod h1:rvVVNEFfkJVWGUdEfU8QaoOg/9zFX0h9ofWzA60mz1I=
+github.com/tidwall/geoindex v1.7.0 h1:jtk41sfgwIt8MEDyC3xyKSj75iXXf6rjReJGDNPtR5o=
+github.com/tidwall/geoindex v1.7.0/go.mod h1:rvVVNEFfkJVWGUdEfU8QaoOg/9zFX0h9ofWzA60mz1I=
 github.com/tidwall/geojson v1.3.6 h1:ZbpDNwdhXyDe8XGTplGVaGrcS2ViFaSoo3QBNXe1uhM=
 github.com/tidwall/geojson v1.3.6/go.mod h1:1cn3UWfSYCJOq53NZoQ9rirdw89+DM0vw+ZOAVvuReg=
 github.com/tidwall/gjson v1.12.1/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
@@ -32,6 +35,8 @@ github.com/tidwall/lotsa v1.0.2/go.mod h1:X6NiU+4yHA3fE3Puvpnn1XMDrFZrE9JO2/w+UM
 github.com/tidwall/match v1.1.1/go.mod h1:eRSPERbgtNPcGhD8UCthc6PmLEQXEWd3PRB5JTxsfmM=
 github.com/tidwall/pretty v1.2.0/go.mod h1:ITEVvHYasfjBbM0u2Pg8T2nJnzm8xPwvNhhsoaGGjNU=
 github.com/tidwall/rtree v1.3.1/go.mod h1:S+JSsqPTI8LfWA4xHBo5eXzie8WJLVFeppAutSegl6M=
+github.com/tidwall/rtree v1.9.2 h1:6HiSU/bf4a7l2smEC+fEum/WloHMFCIQKWHjahm0Do8=
+github.com/tidwall/rtree v1.9.2/go.mod h1:iDJQ9NBRtbfKkzZu02za+mIlaP+bjYPnunbSNidpbCQ=
 github.com/tidwall/sjson v1.2.4/go.mod h1:098SZ494YoMWPmMO6ct4dcFnqxwj9r/gF0Etp19pSNM=
 github.com/twpayne/go-polyline v1.1.1 h1:/tSF1BR7rN4HWj4XKqvRUNrCiYVMCvywxTFVofvDV0w=
 github.com/twpayne/go-polyline v1.1.1/go.mod h1:ybd9IWWivW/rlXPXuuckeKUyF3yrIim+iqA7kSl4NFY=

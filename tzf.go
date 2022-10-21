@@ -12,6 +12,7 @@ import (
 	"github.com/ringsaturn/tzf/pb"
 	"github.com/ringsaturn/tzf/reduce"
 	"github.com/tidwall/geojson/geometry"
+	"github.com/tidwall/rtree"
 )
 
 type tzitem struct {
@@ -34,6 +35,34 @@ func (i *tzitem) ContainsPoint(p geometry.Point) bool {
 	return false
 }
 
+func (i *tzitem) GetMinMax() ([2]float64, [2]float64) {
+	retmin := [2]float64{
+		i.polys[0].Rect().Min.X,
+		i.polys[0].Rect().Min.Y,
+	}
+	retmax := [2]float64{
+		i.polys[0].Rect().Max.X,
+		i.polys[0].Rect().Max.Y,
+	}
+
+	for _, poly := range i.polys {
+		minx := poly.Rect().Min.X
+		miny := poly.Rect().Min.Y
+		if minx < retmin[0] && miny < retmin[1] {
+			retmin[0] = minx
+			retmin[1] = miny
+		}
+
+		maxx := poly.Rect().Max.X
+		maxy := poly.Rect().Max.Y
+		if minx < retmax[0] && miny < retmax[1] {
+			retmax[0] = maxx
+			retmax[1] = maxy
+		}
+	}
+	return retmin, retmax
+}
+
 // Finder is based on point-in-polygon search algo.
 //
 // Memeory will use about 100MB if lite data and 1G if full data.
@@ -42,6 +71,7 @@ type Finder struct {
 	items   []*tzitem
 	names   []string
 	reduced bool
+	tr      *rtree.RTreeG[*tzitem]
 }
 
 func NewFinderFromRawJSON(input *convert.BoundaryFile) (*Finder, error) {
@@ -56,6 +86,8 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 	now := time.Now()
 	items := make([]*tzitem, 0)
 	names := make([]string, 0)
+
+	tr := &rtree.RTreeG[*tzitem]{}
 	for _, timezone := range input.Timezones {
 		names = append(names, timezone.Name)
 		location, err := time.LoadLocation(timezone.Name)
@@ -95,11 +127,14 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 			newItem.polys = append(newItem.polys, newPoly)
 		}
 		items = append(items, newItem)
+		minp, maxp := newItem.GetMinMax()
+		tr.Insert(minp, maxp, newItem)
 	}
 	finder := &Finder{}
 	finder.items = items
 	finder.names = names
 	finder.reduced = input.Reuced
+	finder.tr = tr
 	return finder, nil
 }
 
@@ -145,7 +180,18 @@ func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
 		X: float64(lng),
 		Y: float64(lat),
 	}
-	for _, item := range f.items {
+	candicates := []*tzitem{}
+	for _, shifted := range []float64{3, 10, 15} {
+		f.tr.Search([2]float64{lng - shifted, lat - shifted}, [2]float64{lng + shifted, lat + shifted}, func(min, max [2]float64, data *tzitem) bool {
+			candicates = append(candicates, data)
+			return true
+		})
+		if len(candicates) > 10 {
+			break
+		}
+	}
+
+	for _, item := range candicates {
 		if item.ContainsPoint(p) {
 			return item.pbtz, nil
 		}
