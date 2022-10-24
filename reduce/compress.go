@@ -56,7 +56,7 @@ func Compress(input *pb.Timezones, method pb.CompressMethod) (*pb.CompressedTime
 	case pb.CompressMethod_Polyline:
 		return CompressWithPolyline(input), nil
 	default:
-		return nil, fmt.Errorf("tzf/reduce: unknwon method %v", method)
+		return nil, fmt.Errorf("tzf/reduce: unknown method %v", method)
 	}
 }
 
@@ -88,6 +88,6 @@ func Decompress(input *pb.CompressedTimezones) (*pb.Timezones, error) {
 	case pb.CompressMethod_Polyline:
 		return DecompressWithPolyline(input), nil
 	default:
-		return nil, fmt.Errorf("tzf/reduce: unknwon method %v", input.Method)
+		return nil, fmt.Errorf("tzf/reduce: unknown method %v", input.Method)
 	}
 }
