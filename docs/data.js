@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1666355479912,
+  "lastUpdate": 1666626532014,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -11131,6 +11131,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.05227737203338561",
             "extra": "mean: 4.430661367399997 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7deacdd7a4963496f564783c4a322486ad46a09e",
+          "message": "Bump github.com/tidwall/geojson from 1.3.6 to 1.4.0 (#42)\n\nBumps [github.com/tidwall/geojson](https://github.com/tidwall/geojson) from 1.3.6 to 1.4.0.\r\n- [Release notes](https://github.com/tidwall/geojson/releases)\r\n- [Commits](https://github.com/tidwall/geojson/compare/v1.3.6...v1.4.0)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: github.com/tidwall/geojson\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-minor\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-10-24T23:47:16+08:00",
+          "tree_id": "4b480ba8975853fc85c908c6b36f1399eca356b9",
+          "url": "https://github.com/ringsaturn/tzf/commit/7deacdd7a4963496f564783c4a322486ad46a09e"
+        },
+        "date": 1666626531031,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 20302.949869327327,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008710308478132144",
+            "extra": "mean: 49.25392647059379 usec\nrounds: 4352"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.3331345931636559,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00867268926724084",
+            "extra": "mean: 3.0017897285999937 sec\nrounds: 5"
           }
         ]
       }
