@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1666626532014,
+  "lastUpdate": 1666626580779,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -6994,6 +6994,54 @@ window.BENCHMARK_DATA = {
             "value": 9932,
             "unit": "ns/op",
             "extra": "111640 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7deacdd7a4963496f564783c4a322486ad46a09e",
+          "message": "Bump github.com/tidwall/geojson from 1.3.6 to 1.4.0 (#42)\n\nBumps [github.com/tidwall/geojson](https://github.com/tidwall/geojson) from 1.3.6 to 1.4.0.\r\n- [Release notes](https://github.com/tidwall/geojson/releases)\r\n- [Commits](https://github.com/tidwall/geojson/compare/v1.3.6...v1.4.0)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: github.com/tidwall/geojson\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-minor\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-10-24T23:47:16+08:00",
+          "tree_id": "4b480ba8975853fc85c908c6b36f1399eca356b9",
+          "url": "https://github.com/ringsaturn/tzf/commit/7deacdd7a4963496f564783c4a322486ad46a09e"
+        },
+        "date": 1666626579693,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 8799,
+            "unit": "ns/op",
+            "extra": "140829 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 9469,
+            "unit": "ns/op",
+            "extra": "129973 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9211,
+            "unit": "ns/op",
+            "extra": "132391 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 10097,
+            "unit": "ns/op",
+            "extra": "121822 times\n2 procs"
           }
         ]
       }
