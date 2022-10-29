@@ -92,7 +92,16 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 		names = append(names, timezone.Name)
 		location, err := time.LoadLocation(timezone.Name)
 		if err != nil {
-			return nil, err
+			// check if changed
+			oldname, ok := backportstz[timezone.Name]
+			if !ok {
+				return nil, err
+			}
+			location, err = time.LoadLocation(oldname)
+			if err != nil {
+				return nil, err
+			}
+
 		}
 		_, tzOffset := now.In(location).Zone()
 
