@@ -12,8 +12,6 @@
 <tr><td>
 
 ```go
-package main
-
 import (
 	"fmt"
 
@@ -23,31 +21,29 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func main() {
-	input := &pb.Timezones{}
+// ...
 
-	// Lite data, about 10MB
-	dataFile := tzfrel.LiteData
+input := &pb.Timezones{}
 
-	// Full data, about 80MB
-	// dataFile := tzfrel.FullData
+// Lite data, about 10MB
+dataFile := tzfrel.LiteData
 
-	err := proto.Unmarshal(dataFile, input)
-	if err != nil {
-		panic(err)
-	}
-	finder, err := tzf.NewFinderFromPB(input)
-	if err != nil {
-		panic(err)
-	}
+// Full data, about 80MB
+// dataFile := tzfrel.FullData
+
+err := proto.Unmarshal(dataFile, input)
+if err != nil {
+	panic(err)
+}
+finder, err := tzf.NewFinderFromPB(input)
+if err != nil {
+	panic(err)
 }
 ```
 
 </td><td>
 
 ```go
-package main
-
 import (
 	"fmt"
 
@@ -57,20 +53,20 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func main() {
-	input := &pb.CompressedTimezones{}
+// ...
 
-	// Compress data, about 5MB
-	dataFile := tzfrel.LiteCompressData
+input := &pb.CompressedTimezones{}
 
-	err := proto.Unmarshal(dataFile, input)
-	if err != nil {
-		panic(err)
-	}
-	finder, err := tzf.NewFinderFromCompressed(input)
-	if err != nil {
-		panic(err)
-	}
+// Compress data, about 5MB
+dataFile := tzfrel.LiteCompressData
+
+err := proto.Unmarshal(dataFile, input)
+if err != nil {
+	panic(err)
+}
+finder, err := tzf.NewFinderFromCompressed(input)
+if err != nil {
+	panic(err)
 }
 ```
 
