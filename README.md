@@ -79,12 +79,19 @@ graph TD
 
 ### Which dataset should I use
 
-The lite data(11MB) doesn't work well in some edge places.
+The [full data(~80MB)][full-link] could work anywhere but requires more memory usage.
 
-The full data(83.5MB) could work anywhere but requires more memory usage.
+The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
 
 You can see ranges that results diff in this [gist][points_not_equal].
 
+If a little longer init time is acceptable,
+the compressed data(~5MB) which come from lite data
+will be more friendly for binary distribution.
+
+[full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
+[lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
+[compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
 [points_not_equal]: https://gist.github.com/ringsaturn/8e1614146127cb25bf4d1325df347d22
 
 ## Related Links
