@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1666629030514,
+  "lastUpdate": 1667043031607,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -11303,6 +11303,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.01240229915796458",
             "extra": "mean: 4.542141304600011 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ba0533a96d8f61371740482d307b2e6c3d5e534",
+          "message": "Update dependabot.yml",
+          "timestamp": "2022-10-29T19:29:20+08:00",
+          "tree_id": "115e749df633b0276789672a7d8eeef098314cec",
+          "url": "https://github.com/ringsaturn/tzf/commit/3ba0533a96d8f61371740482d307b2e6c3d5e534"
+        },
+        "date": 1667043031230,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 21038.595104940978,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007596026513478277",
+            "extra": "mean: 47.53169092384629 usec\nrounds: 3724"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.3387108135351844,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0023223761788323124",
+            "extra": "mean: 2.9523710494 sec\nrounds: 5"
           }
         ]
       }
