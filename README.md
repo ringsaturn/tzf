@@ -6,6 +6,11 @@
 
 ### Go
 
+<table>
+<thead><tr><th>Lite/Full Data</th><th>Compressed Data</th></tr></thead>
+<tbody>
+<tr><td>
+
 ```go
 package main
 
@@ -21,16 +26,59 @@ import (
 func main() {
 	input := &pb.Timezones{}
 
-	// Lite data, about 11MB
+	// Lite data, about 10MB
 	dataFile := tzfrel.LiteData
 
-	// Full data, about 83.5MB
+	// Full data, about 80MB
 	// dataFile := tzfrel.FullData
 
 	if err := proto.Unmarshal(dataFile, input); err != nil {
 		panic(err)
 	}
-	finder, _ := tzf.NewFinderFromPB(input)
+	finder, err := tzf.NewFinderFromPB(input)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(finder.GetTimezoneName(111.8674, 34.4200))
+	fmt.Println(finder.GetTimezoneName(-97.8674, 34.4200))
+	fmt.Println(finder.GetTimezoneName(121.3547, 31.1139))
+	fmt.Println(finder.GetTimezoneName(139.4382, 36.4432))
+	fmt.Println(finder.GetTimezoneName(24.5212, 50.2506))
+	fmt.Println(finder.GetTimezoneName(-0.9671, 52.0152))
+	fmt.Println(finder.GetTimezoneName(-4.5706, 46.2747))
+	fmt.Println(finder.GetTimezoneName(111.9781, 45.0182))
+	fmt.Println(finder.GetTimezoneName(-73.7729, 38.3530))
+	fmt.Println(finder.GetTimezoneName(114.1594, 22.3173))
+}
+```
+
+</td><td>
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/ringsaturn/tzf"
+	tzfrel "github.com/ringsaturn/tzf-rel"
+	"github.com/ringsaturn/tzf/pb"
+	"google.golang.org/protobuf/proto"
+)
+
+func main() {
+	input := &pb.CompressedTimezones{}
+
+	// Compress data, about 5MB
+	dataFile := tzfrel.LiteCompressData
+
+	if err := proto.Unmarshal(dataFile, input); err != nil {
+		panic(err)
+	}
+	finder, err := tzf.NewFinderFromCompressed(input)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println(finder.GetTimezoneName(111.8674, 34.4200))
 	fmt.Println(finder.GetTimezoneName(-97.8674, 34.4200))
 	fmt.Println(finder.GetTimezoneName(121.3547, 31.1139))
@@ -42,6 +90,9 @@ func main() {
 	fmt.Println(finder.GetTimezoneName(-73.7729, 38.3530))
 }
 ```
+
+</td></tr>
+</tbody></table>
 
 Output:
 
@@ -57,9 +108,32 @@ Asia/Shanghai
 Etc/GMT+5
 ```
 
+#### Which dataset should I use
+
+The [full data(~80MB)][full-link] could work anywhere but requires more memory usage.
+
+The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
+
+You can see ranges that results diff in this [gist][points_not_equal].
+
+If a little longer init time is acceptable,
+the [compressed data(~5MB)][compressd-link] which come from lite data
+will be more friendly for binary distribution.
+
+[full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
+[lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
+[compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
+[points_not_equal]: https://gist.github.com/ringsaturn/8e1614146127cb25bf4d1325df347d22
+
 ### Python
 
-Check <https://github.com/ringsaturn/tzf/tree/main/python>
+```py
+>>> from tzfpy import get_tz
+>>> print(get_tz(121.4737, 31.2305))
+Asia/Shanghai
+```
+
+Python binding source codes: <https://github.com/ringsaturn/tzf/tree/main/python>
 
 ## Data
 
@@ -76,23 +150,6 @@ graph TD
     D --> H
     H --> GetTimezone
 ```
-
-### Which dataset should I use
-
-The [full data(~80MB)][full-link] could work anywhere but requires more memory usage.
-
-The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
-
-You can see ranges that results diff in this [gist][points_not_equal].
-
-If a little longer init time is acceptable,
-the [compressed data(~5MB)][compressd-link] which come from lite data
-will be more friendly for binary distribution.
-
-[full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
-[lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
-[compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
-[points_not_equal]: https://gist.github.com/ringsaturn/8e1614146127cb25bf4d1325df347d22
 
 ## Related Links
 
