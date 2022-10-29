@@ -86,7 +86,7 @@ The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
 You can see ranges that results diff in this [gist][points_not_equal].
 
 If a little longer init time is acceptable,
-the compressed data(~5MB) which come from lite data
+the [compressed data(~5MB)][compressd-link] which come from lite data
 will be more friendly for binary distribution.
 
 [full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
