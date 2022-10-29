@@ -173,7 +173,7 @@ jobs:
           echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
 
       - name: Download distribution artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v3.0.1
         with:
           name: tzfpy-dist
           path: python/dist
