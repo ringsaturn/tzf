@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667043372420,
+  "lastUpdate": 1667043390634,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -7282,6 +7282,54 @@ window.BENCHMARK_DATA = {
             "value": 6686,
             "unit": "ns/op",
             "extra": "157303 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "93642e6dddb0da7828cd2082a2df8fcef3bb5779",
+          "message": "Bump github.com/ringsaturn/tzf-rel from 0.0.2021-c3 to 0.0.2022-b (#46)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-10-29T19:34:43+08:00",
+          "tree_id": "0e3ad9ad0593fc83ab36bd8b7eb633fb5116984a",
+          "url": "https://github.com/ringsaturn/tzf/commit/93642e6dddb0da7828cd2082a2df8fcef3bb5779"
+        },
+        "date": 1667043390201,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6354,
+            "unit": "ns/op",
+            "extra": "193317 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 6853,
+            "unit": "ns/op",
+            "extra": "175975 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 6669,
+            "unit": "ns/op",
+            "extra": "179316 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7315,
+            "unit": "ns/op",
+            "extra": "161610 times\n2 procs"
           }
         ]
       }
