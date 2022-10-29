@@ -63,7 +63,7 @@ jobs:
   #         package-dir: python
   #         output-dir: python/dist
 
-  #     - uses: actions/upload-artifact@v3
+  #     - uses: actions/upload-artifact@v3.1.1
   #       with:
   #         name: tzfpy-dist
   #         path: python/dist/*.whl
@@ -111,7 +111,7 @@ jobs:
           package-dir: python
           output-dir: python/dist
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3.1.1
         with:
           name: tzfpy-dist
           path: python/dist/*.whl
@@ -154,7 +154,7 @@ jobs:
           package-dir: python
           output-dir: python/dist
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3.1.1
         with:
           name: tzfpy-dist
           path: python/dist/*.whl
