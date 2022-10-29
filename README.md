@@ -115,6 +115,10 @@ will be more friendly for binary distribution.
 
 ### Python
 
+```console
+pip install tzfpy
+```
+
 ```py
 >>> from tzfpy import get_tz
 >>> print(get_tz(121.4737, 31.2305))
