@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667043093953,
+  "lastUpdate": 1667043209506,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -11389,6 +11389,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0023223761788323124",
             "extra": "mean: 2.9523710494 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8c694dce27e58f9e296fec8958ce6aa9dacb8a51",
+          "message": "Bump actions/upload-artifact from 3.1.0 to 3.1.1 (#44)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-10-29T19:32:05+08:00",
+          "tree_id": "fe41fd2a274dd25be562249632ef18a2e3ec0b72",
+          "url": "https://github.com/ringsaturn/tzf/commit/8c694dce27e58f9e296fec8958ce6aa9dacb8a51"
+        },
+        "date": 1667043208791,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 17593.678874493427,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010815158271646354",
+            "extra": "mean: 56.83859567595937 usec\nrounds: 4024"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.2917766996842046,
+            "unit": "iter/sec",
+            "range": "stddev: 0.02074199637048501",
+            "extra": "mean: 3.4272784669999994 sec\nrounds: 5"
           }
         ]
       }
