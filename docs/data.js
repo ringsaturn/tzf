@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667043261912,
+  "lastUpdate": 1667043320603,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -7234,6 +7234,54 @@ window.BENCHMARK_DATA = {
             "value": 8830,
             "unit": "ns/op",
             "extra": "136195 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "567d659764410cad1761b4a779598afa2adb464c",
+          "message": "Bump pypa/cibuildwheel from 2.10.2 to 2.11.2 (#45)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-10-29T19:33:36+08:00",
+          "tree_id": "2bcd764ff711a9c93cab529029a193dd85d56954",
+          "url": "https://github.com/ringsaturn/tzf/commit/567d659764410cad1761b4a779598afa2adb464c"
+        },
+        "date": 1667043320104,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6594,
+            "unit": "ns/op",
+            "extra": "205140 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 6312,
+            "unit": "ns/op",
+            "extra": "167749 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7011,
+            "unit": "ns/op",
+            "extra": "190708 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 6686,
+            "unit": "ns/op",
+            "extra": "157303 times\n2 procs"
           }
         ]
       }
