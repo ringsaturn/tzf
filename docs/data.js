@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667043246972,
+  "lastUpdate": 1667043261912,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -7186,6 +7186,54 @@ window.BENCHMARK_DATA = {
             "value": 7594,
             "unit": "ns/op",
             "extra": "158385 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8c694dce27e58f9e296fec8958ce6aa9dacb8a51",
+          "message": "Bump actions/upload-artifact from 3.1.0 to 3.1.1 (#44)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-10-29T19:32:05+08:00",
+          "tree_id": "fe41fd2a274dd25be562249632ef18a2e3ec0b72",
+          "url": "https://github.com/ringsaturn/tzf/commit/8c694dce27e58f9e296fec8958ce6aa9dacb8a51"
+        },
+        "date": 1667043260212,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 7653,
+            "unit": "ns/op",
+            "extra": "152094 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 8518,
+            "unit": "ns/op",
+            "extra": "143588 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 8006,
+            "unit": "ns/op",
+            "extra": "144847 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 8830,
+            "unit": "ns/op",
+            "extra": "136195 times\n2 procs"
           }
         ]
       }
