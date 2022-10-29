@@ -32,23 +32,14 @@ func main() {
 	// Full data, about 80MB
 	// dataFile := tzfrel.FullData
 
-	if err := proto.Unmarshal(dataFile, input); err != nil {
+	err := proto.Unmarshal(dataFile, input)
+	if err != nil {
 		panic(err)
 	}
 	finder, err := tzf.NewFinderFromPB(input)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(finder.GetTimezoneName(111.8674, 34.4200))
-	fmt.Println(finder.GetTimezoneName(-97.8674, 34.4200))
-	fmt.Println(finder.GetTimezoneName(121.3547, 31.1139))
-	fmt.Println(finder.GetTimezoneName(139.4382, 36.4432))
-	fmt.Println(finder.GetTimezoneName(24.5212, 50.2506))
-	fmt.Println(finder.GetTimezoneName(-0.9671, 52.0152))
-	fmt.Println(finder.GetTimezoneName(-4.5706, 46.2747))
-	fmt.Println(finder.GetTimezoneName(111.9781, 45.0182))
-	fmt.Println(finder.GetTimezoneName(-73.7729, 38.3530))
-	fmt.Println(finder.GetTimezoneName(114.1594, 22.3173))
 }
 ```
 
@@ -72,40 +63,41 @@ func main() {
 	// Compress data, about 5MB
 	dataFile := tzfrel.LiteCompressData
 
-	if err := proto.Unmarshal(dataFile, input); err != nil {
+	err := proto.Unmarshal(dataFile, input)
+	if err != nil {
 		panic(err)
 	}
 	finder, err := tzf.NewFinderFromCompressed(input)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(finder.GetTimezoneName(111.8674, 34.4200))
-	fmt.Println(finder.GetTimezoneName(-97.8674, 34.4200))
-	fmt.Println(finder.GetTimezoneName(121.3547, 31.1139))
-	fmt.Println(finder.GetTimezoneName(139.4382, 36.4432))
-	fmt.Println(finder.GetTimezoneName(24.5212, 50.2506))
-	fmt.Println(finder.GetTimezoneName(-0.9671, 52.0152))
-	fmt.Println(finder.GetTimezoneName(-4.5706, 46.2747))
-	fmt.Println(finder.GetTimezoneName(111.9781, 45.0182))
-	fmt.Println(finder.GetTimezoneName(-73.7729, 38.3530))
 }
 ```
 
 </td></tr>
 </tbody></table>
 
-Output:
-
-```
-Asia/Shanghai
-America/Chicago
-Asia/Shanghai
-Asia/Tokyo
-Europe/Kiev
-Europe/London
-Etc/GMT
-Asia/Shanghai
-Etc/GMT+5
+```go
+fmt.Println(finder.GetTimezoneName(111.8674, 34.4200))
+// Output: Asia/Shanghai
+fmt.Println(finder.GetTimezoneName(-97.8674, 34.4200))
+// Output: America/Chicago
+fmt.Println(finder.GetTimezoneName(121.3547, 31.1139))
+// Output: Asia/Shanghai
+fmt.Println(finder.GetTimezoneName(139.4382, 36.4432))
+// Output: Asia/Tokyo
+fmt.Println(finder.GetTimezoneName(24.5212, 50.2506))
+// Output: Europe/Kyiv
+fmt.Println(finder.GetTimezoneName(-0.9671, 52.0152))
+// Output: Europe/London
+fmt.Println(finder.GetTimezoneName(-4.5706, 46.2747))
+// Output: Etc/GMT
+fmt.Println(finder.GetTimezoneName(111.9781, 45.0182))
+// Output: Asia/Shanghai
+fmt.Println(finder.GetTimezoneName(-73.7729, 38.3530))
+// Output: Etc/GMT+5
+fmt.Println(finder.GetTimezoneName(114.1594, 22.3173))
+// Output: Asia/Hong_Kong
 ```
 
 #### Which dataset should I use
