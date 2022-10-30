@@ -130,6 +130,13 @@ Asia/Shanghai
 
 Python binding source codes: <https://github.com/ringsaturn/tzf/tree/main/python>
 
+### Cli Tool
+
+```bash
+go install github.com/ringsaturn/tzf/cmd/tzf@latest
+tzf -lng 116.3883 -lat 39.9289
+```
+
 ## Data
 
 Original data download from <https://github.com/evansiroky/timezone-boundary-builder>.
