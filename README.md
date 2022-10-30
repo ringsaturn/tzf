@@ -30,7 +30,9 @@ import (
 #### Use lite/full data
 
 The [full data(~80MB)][full-link] could work anywhere but requires more memory usage.
+
 The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
+
 You can see ranges that results diff in this [gist][points_not_equal].
 
 [full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
