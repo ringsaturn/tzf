@@ -37,7 +37,6 @@ You can see ranges that results diff in this [gist][points_not_equal].
 [lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
 [points_not_equal]: https://gist.github.com/ringsaturn/8e1614146127cb25bf4d1325df347d22
 
-
 </td>
 <td>
 
@@ -116,13 +115,6 @@ fmt.Println(finder.GetTimezoneName(114.1594, 22.3173)) // Output: Asia/Hong_Kong
 </tr>
 </tbody>
 </table>
-
-#### Which dataset should I use
-
-
-
-
-
 
 ### Python
 
