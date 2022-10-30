@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667112858194,
+  "lastUpdate": 1667112923923,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -7810,6 +7810,54 @@ window.BENCHMARK_DATA = {
             "value": 8579,
             "unit": "ns/op",
             "extra": "137443 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aa4912c92e0dd1e4f02b80d4b1ea4fa32dbeb2e3",
+          "message": "init cli tool (#49)",
+          "timestamp": "2022-10-30T14:53:05+08:00",
+          "tree_id": "a5131eccb60e4c603ea7f1063548ab1b89942f45",
+          "url": "https://github.com/ringsaturn/tzf/commit/aa4912c92e0dd1e4f02b80d4b1ea4fa32dbeb2e3"
+        },
+        "date": 1667112923022,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6920,
+            "unit": "ns/op",
+            "extra": "160627 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 8020,
+            "unit": "ns/op",
+            "extra": "156742 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7231,
+            "unit": "ns/op",
+            "extra": "158902 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 8045,
+            "unit": "ns/op",
+            "extra": "141904 times\n2 procs"
           }
         ]
       }
