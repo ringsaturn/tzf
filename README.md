@@ -7,9 +7,9 @@
 ### Go
 
 <table>
-<thead><tr><th>Lite/Full Data</th><th>Compressed Data</th></tr></thead>
 <tbody>
-<tr><td>
+<tr>
+<td colspan="2">
 
 ```go
 import (
@@ -20,9 +20,14 @@ import (
 	"github.com/ringsaturn/tzf/pb"
 	"google.golang.org/protobuf/proto"
 )
+```
 
-// ...
+</td>
+</tr>
+<tr>
+<td>
 
+```go
 input := &pb.Timezones{}
 
 // Lite data, about 10MB
@@ -41,20 +46,10 @@ if err != nil {
 }
 ```
 
-</td><td>
+</td>
+<td>
 
 ```go
-import (
-	"fmt"
-
-	"github.com/ringsaturn/tzf"
-	tzfrel "github.com/ringsaturn/tzf-rel"
-	"github.com/ringsaturn/tzf/pb"
-	"google.golang.org/protobuf/proto"
-)
-
-// ...
-
 input := &pb.CompressedTimezones{}
 
 // Compress data, about 5MB
@@ -70,31 +65,28 @@ if err != nil {
 }
 ```
 
-</td></tr>
-</tbody></table>
+</td>
+</tr>
+<tr>
+<td colspan="2">
 
 ```go
-fmt.Println(finder.GetTimezoneName(111.8674, 34.4200))
-// Output: Asia/Shanghai
-fmt.Println(finder.GetTimezoneName(-97.8674, 34.4200))
-// Output: America/Chicago
-fmt.Println(finder.GetTimezoneName(121.3547, 31.1139))
-// Output: Asia/Shanghai
-fmt.Println(finder.GetTimezoneName(139.4382, 36.4432))
-// Output: Asia/Tokyo
-fmt.Println(finder.GetTimezoneName(24.5212, 50.2506))
-// Output: Europe/Kyiv
-fmt.Println(finder.GetTimezoneName(-0.9671, 52.0152))
-// Output: Europe/London
-fmt.Println(finder.GetTimezoneName(-4.5706, 46.2747))
-// Output: Etc/GMT
-fmt.Println(finder.GetTimezoneName(111.9781, 45.0182))
-// Output: Asia/Shanghai
-fmt.Println(finder.GetTimezoneName(-73.7729, 38.3530))
-// Output: Etc/GMT+5
-fmt.Println(finder.GetTimezoneName(114.1594, 22.3173))
-// Output: Asia/Hong_Kong
+fmt.Println(finder.GetTimezoneName(111.8674, 34.4200)) // Output: Asia/Shanghai
+fmt.Println(finder.GetTimezoneName(-97.8674, 34.4200)) // Output: America/Chicago
+fmt.Println(finder.GetTimezoneName(121.3547, 31.1139)) // Output: Asia/Shanghai
+fmt.Println(finder.GetTimezoneName(139.4382, 36.4432)) // Output: Asia/Tokyo
+fmt.Println(finder.GetTimezoneName(24.5212, 50.2506))  // Output: Europe/Kyiv
+fmt.Println(finder.GetTimezoneName(-0.9671, 52.0152))  // Output: Europe/London
+fmt.Println(finder.GetTimezoneName(-4.5706, 46.2747))  // Output: Etc/GMT
+fmt.Println(finder.GetTimezoneName(111.9781, 45.0182)) // Output: Asia/Shanghai
+fmt.Println(finder.GetTimezoneName(-73.7729, 38.3530)) // Output: Etc/GMT+5
+fmt.Println(finder.GetTimezoneName(114.1594, 22.3173)) // Output: Asia/Hong_Kong
 ```
+
+</td>
+</tr>
+</tbody>
+</table>
 
 #### Which dataset should I use
 
