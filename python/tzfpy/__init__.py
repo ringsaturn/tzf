@@ -20,7 +20,7 @@ def get_tz(lng: float, lat: float) -> str:
 def timezone_names() -> List[str]:
     res = _names()
     names = []
-    for i in range(450):
+    for i in range(445):
         names.append(res[i].decode())
     return names
 
