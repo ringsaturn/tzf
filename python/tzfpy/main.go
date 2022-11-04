@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	finder *tzf.Finder
+	finder         *tzf.Finder
+	timezoneCounts int
 )
 
 func init() {
@@ -22,6 +23,8 @@ func init() {
 	}
 	_finder, _ := tzf.NewFinderFromCompressed(compressedInput)
 	finder = _finder
+
+	timezoneCounts = len(finder.TimezoneNames())
 }
 
 //export GetTZ
@@ -44,6 +47,11 @@ func goStringSliceToC(stringSlice []string) **C.char {
 //export TimezoneNames
 func TimezoneNames() **C.char {
 	return goStringSliceToC(finder.TimezoneNames())
+}
+
+//export CountTimezoneNames
+func CountTimezoneNames() C.long {
+	return C.long(timezoneCounts)
 }
 
 func main() {
