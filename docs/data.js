@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667571294998,
+  "lastUpdate": 1667571364120,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -7906,6 +7906,54 @@ window.BENCHMARK_DATA = {
             "value": 7342,
             "unit": "ns/op",
             "extra": "158498 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7d1110d216d9f82c1114b1f7a78e69a7cf02d1f3",
+          "message": "Bump github.com/ringsaturn/tzf-rel from 0.0.2022-b to 0.0.2022-f (#50)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\r\nCo-authored-by: ringsaturn <ringsaturn.me@gmail.com>",
+          "timestamp": "2022-11-04T22:13:10+08:00",
+          "tree_id": "feb8b62df2e86ba9ed60e3805106aded818c9eb5",
+          "url": "https://github.com/ringsaturn/tzf/commit/7d1110d216d9f82c1114b1f7a78e69a7cf02d1f3"
+        },
+        "date": 1667571363228,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 8731,
+            "unit": "ns/op",
+            "extra": "135654 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 9792,
+            "unit": "ns/op",
+            "extra": "117410 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9565,
+            "unit": "ns/op",
+            "extra": "130414 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 10023,
+            "unit": "ns/op",
+            "extra": "118009 times\n2 procs"
           }
         ]
       }
