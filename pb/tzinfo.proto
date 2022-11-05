@@ -45,3 +45,16 @@ message CompressedTimezones {
   CompressMethod method = 1;
   repeated CompressedTimezone timezones = 2;
 }
+
+message PreindexTimezone {
+  string name = 1;
+  int32 x = 2;
+  int32 y = 3;
+  int32 z = 4;
+}
+
+message PreindexTimezones{
+  int32 idxZoom = 1;
+  int32 aggZoom = 2;
+  repeated PreindexTimezone keys = 3;
+}
