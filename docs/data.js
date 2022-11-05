@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667639226575,
+  "lastUpdate": 1667658277929,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -13159,6 +13159,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.010813148243012275",
             "extra": "mean: 3.473589332200001 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3d22b8fd7ea0a575667c50baaa205a2e2f80b500",
+          "message": "fix outdated codes, add world city compare for lite/full (#53)",
+          "timestamp": "2022-11-05T22:23:05+08:00",
+          "tree_id": "576c72b31057535ae6d6ee505b286ee749c3a99a",
+          "url": "https://github.com/ringsaturn/tzf/commit/3d22b8fd7ea0a575667c50baaa205a2e2f80b500"
+        },
+        "date": 1667658276942,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 16035.598110346587,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000035127771243075965",
+            "extra": "mean: 62.36125357586592 usec\nrounds: 769"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.2847364007844021,
+            "unit": "iter/sec",
+            "range": "stddev: 0.017214461988581627",
+            "extra": "mean: 3.5120202308000104 sec\nrounds: 5"
           }
         ]
       }
