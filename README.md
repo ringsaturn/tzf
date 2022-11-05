@@ -33,11 +33,11 @@ The [full data(~80MB)][full-link] could work anywhere but requires more memory u
 
 The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
 
-You can see ranges that results diff in this [gist][points_not_equal].
+You can see points that results diff in this [page][points_not_equal].
 
 [full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
 [lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
-[points_not_equal]: https://gist.github.com/ringsaturn/8e1614146127cb25bf4d1325df347d22
+[points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
 </td>
 <td>
