@@ -4,7 +4,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -15,7 +14,7 @@ import (
 func main() {
 	jsonFilePath := os.Args[1]
 
-	rawFile, err := ioutil.ReadFile(jsonFilePath)
+	rawFile, err := os.ReadFile(jsonFilePath)
 	if err != nil {
 		panic(err)
 	}
