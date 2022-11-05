@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"os"
 
+	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
 	tzfrel "github.com/ringsaturn/tzf-rel"
 	"github.com/ringsaturn/tzf/pb"
@@ -81,8 +83,29 @@ func main() {
 			})
 		}
 	}
+	for _, city := range gocitiesjson.Cities {
+		_lng := city.Lng
+		_lat := city.Lat
+		fullRes := fullFinder.GetTimezoneName(_lng, _lat)
+		liteRes := liteFinder.GetTimezoneName(_lng, _lat)
+		if fullRes == liteRes {
+			continue
+		}
+		notEqualData.Features = append(notEqualData.Features, Features{
+			Type: "Feature",
+			Properties: map[string]interface{}{
+				"lite":      liteRes,
+				"full":      fullRes,
+				"worldCity": fmt.Sprintf("%v-%v", city.Country, city.Name),
+			},
+			Geometry: Geometry{
+				Type:        "Point",
+				Coordinates: []float64{_lng, _lat},
+			},
+		})
+	}
 
 	file, _ := json.Marshal(notEqualData)
 
-	_ = ioutil.WriteFile("points_not_equal.geojson", file, 0644)
+	_ = os.WriteFile("points_not_equal.geojson", file, 0644)
 }

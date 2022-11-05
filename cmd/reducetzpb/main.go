@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -20,7 +19,7 @@ const (
 
 func main() {
 	originalProbufPath := os.Args[1]
-	rawFile, err := ioutil.ReadFile(originalProbufPath)
+	rawFile, err := os.ReadFile(originalProbufPath)
 	if err != nil {
 		panic(err)
 	}

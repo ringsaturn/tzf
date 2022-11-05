@@ -25,8 +25,7 @@ cover: test
 	go tool cover -html=coverage.out -o=coverage.html
 
 comparetzpb_gen:
-	go install github.com/ringsaturn/tzf/cmd/comparetzpb@latest
-	comparetzpb
+	go run cmd/comparetzpb/main.go
 
 bench:
 	go test -bench=. ./...
