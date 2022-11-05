@@ -2,11 +2,13 @@ package tzf_test
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 
 	"sort"
 
+	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
 	tzfrel "github.com/ringsaturn/tzf-rel"
 	"github.com/ringsaturn/tzf/pb"
@@ -53,6 +55,13 @@ func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
 	}
 }
 
+func BenchmarkGetTimezoneName_Random_WorldCities(b *testing.B) {
+	for i := 0; i <= b.N; i++ {
+		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
+		_ = finder.GetTimezoneName(p.Lng, p.Lat)
+	}
+}
+
 func BenchmarkFullFinder_GetTimezoneName(b *testing.B) {
 	for i := 0; i <= b.N; i++ {
 		_ = fullFinder.GetTimezoneName(116.6386, 40.0786)
@@ -62,6 +71,13 @@ func BenchmarkFullFinder_GetTimezoneName(b *testing.B) {
 func BenchmarkFullFinder_GetTimezoneNameAtEdge(b *testing.B) {
 	for i := 0; i <= b.N; i++ {
 		_ = fullFinder.GetTimezoneName(110.8571, 43.1483)
+	}
+}
+
+func BenchmarkFullFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
+	for i := 0; i <= b.N; i++ {
+		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
+		_ = fullFinder.GetTimezoneName(p.Lng, p.Lat)
 	}
 }
 
