@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	idxZoom   = 11
-	aggZoom   = 3
-	layerDrop = 1
+	idxZoom            = 11
+	aggZoom            = 3
+	maxZoomLevelToKeep = 10
+	layerDrop          = 1
 )
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 		panic(err)
 	}
 
-	output := preindex.PreIndexTimezones(input, maptile.Zoom(idxZoom), maptile.Zoom(aggZoom), layerDrop)
+	output := preindex.PreIndexTimezones(input, maptile.Zoom(idxZoom), maptile.Zoom(aggZoom), maptile.Zoom(maxZoomLevelToKeep), layerDrop)
 
 	outputPath := strings.Replace(originalProbufPath, ".pb", ".preindex.pb", 1)
 	outputBin, _ := proto.Marshal(output)
