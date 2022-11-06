@@ -6,7 +6,9 @@ import (
 	"github.com/ringsaturn/tzf/pb"
 )
 
-// FuzzyFinder will iter tile zoom level for input points and check if tile in a map.
+// FuzzyFinder use a tile map to store timezone name. Data are made by
+// [github.com/ringsaturn/tzf/cmd/preindextzpb] which powerd by
+// [github.com/ringsaturn/tzf/preindex.PreIndexTimezones].
 type FuzzyFinder struct {
 	idxZoom int
 	aggZoom int

@@ -6,12 +6,29 @@
 
 ### Go
 
-<table>
-<tbody>
-<tr>
-<td colspan="2">
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/ringsaturn/tzf"
+)
+
+func main() {
+	finder, err := tzf.NewDefaultFinder()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
+}
+```
+
+If you need 100% accurate query result, use below to got a finder:
 
 ```go
+package main
+
 import (
 	"fmt"
 
@@ -20,103 +37,20 @@ import (
 	"github.com/ringsaturn/tzf/pb"
 	"google.golang.org/protobuf/proto"
 )
-```
 
-</td>
+func main() {
+	input := &pb.Timezones{}
 
-<tr>
-<td>
+	// Full data, about 83.5MB
+	dataFile := tzfrel.FullData
 
-#### Use lite/full data
-
-The [full data(~80MB)][full-link] could work anywhere but requires more memory usage.
-
-The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
-
-You can see points that results diff in this [page][points_not_equal].
-
-[full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
-[lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
-[points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
-
-</td>
-<td>
-
-#### Use compress data
-
-If a little longer init time is acceptable,
-the [compressed data(~5MB)][compressd-link] which come from lite data
-will be more friendly for binary distribution.
-
-[compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
-
-</td>
-</tr>
-
-</tr>
-<tr>
-<td>
-
-```go
-input := &pb.Timezones{}
-
-// Lite data, about 10MB
-dataFile := tzfrel.LiteData
-
-// Full data, about 80MB
-// dataFile := tzfrel.FullData
-
-err := proto.Unmarshal(dataFile, input)
-if err != nil {
-	panic(err)
-}
-finder, err := tzf.NewFinderFromPB(input)
-if err != nil {
-	panic(err)
+	if err := proto.Unmarshal(dataFile, input); err != nil {
+		panic(err)
+	}
+	finder, _ := tzf.NewFinderFromPB(input)
+	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
 }
 ```
-
-</td>
-<td>
-
-```go
-input := &pb.CompressedTimezones{}
-
-// Compress data, about 5MB
-dataFile := tzfrel.LiteCompressData
-
-err := proto.Unmarshal(dataFile, input)
-if err != nil {
-	panic(err)
-}
-finder, err := tzf.NewFinderFromCompressed(input)
-if err != nil {
-	panic(err)
-}
-```
-
-</td>
-</tr>
-<tr>
-<td colspan="2">
-
-```go
-fmt.Println(finder.GetTimezoneName(111.8674, 34.4200)) // Output: Asia/Shanghai
-fmt.Println(finder.GetTimezoneName(-97.8674, 34.4200)) // Output: America/Chicago
-fmt.Println(finder.GetTimezoneName(121.3547, 31.1139)) // Output: Asia/Shanghai
-fmt.Println(finder.GetTimezoneName(139.4382, 36.4432)) // Output: Asia/Tokyo
-fmt.Println(finder.GetTimezoneName(24.5212, 50.2506))  // Output: Europe/Kyiv
-fmt.Println(finder.GetTimezoneName(-0.9671, 52.0152))  // Output: Europe/London
-fmt.Println(finder.GetTimezoneName(-4.5706, 46.2747))  // Output: Etc/GMT
-fmt.Println(finder.GetTimezoneName(111.9781, 45.0182)) // Output: Asia/Shanghai
-fmt.Println(finder.GetTimezoneName(-73.7729, 38.3530)) // Output: Etc/GMT+5
-fmt.Println(finder.GetTimezoneName(114.1594, 22.3173)) // Output: Asia/Hong_Kong
-```
-
-</td>
-</tr>
-</tbody>
-</table>
 
 ### Python
 
@@ -145,15 +79,54 @@ Original data download from <https://github.com/evansiroky/timezone-boundary-bui
 
 Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> which has Go's `embed` support.
 
+tzf's data pipleine can de drawed as:
+
 ```mermaid
 graph TD
-    D[Probuf based Bin file]
-    H[Polygon search component]
-    D --> |Reduce via cmd/reducePolygon|D
-    A[Raw timezone boundary JSON file] --> |Convert via cmd/tzjson2pb|D
-    D --> H
-    H --> GetTimezone
+    Raw[GeoJSON from evansiroky/timezone-boundary-builder]
+    Full[Full: Probuf based data]
+    Lite[Lite: smaller of Full data]
+    Compressed[Compressed: Lite compressed via Polyline]
+    Preindex[Tile based data]
+
+    Finder[Finder: Polygon Based Finder]
+    FuzzyFinder[FuzzyFinder: Tile based Finder]
+    DefaultFinder[DefaultFinder: combine FuzzyFinder and Compressed Finder]
+
+    tzfpy[tzfpy: tzf's Python binding]
+
+    Raw --> |cmd/geojson2tzpb|Full
+    Full --> |cmd/reducetzpb|Lite
+    Lite --> |cmd/compresstzpb|Compressed
+    Lite --> |cmd/preindextzpb|Preindex
+
+    Full --> |tzf.NewFinderFromPB|Finder
+    Lite --> |tzf.NewFinderFromPB|Finder
+    Compressed --> |tzf.NewFinderFromCompressed|Finder --> |tzf.NewDefaultFinder|DefaultFinder
+    Preindex --> |tzf.NewFuzzyFinderFromPB|FuzzyFinder --> |tzf.NewDefaultFinder|DefaultFinder
+
+    DefaultFinder --> tzfpy
 ```
+
+The [full data(~80MB)][full-link] could work anywhere but requires more memory usage.
+
+The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
+
+You can see points that results diff in this [page][points_not_equal].
+
+If a little longer init time is acceptable,
+the [compressed data(~5MB)][compressd-link] which come from lite data
+will be more friendly for binary distribution.
+
+The [preindex data(~1.78MB)][preindex-link] are many tiles.
+It's used inside the `DefaultFinder`, which built on `FuzzyFinder`, to reduce
+raycasting algorithm execution times.
+
+[full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
+[lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
+[preindex-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.preindex.pb
+[compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
+[points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
 ## Related Links
 
