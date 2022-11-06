@@ -24,7 +24,7 @@ func main() {
 }
 ```
 
-If you need 100% accurate query, use below finder
+If you need 100% accurate query result, use below to got a finder:
 
 ```go
 package main
@@ -91,7 +91,7 @@ graph TD
 
     Finder[Finder: Polygon Based Finder]
     FuzzyFinder[FuzzyFinder: Tile based Finder]
-    DefaultFinder[DefaultFinder: combine Finder Compressed from  and FuzzyFinder]
+    DefaultFinder[DefaultFinder: combine FuzzyFinder and Compressed Finder]
 
     tzfpy[tzfpy: tzf's Python binding]
 
@@ -118,10 +118,15 @@ If a little longer init time is acceptable,
 the [compressed data(~5MB)][compressd-link] which come from lite data
 will be more friendly for binary distribution.
 
+The [preindex data(~1.78MB)][preindex-link] are many tiles.
+It's used inside the `DefaultFinder`, which built on `FuzzyFinder`, to reduce
+raycasting algorithm execution times.
+
 [full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
 [lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
-[points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
+[preindex-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.preindex.pb
 [compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
+[points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
 ## Related Links
 
