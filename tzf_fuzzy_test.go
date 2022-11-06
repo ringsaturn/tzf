@@ -21,7 +21,25 @@ func init() {
 	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
 		panic(err)
 	}
-	fuzzyFinder, _ = tzf.NewFuzzyFinderFromPB(input)
+	_fuzzyFinder, err := tzf.NewFuzzyFinderFromPB(input)
+	if err != nil {
+		panic(err)
+	}
+	fuzzyFinder = _fuzzyFinder
+}
+
+func TestFuzzySupports(t *testing.T) {
+	failCount := 0
+	for _, city := range gocitiesjson.Cities {
+		name := fuzzyFinder.GetTimezoneName(city.Lng, city.Lat)
+		if name == "" {
+			failCount += 1
+		}
+	}
+	// more than 10%
+	if failCount/len(gocitiesjson.Cities)*100 > 10 {
+		t.Errorf("has too many covered cities %v", failCount)
+	}
 }
 
 func ExampleFuzzyFinder_GetTimezoneName() {

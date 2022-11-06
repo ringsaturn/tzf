@@ -1,8 +1,6 @@
 package tzf
 
 import (
-	"fmt"
-
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/maptile"
 	"github.com/ringsaturn/tzf/pb"
@@ -16,7 +14,6 @@ type FuzzyFinder struct {
 }
 
 func NewFuzzyFinderFromPB(input *pb.PreindexTimezones) (*FuzzyFinder, error) {
-	fmt.Println(input.AggZoom, input.IdxZoom)
 	f := &FuzzyFinder{
 		m:       make(map[maptile.Tile][]string),
 		idxZoom: int(input.IdxZoom),
