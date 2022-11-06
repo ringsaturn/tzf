@@ -1,4 +1,4 @@
-// CLI tool to reduce polygon filesize
+// CLI tool to preindex timezone shape.
 package main
 
 import (
