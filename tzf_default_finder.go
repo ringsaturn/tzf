@@ -28,7 +28,7 @@ func NewDefaultFinder() (*DefaultFinder, error) {
 
 	finder, err := func() (*Finder, error) {
 		input := &pb.CompressedTimezones{}
-		if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
+		if err := proto.Unmarshal(tzfrel.LiteCompressData, input); err != nil {
 			panic(err)
 		}
 		return NewFinderFromCompressed(input)
