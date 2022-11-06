@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667710585284,
+  "lastUpdate": 1667729824714,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -13453,6 +13453,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.014976086365720238",
             "extra": "mean: 2.9715895472 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "270540b6eba1e45b8252d7b10d559490a3f8c2ae",
+          "message": "introduce FuzzyFinder (#55)",
+          "timestamp": "2022-11-06T18:15:43+08:00",
+          "tree_id": "bf182052fad866d85d97c6d66217e78e548eefd1",
+          "url": "https://github.com/ringsaturn/tzf/commit/270540b6eba1e45b8252d7b10d559490a3f8c2ae"
+        },
+        "date": 1667729824262,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 20073.749947973287,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008383399637665257",
+            "extra": "mean: 49.81630251406829 usec\nrounds: 3699"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.33942415967387485,
+            "unit": "iter/sec",
+            "range": "stddev: 0.004690154724200061",
+            "extra": "mean: 2.946166239199999 sec\nrounds: 5"
           }
         ]
       }
