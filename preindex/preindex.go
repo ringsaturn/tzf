@@ -54,7 +54,7 @@ func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 	return ret
 }
 
-func PreIndexTimezone(input *pb.Timezone, minIndexzoom maptile.Zoom, aggZoom maptile.Zoom, dropEdgeLayger int) ([]*pb.PreindexTimezone, error) {
+func PreIndexTimezone(input *pb.Timezone, idxZoom maptile.Zoom, aggZoom maptile.Zoom, dropEdgeLayger int) ([]*pb.PreindexTimezone, error) {
 	// Generate all tiles event not included in timezone shape
 	tiles := []maptile.Tile{}
 	for _, poly := range input.Polygons {
@@ -86,7 +86,7 @@ func PreIndexTimezone(input *pb.Timezone, minIndexzoom maptile.Zoom, aggZoom map
 		}
 
 		// gen polygon tiles
-		polytiles, err := tilecover.Geometry(orbPoly, minIndexzoom)
+		polytiles, err := tilecover.Geometry(orbPoly, idxZoom)
 		if err != nil {
 			panic(err)
 		}
@@ -152,4 +152,19 @@ func PreIndexTimezone(input *pb.Timezone, minIndexzoom maptile.Zoom, aggZoom map
 		})
 	}
 	return ret, nil
+}
+
+func PreIndexTimezones(input *pb.Timezones, idxZoom maptile.Zoom, aggZoom maptile.Zoom, dropEdgeLayger int) *pb.PreindexTimezones {
+	ret := &pb.PreindexTimezones{
+		IdxZoom: int32(idxZoom),
+		AggZoom: int32(aggZoom),
+		Keys:    make([]*pb.PreindexTimezone, 0),
+	}
+	for _, tz := range input.Timezones {
+		preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, dropEdgeLayger)
+		if err == nil {
+			ret.Keys = append(ret.Keys, preindexes...)
+		}
+	}
+	return ret
 }

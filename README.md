@@ -132,7 +132,7 @@ Asia/Shanghai
 
 Python binding source codes: <https://github.com/ringsaturn/tzf/tree/main/python>
 
-### Cli Tool
+### CLI Tool
 
 ```bash
 go install github.com/ringsaturn/tzf/cmd/tzf@latest
