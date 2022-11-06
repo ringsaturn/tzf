@@ -51,3 +51,7 @@ func (f *DefaultFinder) GetTimezoneName(lng float64, lat float64) string {
 	}
 	return f.finder.GetTimezoneName(lng, lat)
 }
+
+func (f *DefaultFinder) TimezoneNames() []string {
+	return f.finder.TimezoneNames()
+}

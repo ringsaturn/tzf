@@ -6,24 +6,19 @@ import (
 	"unsafe"
 
 	"github.com/ringsaturn/tzf"
-	tzfrel "github.com/ringsaturn/tzf-rel"
-	"github.com/ringsaturn/tzf/pb"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
-	finder         *tzf.Finder
+	finder         *tzf.DefaultFinder
 	timezoneCounts int
 )
 
 func init() {
-	compressedInput := &pb.CompressedTimezones{}
-	if err := proto.Unmarshal(tzfrel.LiteCompressData, compressedInput); err != nil {
+	_finder, err := tzf.NewDefaultFinder()
+	if err != nil {
 		panic(err)
 	}
-	_finder, _ := tzf.NewFinderFromCompressed(compressedInput)
 	finder = _finder
-
 	timezoneCounts = len(finder.TimezoneNames())
 }
 
