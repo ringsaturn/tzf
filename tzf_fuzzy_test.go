@@ -22,7 +22,6 @@ func init() {
 		panic(err)
 	}
 	fuzzyFinder, _ = tzf.NewFuzzyFinderFromPB(input)
-	// fmt.Println(fuzzyFinder.GetTimezoneName(116.3883, 39.9289))
 }
 
 func ExampleFuzzyFinder_GetTimezoneName() {
