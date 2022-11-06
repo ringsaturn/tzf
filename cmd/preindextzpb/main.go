@@ -12,6 +12,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+var (
+	idxZoom            = 11
+	aggZoom            = 3
+	maxZoomLevelToKeep = 10
+	layerDrop          = 1
+)
+
 func main() {
 	originalProbufPath := os.Args[1]
 	rawFile, err := os.ReadFile(originalProbufPath)
@@ -23,24 +30,7 @@ func main() {
 		panic(err)
 	}
 
-	IdxZoom := 11
-	AggZoom := 3
-	layerDrop := 1
-
-	output := &pb.PreindexTimezones{
-		IdxZoom: int32(IdxZoom),
-		AggZoom: int32(AggZoom),
-		Keys:    make([]*pb.PreindexTimezone, 0),
-	}
-
-	for _, tz := range input.Timezones {
-		fmt.Println(tz.Name)
-		tiles, err := preindex.PreIndexTimezone(tz, maptile.Zoom(IdxZoom), maptile.Zoom(AggZoom), layerDrop)
-		if err != nil {
-			continue
-		}
-		output.Keys = append(output.Keys, tiles...)
-	}
+	output := preindex.PreIndexTimezones(input, maptile.Zoom(idxZoom), maptile.Zoom(aggZoom), maptile.Zoom(maxZoomLevelToKeep), layerDrop)
 
 	outputPath := strings.Replace(originalProbufPath, ".pb", ".preindex.pb", 1)
 	outputBin, _ := proto.Marshal(output)

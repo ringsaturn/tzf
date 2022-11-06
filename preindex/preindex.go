@@ -1,6 +1,7 @@
 package preindex
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/paulmach/orb"
@@ -54,7 +55,10 @@ func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 	return ret
 }
 
-func PreIndexTimezone(input *pb.Timezone, minIndexzoom maptile.Zoom, aggZoom maptile.Zoom, dropEdgeLayger int) ([]*pb.PreindexTimezone, error) {
+// PreIndexTimezone will gen tiles at `idxZoom` level and merge up to `aggZoom`.
+//
+// The `idxZoom` level tiles will be removed before final return.
+func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep maptile.Zoom, dropEdgeLayger int) ([]*pb.PreindexTimezone, error) {
 	// Generate all tiles event not included in timezone shape
 	tiles := []maptile.Tile{}
 	for _, poly := range input.Polygons {
@@ -86,7 +90,7 @@ func PreIndexTimezone(input *pb.Timezone, minIndexzoom maptile.Zoom, aggZoom map
 		}
 
 		// gen polygon tiles
-		polytiles, err := tilecover.Geometry(orbPoly, minIndexzoom)
+		polytiles, err := tilecover.Geometry(orbPoly, idxZoom)
 		if err != nil {
 			panic(err)
 		}
@@ -144,6 +148,9 @@ func PreIndexTimezone(input *pb.Timezone, minIndexzoom maptile.Zoom, aggZoom map
 	// Dumps as pb
 	ret := []*pb.PreindexTimezone{}
 	for _, v := range maps.Keys(mergedtiles) {
+		if int(v.Z) > int(maxZoomLevelToKeep) {
+			continue
+		}
 		ret = append(ret, &pb.PreindexTimezone{
 			Name: input.Name,
 			X:    int32(v.X),
@@ -152,4 +159,28 @@ func PreIndexTimezone(input *pb.Timezone, minIndexzoom maptile.Zoom, aggZoom map
 		})
 	}
 	return ret, nil
+}
+
+func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep maptile.Zoom, dropEdgeLayger int) *pb.PreindexTimezones {
+	ret := &pb.PreindexTimezones{
+		IdxZoom: int32(idxZoom),
+		AggZoom: int32(aggZoom),
+		Keys:    make([]*pb.PreindexTimezone, 0),
+	}
+	for _, tz := range input.Timezones {
+		preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayger)
+		if err == nil {
+			ret.Keys = append(ret.Keys, preindexes...)
+		}
+	}
+	return ret
+}
+
+func PreIndexTimezonesToGeoJSON(input *pb.PreindexTimezones) []byte {
+	tileset := maptile.Set{}
+	for _, key := range input.Keys {
+		tileset[maptile.New(uint32(key.X), uint32(key.Y), maptile.Zoom(key.Z))] = true
+	}
+	b, _ := json.Marshal(tileset.ToFeatureCollection())
+	return b
 }

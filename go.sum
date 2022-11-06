@@ -17,8 +17,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/ringsaturn/go-cities.json v0.0.0-20221105062652-69af5b046d54 h1:MVA2qVbFEcf2ZOndL1D9fdg30Do8G+FlNIWbzSM4L58=
 github.com/ringsaturn/go-cities.json v0.0.0-20221105062652-69af5b046d54/go.mod h1:qpTYJsvNi40oTJs0WEdRdNAbWcLBWSL7oRHUxMrF4g8=
-github.com/ringsaturn/tzf-rel v0.0.2022-f h1:Fp02qUdbVoFffIxOu/4ahpINhBOCrvN+3a9wOvixlN4=
-github.com/ringsaturn/tzf-rel v0.0.2022-f/go.mod h1:TvyUIUpF3aCH98QYjTmMb1cqK7pFswdFLoIVZwGNV/M=
+github.com/ringsaturn/tzf-rel v0.0.2022-f.0.20221106055029-45b36f15e35f h1:fewfW7SnADDH5Qtoe6UOY2Ng3nJkUr3flseham0nbC4=
+github.com/ringsaturn/tzf-rel v0.0.2022-f.0.20221106055029-45b36f15e35f/go.mod h1:TvyUIUpF3aCH98QYjTmMb1cqK7pFswdFLoIVZwGNV/M=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.3.0/go.mod h1:qt09Ya8vawLte6SNmTgCsAVtYtaKzEcn8ATUoHMkEqE=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
