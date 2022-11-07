@@ -1,3 +1,22 @@
+// Package preindex
+//
+// # Background
+//
+// The Ray Casting algorithm's time complexity is $O(n^2)$ which is expensive for
+// high throughput API that severing geo based data like weather forecasts.
+// And most of these requests are came from big cities around the world.
+//
+// If we can reduce these location's query execution time, our API could got
+// performance improvements.
+//
+// # How to
+//
+// Preindex's logic is very simple, generate map tiles around a multi polygon,
+// and exclude 1/2 edge layer, then merge to upper tiles. Then dumps all the tiles's
+// X/Y/Z and timezone to Protocol Buffer based data.
+//
+// A sample image of output tiles show on maps:
+// https://user-images.githubusercontent.com/13536789/200174943-7d40661e-bda5-4b79-a867-ec637e245a49.png
 package preindex
 
 import (
@@ -13,6 +32,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+// Drop most outside layer of tile, since tile may cover area not included in timezone.
 func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 	ret := []maptile.Tile{}
 	tilehash := map[maptile.Tile]bool{}
@@ -55,7 +75,7 @@ func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 	return ret
 }
 
-// PreIndexTimezone will gen tiles at `idxZoom` level and merge up to `aggZoom`.
+// PreIndexTimezone will gen tiles at idxZoom level and merge up to aggZoom.
 //
 // The `idxZoom` level tiles will be removed before final return.
 func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep maptile.Zoom, dropEdgeLayger int) ([]*pb.PreindexTimezone, error) {

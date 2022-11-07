@@ -79,7 +79,7 @@ Original data download from <https://github.com/evansiroky/timezone-boundary-bui
 
 Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel> which has Go's `embed` support.
 
-tzf's data pipleine can de drawed as:
+tzf's data pipeline can de drew as:
 
 ```mermaid
 graph TD
