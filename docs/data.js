@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667835699368,
+  "lastUpdate": 1667836361176,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -13997,6 +13997,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.016390817562853103",
             "extra": "mean: 1.5660032943999909 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0f7f1e53362705f4d896453003b0a37685171c24",
+          "message": "Bump benchmark-action/github-action-benchmark from 1.14.0 to 1.15.0 (#59)\n\nBumps [benchmark-action/github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark) from 1.14.0 to 1.15.0.\r\n- [Release notes](https://github.com/benchmark-action/github-action-benchmark/releases)\r\n- [Changelog](https://github.com/benchmark-action/github-action-benchmark/blob/master/CHANGELOG.md)\r\n- [Commits](https://github.com/benchmark-action/github-action-benchmark/compare/v1.14.0...v1.15.0)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: benchmark-action/github-action-benchmark\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-minor\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-11-07T23:51:14+08:00",
+          "tree_id": "cd06beccc080b5276c7dc3c24faa2fed78723068",
+          "url": "https://github.com/ringsaturn/tzf/commit/0f7f1e53362705f4d896453003b0a37685171c24"
+        },
+        "date": 1667836360238,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 21763.411565597828,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018852526783297737",
+            "extra": "mean: 45.94867844987752 usec\nrounds: 4413"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.6531369660272417,
+            "unit": "iter/sec",
+            "range": "stddev: 0.025875053566450763",
+            "extra": "mean: 1.5310724273999994 sec\nrounds: 5"
           }
         ]
       }
