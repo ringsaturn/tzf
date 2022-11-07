@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667836361176,
+  "lastUpdate": 1667836443608,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -8644,6 +8644,78 @@ window.BENCHMARK_DATA = {
             "value": 11952,
             "unit": "ns/op",
             "extra": "99272 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0f7f1e53362705f4d896453003b0a37685171c24",
+          "message": "Bump benchmark-action/github-action-benchmark from 1.14.0 to 1.15.0 (#59)\n\nBumps [benchmark-action/github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark) from 1.14.0 to 1.15.0.\r\n- [Release notes](https://github.com/benchmark-action/github-action-benchmark/releases)\r\n- [Changelog](https://github.com/benchmark-action/github-action-benchmark/blob/master/CHANGELOG.md)\r\n- [Commits](https://github.com/benchmark-action/github-action-benchmark/compare/v1.14.0...v1.15.0)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: benchmark-action/github-action-benchmark\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-minor\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-11-07T23:51:14+08:00",
+          "tree_id": "cd06beccc080b5276c7dc3c24faa2fed78723068",
+          "url": "https://github.com/ringsaturn/tzf/commit/0f7f1e53362705f4d896453003b0a37685171c24"
+        },
+        "date": 1667836442774,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 2258,
+            "unit": "ns/op",
+            "extra": "511875 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1005,
+            "unit": "ns/op",
+            "extra": "1200025 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6411,
+            "unit": "ns/op",
+            "extra": "186058 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7000,
+            "unit": "ns/op",
+            "extra": "171046 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 9171,
+            "unit": "ns/op",
+            "extra": "130048 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 6859,
+            "unit": "ns/op",
+            "extra": "174763 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7506,
+            "unit": "ns/op",
+            "extra": "159738 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 11601,
+            "unit": "ns/op",
+            "extra": "101270 times\n2 procs"
           }
         ]
       }
