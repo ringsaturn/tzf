@@ -128,12 +128,35 @@ raycasting algorithm execution times.
 [compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
 [points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
-## Related Links
+## Performance
+
+Benchmark run version https://github.com/ringsaturn/tzf/releases/tag/v0.9.0
+
+```
+goos: darwin
+goarch: amd64
+pkg: github.com/ringsaturn/tzf
+cpu: Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz
+BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities-16              731966              1737 ns/op
+BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities-16               1608507               734.9 ns/op
+BenchmarkGetTimezoneName-16                                               260023              4646 ns/op
+BenchmarkGetTimezoneNameAtEdge-16                                         234446              5178 ns/op
+BenchmarkGetTimezoneName_Random_WorldCities-16                            178764              6571 ns/op
+BenchmarkFullFinder_GetTimezoneName-16                                    236419              5088 ns/op
+BenchmarkFullFinder_GetTimezoneNameAtEdge-16                              225300              5470 ns/op
+BenchmarkFullFinder_GetTimezoneName_Random_WorldCities-16                 127683              8070 ns/op
+PASS
+ok      github.com/ringsaturn/tzf       18.869s
+```
 
 - <https://ringsaturn.github.io/tzf/>: Continuous Benchmark Result
-  - <https://ringsaturn.github.io/tz-benchmark/> Continuous Benchmark Compared with other packages
+- <https://ringsaturn.github.io/tz-benchmark/> Continuous Benchmark Compared with other packages
+
+## Related Repos
+
 - <https://github.com/ringsaturn/tzf-rel>: Preprocessed probuf data release repo
 - <https://github.com/ringsaturn/tzf-server>: HTTP Server for debug
+- <https://github.com/ringsaturn/tz-benchmark>: Continuous Benchmark Compared with other packages
 
 ## Thanks
 
