@@ -75,7 +75,7 @@ jobs:
           make bench | tee benchmark_result.txt
 
       - name: Continuous Benchmark
-        uses: benchmark-action/github-action-benchmark@v1.14.0
+        uses: benchmark-action/github-action-benchmark@v1.15.0
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           name: Go Benchmark
@@ -127,7 +127,7 @@ jobs:
           fil-profile --no-browser run tzfpy/__init__.py
 
       - name: Continuous Benchmark
-        uses: benchmark-action/github-action-benchmark@v1.14.0
+        uses: benchmark-action/github-action-benchmark@v1.15.0
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           name: tzf-py Benchmark
