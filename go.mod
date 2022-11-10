@@ -14,4 +14,7 @@ require (
 	google.golang.org/protobuf v1.28.1
 )
 
-require github.com/tidwall/geoindex v1.7.0 // indirect
+require (
+	github.com/stretchr/testify v1.7.1 // indirect
+	github.com/tidwall/geoindex v1.7.0 // indirect
+)
