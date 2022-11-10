@@ -31,7 +31,7 @@ func NewDefaultFinder() (*DefaultFinder, error) {
 		if err := proto.Unmarshal(tzfrel.LiteCompressData, input); err != nil {
 			panic(err)
 		}
-		return NewFinderFromCompressed(input)
+		return NewFinderFromCompressed(input, SetReduceMem)
 	}()
 	if err != nil {
 		return nil, err

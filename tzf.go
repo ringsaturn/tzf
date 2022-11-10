@@ -5,6 +5,7 @@
 package tzf
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,9 +16,20 @@ import (
 	"github.com/tidwall/rtree"
 )
 
+type Option struct {
+	ReduceMemory bool
+}
+
+type OptionFunc = func(opt *Option)
+
+func SetReduceMem(opt *Option) {
+	opt.ReduceMemory = true
+}
+
 type tzitem struct {
 	pbtz     *pb.Timezone
 	location *time.Location
+	name     string
 	shift    int
 	polys    []*geometry.Poly
 }
@@ -72,20 +84,26 @@ type Finder struct {
 	names   []string
 	reduced bool
 	tr      *rtree.RTreeG[*tzitem]
+	opt     *Option
 }
 
-func NewFinderFromRawJSON(input *convert.BoundaryFile) (*Finder, error) {
+func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (*Finder, error) {
 	timezones, err := convert.Do(input)
 	if err != nil {
 		return nil, err
 	}
-	return NewFinderFromPB(timezones)
+	return NewFinderFromPB(timezones, opts...)
 }
 
-func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
+func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (*Finder, error) {
 	now := time.Now()
 	items := make([]*tzitem, 0)
 	names := make([]string, 0)
+
+	opt := &Option{}
+	for _, optFunc := range opts {
+		optFunc(opt)
+	}
 
 	tr := &rtree.RTreeG[*tzitem]{}
 	for _, timezone := range input.Timezones {
@@ -106,9 +124,12 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 		_, tzOffset := now.In(location).Zone()
 
 		newItem := &tzitem{
-			pbtz:     timezone,
 			location: location,
 			shift:    tzOffset,
+			name:     timezone.Name,
+		}
+		if !opt.ReduceMemory {
+			newItem.pbtz = timezone
 		}
 		for _, polygon := range timezone.Polygons {
 
@@ -144,15 +165,16 @@ func NewFinderFromPB(input *pb.Timezones) (*Finder, error) {
 	finder.names = names
 	finder.reduced = input.Reuced
 	finder.tr = tr
+	finder.opt = opt
 	return finder, nil
 }
 
-func NewFinderFromCompressed(input *pb.CompressedTimezones) (*Finder, error) {
+func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) (*Finder, error) {
 	tzs, err := reduce.Decompress(input)
 	if err != nil {
 		return nil, err
 	}
-	return NewFinderFromPB(tzs)
+	return NewFinderFromPB(tzs, opts...)
 }
 
 func (f *Finder) getItem(lng float64, lat float64) (*tzitem, error) {
@@ -173,7 +195,7 @@ func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
 	if err != nil {
 		return ""
 	}
-	return item.pbtz.GetName()
+	return item.name
 }
 
 func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error) {
@@ -185,6 +207,9 @@ func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error
 }
 
 func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
+	if f.opt.ReduceMemory {
+		return nil, errors.New("tzf: not suppor when reduce mem")
+	}
 	p := geometry.Point{
 		X: float64(lng),
 		Y: float64(lat),
@@ -210,7 +235,7 @@ func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
 
 func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
 	for _, item := range f.items {
-		if item.pbtz.Name == name {
+		if item.name == name {
 			return item.pbtz, nil
 		}
 	}
@@ -218,6 +243,9 @@ func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
 }
 
 func (f *Finder) GetTimezoneShapeByShift(shift int) ([]*pb.Timezone, error) {
+	if f.opt.ReduceMemory {
+		return nil, errors.New("tzf: not suppor when reduce mem")
+	}
 	res := make([]*pb.Timezone, 0)
 	for _, item := range f.items {
 		if item.shift == shift {
