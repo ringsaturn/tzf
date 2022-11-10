@@ -17,13 +17,14 @@ import (
 )
 
 type Option struct {
-	ReduceMemory bool
+	DropPBTZ bool
 }
 
 type OptionFunc = func(opt *Option)
 
-func SetReduceMem(opt *Option) {
-	opt.ReduceMemory = true
+// SetDropPBTZ will make Finder not save [github.com/ringsaturn/tzf/pb.Timezone] in memory
+func SetDropPBTZ(opt *Option) {
+	opt.DropPBTZ = true
 }
 
 type tzitem struct {
@@ -128,7 +129,7 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (*Finder, error) {
 			shift:    tzOffset,
 			name:     timezone.Name,
 		}
-		if !opt.ReduceMemory {
+		if !opt.DropPBTZ {
 			newItem.pbtz = timezone
 		}
 		for _, polygon := range timezone.Polygons {
@@ -207,7 +208,7 @@ func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error
 }
 
 func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
-	if f.opt.ReduceMemory {
+	if f.opt.DropPBTZ {
 		return nil, errors.New("tzf: not suppor when reduce mem")
 	}
 	p := geometry.Point{
@@ -243,7 +244,7 @@ func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
 }
 
 func (f *Finder) GetTimezoneShapeByShift(shift int) ([]*pb.Timezone, error) {
-	if f.opt.ReduceMemory {
+	if f.opt.DropPBTZ {
 		return nil, errors.New("tzf: not suppor when reduce mem")
 	}
 	res := make([]*pb.Timezone, 0)
