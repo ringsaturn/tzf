@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1667836443608,
+  "lastUpdate": 1668092289858,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -14107,6 +14107,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.025875053566450763",
             "extra": "mean: 1.5310724273999994 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "11d9209b7d41695bfee6ccb31eba8b6a66db6e96",
+          "message": "add finder opt to reduce mem when not need (#60)\n\n`DefaultFinder` will try to reduce mem by default.",
+          "timestamp": "2022-11-10T22:56:51+08:00",
+          "tree_id": "cef4db08aa1dcfc63bd1290156319c6e08c066a2",
+          "url": "https://github.com/ringsaturn/tzf/commit/11d9209b7d41695bfee6ccb31eba8b6a66db6e96"
+        },
+        "date": 1668092289335,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 22121.55216198391,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000009317862571135834",
+            "extra": "mean: 45.20478457739097 usec\nrounds: 4020"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.6414891222622153,
+            "unit": "iter/sec",
+            "range": "stddev: 0.005512196859533462",
+            "extra": "mean: 1.5588728870000068 sec\nrounds: 5"
           }
         ]
       }
