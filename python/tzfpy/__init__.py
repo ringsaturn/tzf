@@ -49,13 +49,6 @@ def timezone_names_counts() -> int:
 
 
 if __name__ == "__main__":
-    import time
-
+    print(get_tz(11, 11))
     print(get_tz(116, 39))
-    while True:
-        # for i in range(1000):
-        get_tz(116, 39)
-        timezone_names()
-        timezone_names_counts()
-        time.sleep(0.1)
-    # print(timezone_names())
+    print(timezone_names())
