@@ -6,7 +6,9 @@
 
 ### Go
 
+
 ```go
+// Use about 150MB memory for init, and 60MB after GC.
 package main
 
 import (
@@ -27,6 +29,7 @@ func main() {
 If you need 100% accurate query result, use below to got a finder:
 
 ```go
+// Use about 900MB memory for init, and 60MB after GC.
 package main
 
 import (
@@ -57,6 +60,8 @@ func main() {
 ```console
 pip install tzfpy
 ```
+
+Use about 150MB memory for init, and 60MB after GC.
 
 ```py
 >>> from tzfpy import get_tz
