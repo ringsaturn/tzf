@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1668092397697,
+  "lastUpdate": 1668260732147,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -14217,6 +14217,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.005512196859533462",
             "extra": "mean: 1.5588728870000068 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f61eb6537f272d4bcc22ad1f5d6b0629be1fea8",
+          "message": "Fix memory leak in tzfpy (#63)\n\n- set timezone counts, names to Python vars, and never calling c_lib\r\n- add free func to free memory after got pointer from Go side, and send it back to Go side to free",
+          "timestamp": "2022-11-12T21:44:17+08:00",
+          "tree_id": "e507b58a46708d4a49d072bfa30770de25548017",
+          "url": "https://github.com/ringsaturn/tzf/commit/7f61eb6537f272d4bcc22ad1f5d6b0629be1fea8"
+        },
+        "date": 1668260731632,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 21840.536330422903,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000007308117007232721",
+            "extra": "mean: 45.78642139877508 usec\nrounds: 3645"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.420024620559659,
+            "unit": "iter/sec",
+            "range": "stddev: 0.008056676853041235",
+            "extra": "mean: 2.3808128168000167 sec\nrounds: 5"
           }
         ]
       }
