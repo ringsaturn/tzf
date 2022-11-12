@@ -1,6 +1,8 @@
 package tzf
 
 import (
+	"runtime"
+
 	tzfrel "github.com/ringsaturn/tzf-rel"
 	"github.com/ringsaturn/tzf/pb"
 	"google.golang.org/protobuf/proto"
@@ -40,6 +42,9 @@ func NewDefaultFinder() (*DefaultFinder, error) {
 	f := &DefaultFinder{}
 	f.fuzzyFinder = fuzzyFinder
 	f.finder = finder
+
+	// Force free mem by probuf, about 80MB
+	runtime.GC()
 
 	return f, nil
 }
