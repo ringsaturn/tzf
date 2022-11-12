@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1668260732147,
+  "lastUpdate": 1668260815720,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -8788,6 +8788,78 @@ window.BENCHMARK_DATA = {
             "value": 14039,
             "unit": "ns/op",
             "extra": "79441 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f61eb6537f272d4bcc22ad1f5d6b0629be1fea8",
+          "message": "Fix memory leak in tzfpy (#63)\n\n- set timezone counts, names to Python vars, and never calling c_lib\r\n- add free func to free memory after got pointer from Go side, and send it back to Go side to free",
+          "timestamp": "2022-11-12T21:44:17+08:00",
+          "tree_id": "e507b58a46708d4a49d072bfa30770de25548017",
+          "url": "https://github.com/ringsaturn/tzf/commit/7f61eb6537f272d4bcc22ad1f5d6b0629be1fea8"
+        },
+        "date": 1668260814979,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 2248,
+            "unit": "ns/op",
+            "extra": "524962 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1018,
+            "unit": "ns/op",
+            "extra": "1000000 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6618,
+            "unit": "ns/op",
+            "extra": "181704 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7155,
+            "unit": "ns/op",
+            "extra": "167276 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 9442,
+            "unit": "ns/op",
+            "extra": "126096 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7205,
+            "unit": "ns/op",
+            "extra": "166693 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7783,
+            "unit": "ns/op",
+            "extra": "153375 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 12047,
+            "unit": "ns/op",
+            "extra": "101024 times\n2 procs"
           }
         ]
       }
