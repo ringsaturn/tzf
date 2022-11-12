@@ -1,5 +1,14 @@
 import os
-from ctypes import CDLL, POINTER, c_char_p, c_float, c_long, c_int, c_void_p, string_at
+from ctypes import (
+    CDLL,
+    POINTER,
+    c_char_p,
+    c_float,
+    c_int,
+    c_long,
+    c_void_p,
+    string_at,
+)
 from typing import List
 
 c_lib = CDLL(os.path.join(os.path.dirname(__file__), "tzf.so"))
