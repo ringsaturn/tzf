@@ -1,5 +1,5 @@
 import os
-from ctypes import CDLL, POINTER, c_char_p, c_float, c_long
+from ctypes import CDLL, POINTER, c_char_p, c_float, c_long, c_int
 from typing import List
 
 c_lib = CDLL(os.path.join(os.path.dirname(__file__), "tzf.so"))
@@ -15,6 +15,9 @@ _names_counts.restype = c_long
 _names = c_lib.TimezoneNames
 _names.restype = POINTER(c_char_p)
 
+_free = c_lib.FreeChar
+_free.argtypes = [c_char_p]
+_free.restype = c_int
 
 _count = _names_counts()
 
@@ -31,7 +34,11 @@ names = _setup_timezone_names()
 
 
 def get_tz(lng: float, lat: float) -> str:
-    return _get(c_float(lng), c_float(lat)).decode()
+    raw = _get(c_float(lng), c_float(lat))
+    ret = raw.decode()
+    # print(ret)
+    _free(raw)
+    return ret
 
 
 def timezone_names() -> List[str]:
@@ -45,9 +52,9 @@ def timezone_names_counts() -> int:
 if __name__ == "__main__":
     import time
     while True:
-        for i in range(1000):
-            get_tz(116, 39)
-            timezone_names()
-            timezone_names_counts()
-        time.sleep(0.01)
+        # for i in range(1000):
+        get_tz(116, 39)
+        # timezone_names()
+        # timezone_names_counts()
+        time.sleep(1)
     # print(timezone_names())

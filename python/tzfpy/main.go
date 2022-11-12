@@ -27,9 +27,17 @@ func init() {
 //export GetTZ
 func GetTZ(lng *C.float, lat *C.float) *C.char {
 	ret := C.CString(finder.GetTimezoneName(float64(*lng), float64(*lat)))
-
-	defer C.free(unsafe.Pointer((ret)))
 	return ret
+}
+
+//export FreeChar
+func FreeChar(input *C.char) {
+	// fmt.Println("input", input)
+	ptr := unsafe.Pointer(input)
+	// fmt.Println("ptr", ptr)
+	C.free(ptr)
+	// fmt.Println("d")
+	// runtime.GC()
 }
 
 func goStringSliceToC(stringSlice []string) **C.char {
