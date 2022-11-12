@@ -1,6 +1,8 @@
 // TZF's Python binding
 package main
 
+//#cgo LDFLAGS:
+//#include <stdlib.h>
 import "C"
 import (
 	"unsafe"
@@ -24,7 +26,10 @@ func init() {
 
 //export GetTZ
 func GetTZ(lng *C.float, lat *C.float) *C.char {
-	return C.CString(finder.GetTimezoneName(float64(*lng), float64(*lat)))
+	ret := C.CString(finder.GetTimezoneName(float64(*lng), float64(*lat)))
+
+	defer C.free(unsafe.Pointer((ret)))
+	return ret
 }
 
 func goStringSliceToC(stringSlice []string) **C.char {

@@ -16,23 +16,38 @@ _names = c_lib.TimezoneNames
 _names.restype = POINTER(c_char_p)
 
 
-def get_tz(lng: float, lat: float) -> str:
-    return _get(c_float(lng), c_float(lat)).decode()
+_count = _names_counts()
 
 
-def timezone_names_counts() -> int:
-    return _names_counts()
-
-
-def timezone_names() -> List[str]:
+def _setup_timezone_names() -> List[str]:
     res = _names()
     names = []
-    for i in range(timezone_names_counts()):
+    for i in range(_count):
         names.append(res[i].decode())
     return names
 
 
+names = _setup_timezone_names()
+
+
+def get_tz(lng: float, lat: float) -> str:
+    return _get(c_float(lng), c_float(lat)).decode()
+
+
+def timezone_names() -> List[str]:
+    return names
+
+
+def timezone_names_counts() -> int:
+    return _count
+
+
 if __name__ == "__main__":
-    print(get_tz(11, 11))
-    print(get_tz(116, 39))
-    print(timezone_names())
+    import time
+    while True:
+        for i in range(1000):
+            get_tz(116, 39)
+            timezone_names()
+            timezone_names_counts()
+        time.sleep(0.01)
+    # print(timezone_names())
