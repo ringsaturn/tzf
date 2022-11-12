@@ -29,7 +29,7 @@ func main() {
 If you need 100% accurate query result, use below to got a finder:
 
 ```go
-// Use about 900MB memory for init, and 60MB after GC.
+// Use about 900MB memory for init, and 660MB after GC.
 package main
 
 import (
