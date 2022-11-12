@@ -26,18 +26,12 @@ func init() {
 
 //export GetTZ
 func GetTZ(lng *C.float, lat *C.float) *C.char {
-	ret := C.CString(finder.GetTimezoneName(float64(*lng), float64(*lat)))
-	return ret
+	return C.CString(finder.GetTimezoneName(float64(*lng), float64(*lat)))
 }
 
 //export FreeChar
-func FreeChar(input *C.char) {
-	// fmt.Println("input", input)
-	ptr := unsafe.Pointer(input)
-	// fmt.Println("ptr", ptr)
-	C.free(ptr)
-	// fmt.Println("d")
-	// runtime.GC()
+func FreeChar(input unsafe.Pointer) {
+	C.free(input)
 }
 
 func goStringSliceToC(stringSlice []string) **C.char {
