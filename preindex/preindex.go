@@ -6,7 +6,7 @@
 // high throughput API that severing geo based data like weather forecasts.
 // And most of these requests are came from big cities around the world.
 //
-// If we can reduce these location's query execution time, our API could got
+// If we can reduce these location's query execution times, our API could got
 // performance improvements.
 //
 // # How to
