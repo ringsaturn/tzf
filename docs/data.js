@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1668315046757,
+  "lastUpdate": 1668356365722,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -14767,6 +14767,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.01112620889254292",
             "extra": "mean: 2.3851838011999975 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2a62910745c547d6c20061d247fc8e40593dd674",
+          "message": "update proto docs and fix a typo in proto (#65)",
+          "timestamp": "2022-11-14T00:18:06+08:00",
+          "tree_id": "fe4ae0836aca366f73bd83c68fef3e9de1c1d13f",
+          "url": "https://github.com/ringsaturn/tzf/commit/2a62910745c547d6c20061d247fc8e40593dd674"
+        },
+        "date": 1668356364901,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 20528.712582788827,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000020667706065492294",
+            "extra": "mean: 48.71226074051985 usec\nrounds: 3701"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.41264800527915957,
+            "unit": "iter/sec",
+            "range": "stddev: 0.020952128040313836",
+            "extra": "mean: 2.423372916400001 sec\nrounds: 5"
           }
         ]
       }
