@@ -140,7 +140,7 @@ raycasting algorithm execution times.
 
 ## Performance
 
-Benchmark run version https://github.com/ringsaturn/tzf/releases/tag/v0.9.0
+Benchmark run version <https://github.com/ringsaturn/tzf/releases/tag/v0.9.0>
 
 ```
 goos: darwin
