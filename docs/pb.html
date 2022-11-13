@@ -330,7 +330,7 @@
         
       
         <h3 id="pb.Point">Point</h3>
-        <p></p>
+        <p>Basic Point data define.</p>
 
         
           <table class="field-table">
@@ -361,7 +361,7 @@
         
       
         <h3 id="pb.Polygon">Polygon</h3>
-        <p></p>
+        <p>Define a polygon, mostly based on GeoJSON's Polygon define.</p><p>Excerpt from RFC-9476 section 'Polygon'</p><p>-  A linear ring is a closed LineString with four or more positions.</p><p>-  The first and last positions are equivalent, and they MUST contain</p><p>identical values; their representation SHOULD also be identical.</p><p>-  A linear ring is the boundary of a surface or the boundary of a</p><p>hole in a surface.</p><p>-  A linear ring MUST follow the right-hand rule with respect to the</p><p>area it bounds, i.e., exterior rings are counterclockwise, and</p><p>holes are clockwise.</p><p>Note: the [GJ2008] specification did not discuss linear ring winding</p><p>order.  For backwards compatibility, parsers SHOULD NOT reject</p><p>Polygons that do not follow the right-hand rule.</p><p>Though a linear ring is not explicitly represented as a GeoJSON</p><p>geometry type, it leads to a canonical formulation of the Polygon</p><p>geometry type definition as follows:</p><p>-  For type "Polygon", the "coordinates" member MUST be an array of</p><p>linear ring coordinate arrays.</p><p>-  For Polygons with more than one of these rings, the first MUST be</p><p>the exterior ring, and any others MUST be interior rings.  The</p><p>exterior ring bounds the surface, and the interior rings (if</p><p>present) bound holes within the surface.</p><p>[GJ2008]: https://geojson.org/geojson-spec</p>
 
         
           <table class="field-table">
@@ -374,14 +374,14 @@
                   <td>points</td>
                   <td><a href="#pb.Point">Point</a></td>
                   <td>repeated</td>
-                  <td><p> </p></td>
+                  <td><p>define the &#34;exterior ring&#34; </p></td>
                 </tr>
               
                 <tr>
                   <td>holes</td>
                   <td><a href="#pb.Polygon">Polygon</a></td>
                   <td>repeated</td>
-                  <td><p> </p></td>
+                  <td><p>define the &#34;interior rings&#34; as holes </p></td>
                 </tr>
               
             </tbody>
@@ -392,7 +392,7 @@
         
       
         <h3 id="pb.PreindexTimezone">PreindexTimezone</h3>
-        <p></p>
+        <p>PreindexTimezone tile item.</p><p>The X/Y/Z are OSM style like map tile index values.</p>
 
         
           <table class="field-table">
@@ -437,7 +437,7 @@
         
       
         <h3 id="pb.PreindexTimezones">PreindexTimezones</h3>
-        <p></p>
+        <p>PreindexTimezones is all preindex timezone's dumps.</p>
 
         
           <table class="field-table">
@@ -450,14 +450,14 @@
                   <td>idxZoom</td>
                   <td><a href="#int32">int32</a></td>
                   <td></td>
-                  <td><p> </p></td>
+                  <td><p>which zoom value the tiles generated </p></td>
                 </tr>
               
                 <tr>
                   <td>aggZoom</td>
                   <td><a href="#int32">int32</a></td>
                   <td></td>
-                  <td><p> </p></td>
+                  <td><p>which zoom value the tiles merge up with. </p></td>
                 </tr>
               
                 <tr>
@@ -475,7 +475,7 @@
         
       
         <h3 id="pb.Timezone">Timezone</h3>
-        <p></p>
+        <p>Timezone is a timezone's all data.</p>
 
         
           <table class="field-table">
@@ -523,7 +523,7 @@
                 </tr>
               
                 <tr>
-                  <td>reuced</td>
+                  <td>reduced</td>
                   <td><a href="#bool">bool</a></td>
                   <td></td>
                   <td><p>Reduced data will toggle neighbor search as plan b </p></td>
