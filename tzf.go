@@ -164,7 +164,7 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (*Finder, error) {
 	finder := &Finder{}
 	finder.items = items
 	finder.names = names
-	finder.reduced = input.Reuced
+	finder.reduced = input.Reduced
 	finder.tr = tr
 	finder.opt = opt
 	return finder, nil
