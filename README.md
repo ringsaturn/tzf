@@ -84,7 +84,7 @@ Original data download from
 
 Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel>
 which has Go's `embed` support. Those files are Protocol Buffers messages for
-more effiency binary distribution like Python wheels, you can view
+more efficiency binary distribution like Python wheels, you can view
 the [`pb/tzinfo.proto`](./pb/tzinfo.proto) or it's [HTML format docs][pb_html]
 for the internal format info.
 
