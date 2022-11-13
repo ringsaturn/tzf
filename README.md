@@ -1,4 +1,4 @@
-# TZF: a timezone finder for Go&Python. [![Go Reference](https://pkg.go.dev/badge/github.com/ringsaturn/tzf.svg)](https://pkg.go.dev/github.com/ringsaturn/tzf) [![PyPI](https://img.shields.io/pypi/v/tzfpy)](https://pypi.org/project/tzfpy/) [![](https://img.shields.io/pypi/wheel/tzfpy.svg)](https://pypi.org/project/tzfpy/)
+# TZF: a fast timezone finder for Go&Python. [![Go Reference](https://pkg.go.dev/badge/github.com/ringsaturn/tzf.svg)](https://pkg.go.dev/github.com/ringsaturn/tzf) [![PyPI](https://img.shields.io/pypi/v/tzfpy)](https://pypi.org/project/tzfpy/) [![](https://img.shields.io/pypi/wheel/tzfpy.svg)](https://pypi.org/project/tzfpy/)
 
 ![](https://github.com/ringsaturn/tzf/blob/gh-pages/docs/tzf-social-media.png?raw=true)
 
@@ -139,6 +139,20 @@ raycasting algorithm execution times.
 [points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
 ## Performance
+
+Package tzf is designed for high performance geo queries related services like
+weather forecast API. And most queries could return in very limited time,
+averagely like 2000 nanoseconds.
+
+Here is what have been done for performance improvements:
+
+1. Use preindexes to handle most queries, basically about 1000 nanoseconds
+2. Use RTree to filter candidate polygons instead of iter all polygons to reduce
+   Ray Casting algorithm execution times
+3. Use a fine tuned Ray Casting algorithm package
+   <https://github.com/tidwall/geojson> to check if polygon contain point
+
+That's all. There is no black magics inside package tzf.
 
 Benchmark run version <https://github.com/ringsaturn/tzf/releases/tag/v0.9.0>
 
