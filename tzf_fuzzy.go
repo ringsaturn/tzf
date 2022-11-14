@@ -32,15 +32,11 @@ func NewFuzzyFinderFromPB(input *pb.PreindexTimezones) (*FuzzyFinder, error) {
 }
 
 func (f *FuzzyFinder) GetTimezoneName(lng float64, lat float64) string {
-	p := orb.Point{lng, lat}
-	for z := f.aggZoom; z <= f.idxZoom; z++ {
-		key := maptile.At(p, maptile.Zoom(z))
-		v, ok := f.m[key]
-		if ok {
-			return v[0]
-		}
+	names, err := f.GetTimezoneNames(lng, lat)
+	if err != nil {
+		return ""
 	}
-	return ""
+	return names[0]
 }
 
 func (f *FuzzyFinder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
