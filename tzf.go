@@ -186,12 +186,7 @@ func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) 
 	return NewFinderFromPB(tzs, opts...)
 }
 
-func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
-	p := geometry.Point{
-		X: float64(lng),
-		Y: float64(lat),
-	}
-	ret := []*tzitem{}
+func (f *Finder) getItemInRanges(lng float64, lat float64) ([]*tzitem, error) {
 	candicates := []*tzitem{}
 
 	// TODO(ringsaturn): fix this range
@@ -202,6 +197,20 @@ func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
 	})
 	if len(candicates) == 0 {
 		candicates = f.items
+	}
+
+	return candicates, nil
+}
+
+func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
+	p := geometry.Point{
+		X: float64(lng),
+		Y: float64(lat),
+	}
+	ret := []*tzitem{}
+	candicates, err := f.getItemInRanges(lng, lat)
+	if err != nil {
+		return nil, err
 	}
 	for _, item := range candicates {
 		if item.ContainsPoint(p) {
@@ -215,11 +224,20 @@ func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
 }
 
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
-	item, err := f.getItem(lng, lat)
+	p := geometry.Point{
+		X: float64(lng),
+		Y: float64(lat),
+	}
+	candicates, err := f.getItemInRanges(lng, lat)
 	if err != nil {
 		return ""
 	}
-	return item[0].name
+	for _, item := range candicates {
+		if item.ContainsPoint(p) {
+			return item.name
+		}
+	}
+	return ""
 }
 
 func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
