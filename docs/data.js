@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1668525761071,
+  "lastUpdate": 1668525880572,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -9364,6 +9364,78 @@ window.BENCHMARK_DATA = {
             "value": 11563,
             "unit": "ns/op",
             "extra": "90404 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e944b11f6d462f8d1fc3dd855d47a525eb8f547",
+          "message": "Toggle finder using RTree, support return all tz (#71)\n\nIt's expected some performance improvements since finder will not iterate all\r\npolygons which is expensive operations.",
+          "timestamp": "2022-11-15T23:21:24+08:00",
+          "tree_id": "77d3dfbce97b650fd6f10de58e82936291369444",
+          "url": "https://github.com/ringsaturn/tzf/commit/6e944b11f6d462f8d1fc3dd855d47a525eb8f547"
+        },
+        "date": 1668525879707,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 2226,
+            "unit": "ns/op",
+            "extra": "522144 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1053,
+            "unit": "ns/op",
+            "extra": "1127598 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6109,
+            "unit": "ns/op",
+            "extra": "260890 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7704,
+            "unit": "ns/op",
+            "extra": "183409 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 9145,
+            "unit": "ns/op",
+            "extra": "133858 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 5746,
+            "unit": "ns/op",
+            "extra": "226650 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 8585,
+            "unit": "ns/op",
+            "extra": "168984 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 12297,
+            "unit": "ns/op",
+            "extra": "98805 times\n2 procs"
           }
         ]
       }
