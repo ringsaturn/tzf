@@ -16,6 +16,8 @@ import (
 	"github.com/tidwall/rtree"
 )
 
+var ErrNoTimezoneFound = errors.New("tzf: no timezone found")
+
 type Option struct {
 	DropPBTZ bool
 }
@@ -33,6 +35,8 @@ type tzitem struct {
 	name     string
 	shift    int
 	polys    []*geometry.Poly
+	min      [2]float64
+	max      [2]float64
 }
 
 func newNotFoundErr(lng float64, lat float64) error {
@@ -61,15 +65,20 @@ func (i *tzitem) GetMinMax() ([2]float64, [2]float64) {
 	for _, poly := range i.polys {
 		minx := poly.Rect().Min.X
 		miny := poly.Rect().Min.Y
-		if minx < retmin[0] && miny < retmin[1] {
+		if minx < retmin[0] {
 			retmin[0] = minx
+		}
+		if miny < retmin[1] {
 			retmin[1] = miny
 		}
 
 		maxx := poly.Rect().Max.X
 		maxy := poly.Rect().Max.Y
-		if minx < retmax[0] && miny < retmax[1] {
+		if maxx > retmax[0] {
 			retmax[0] = maxx
+
+		}
+		if maxy > retmax[1] {
 			retmax[1] = maxy
 		}
 	}
@@ -157,8 +166,12 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (*Finder, error) {
 			newPoly := geometry.NewPoly(newPoints, holes, nil)
 			newItem.polys = append(newItem.polys, newPoly)
 		}
-		items = append(items, newItem)
 		minp, maxp := newItem.GetMinMax()
+
+		newItem.min = minp
+		newItem.max = maxp
+
+		items = append(items, newItem)
 		tr.Insert(minp, maxp, newItem)
 	}
 	finder := &Finder{}
@@ -178,25 +191,86 @@ func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) 
 	return NewFinderFromPB(tzs, opts...)
 }
 
-func (f *Finder) getItem(lng float64, lat float64) (*tzitem, error) {
+func getRTreeRangeShifed(lng float64, lat float64) float64 {
+	if 73 < lng && lng < 140 && 8 < lat && lat < 54 {
+		return 70.0
+	}
+	return 30.0
+}
+
+func (f *Finder) getItemInRanges(lng float64, lat float64) []*tzitem {
+	candicates := []*tzitem{}
+
+	// TODO(ringsaturn): fix this range
+	shifted := getRTreeRangeShifed(lng, lat)
+	f.tr.Search([2]float64{lng - shifted, lat - shifted}, [2]float64{lng + shifted, lat + shifted}, func(min, max [2]float64, data *tzitem) bool {
+		candicates = append(candicates, data)
+		return true
+	})
+	if len(candicates) == 0 {
+		candicates = f.items
+	}
+
+	return candicates
+}
+
+func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
 	p := geometry.Point{
 		X: float64(lng),
 		Y: float64(lat),
 	}
-	for _, item := range f.items {
+	ret := []*tzitem{}
+	candicates := f.getItemInRanges(lng, lat)
+	if len(candicates) == 0 {
+		return nil, ErrNoTimezoneFound
+	}
+	for _, item := range candicates {
 		if item.ContainsPoint(p) {
-			return item, nil
+			ret = append(ret, item)
 		}
 	}
-	return nil, newNotFoundErr(lng, lat)
+	if len(ret) == 0 {
+		return nil, newNotFoundErr(lng, lat)
+	}
+	return ret, nil
 }
 
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
-	item, err := f.getItem(lng, lat)
-	if err != nil {
+	p := geometry.Point{
+		X: float64(lng),
+		Y: float64(lat),
+	}
+	candicates := f.getItemInRanges(lng, lat)
+	if len(candicates) == 0 {
 		return ""
 	}
-	return item.name
+	// candicates := f.items
+	for _, item := range candicates {
+		minp := item.min
+		maxp := item.max
+		if lng < minp[0] || lng > maxp[0] {
+			continue
+		}
+		if lat < minp[1] || lat > maxp[1] {
+			continue
+		}
+		if item.ContainsPoint(p) {
+			return item.name
+		}
+	}
+	return ""
+}
+
+func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
+	item, err := f.getItem(lng, lat)
+	if err != nil {
+		return nil, err
+	}
+	ret := []string{}
+	for i := 0; i < len(item); i++ {
+		ret = append(ret, item[i].name)
+	}
+	return ret, nil
 }
 
 func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error) {
@@ -204,34 +278,18 @@ func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error
 	if err != nil {
 		return nil, err
 	}
-	return item.location, nil
+	return item[0].location, nil
 }
 
 func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
 	if f.opt.DropPBTZ {
 		return nil, errors.New("tzf: not suppor when reduce mem")
 	}
-	p := geometry.Point{
-		X: float64(lng),
-		Y: float64(lat),
+	item, err := f.getItem(lng, lat)
+	if err != nil {
+		return nil, err
 	}
-	candicates := []*tzitem{}
-	for _, shifted := range []float64{3, 10, 15} {
-		f.tr.Search([2]float64{lng - shifted, lat - shifted}, [2]float64{lng + shifted, lat + shifted}, func(min, max [2]float64, data *tzitem) bool {
-			candicates = append(candicates, data)
-			return true
-		})
-		if len(candicates) > 10 {
-			break
-		}
-	}
-
-	for _, item := range candicates {
-		if item.ContainsPoint(p) {
-			return item.pbtz, nil
-		}
-	}
-	return nil, newNotFoundErr(lng, lat)
+	return item[0].pbtz, nil
 }
 
 func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
