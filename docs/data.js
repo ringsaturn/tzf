@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1668424569523,
+  "lastUpdate": 1668525761071,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -15097,6 +15097,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.009339137838240186",
             "extra": "mean: 2.537303198000001 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e944b11f6d462f8d1fc3dd855d47a525eb8f547",
+          "message": "Toggle finder using RTree, support return all tz (#71)\n\nIt's expected some performance improvements since finder will not iterate all\r\npolygons which is expensive operations.",
+          "timestamp": "2022-11-15T23:21:24+08:00",
+          "tree_id": "77d3dfbce97b650fd6f10de58e82936291369444",
+          "url": "https://github.com/ringsaturn/tzf/commit/6e944b11f6d462f8d1fc3dd855d47a525eb8f547"
+        },
+        "date": 1668525760575,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 22420.741009777645,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006404461778291287",
+            "extra": "mean: 44.601558867474616 usec\nrounds: 2684"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.407884347330082,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00822676098330855",
+            "extra": "mean: 2.4516753499999995 sec\nrounds: 5"
           }
         ]
       }
