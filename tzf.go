@@ -236,12 +236,18 @@ func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
 	return ret, nil
 }
 
+// GetTimezoneName will use alphabet order and return first matched result.
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
-	names, err := f.GetTimezoneNames(lng, lat)
-	if err != nil {
-		return ""
+	p := geometry.Point{
+		X: float64(lng),
+		Y: float64(lat),
 	}
-	return names[0]
+	for _, item := range f.items {
+		if item.ContainsPoint(p) {
+			return item.name
+		}
+	}
+	return ""
 }
 
 func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
