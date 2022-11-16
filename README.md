@@ -154,23 +154,23 @@ Here is what have been done for performance improvements:
 
 That's all. There is no black magics inside package tzf.
 
-Benchmark run version <https://github.com/ringsaturn/tzf/releases/tag/v0.9.0>
+Benchmark run version <https://github.com/ringsaturn/tzf/releases/tag/v0.10.0>
 
 ```
 goos: darwin
 goarch: amd64
 pkg: github.com/ringsaturn/tzf
 cpu: Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz
-BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities-16              731966              1737 ns/op
-BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities-16               1608507               734.9 ns/op
-BenchmarkGetTimezoneName-16                                               260023              4646 ns/op
-BenchmarkGetTimezoneNameAtEdge-16                                         234446              5178 ns/op
-BenchmarkGetTimezoneName_Random_WorldCities-16                            178764              6571 ns/op
-BenchmarkFullFinder_GetTimezoneName-16                                    236419              5088 ns/op
-BenchmarkFullFinder_GetTimezoneNameAtEdge-16                              225300              5470 ns/op
-BenchmarkFullFinder_GetTimezoneName_Random_WorldCities-16                 127683              8070 ns/op
+BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities-16    	  443942	      2583 ns/op
+BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities-16      	 1580524	       769.3 ns/op
+BenchmarkGetTimezoneName-16                                     	  184234	      6983 ns/op
+BenchmarkGetTimezoneNameAtEdge-16                               	  145342	      8779 ns/op
+BenchmarkGetTimezoneName_Random_WorldCities-16                  	  130540	      9247 ns/op
+BenchmarkFullFinder_GetTimezoneName-16                          	  164649	      7256 ns/op
+BenchmarkFullFinder_GetTimezoneNameAtEdge-16                    	  136508	      9382 ns/op
+BenchmarkFullFinder_GetTimezoneName_Random_WorldCities-16       	   91137	     12385 ns/op
 PASS
-ok      github.com/ringsaturn/tzf       18.869s
+ok  	github.com/ringsaturn/tzf	19.073s
 ```
 
 - <https://ringsaturn.github.io/tzf/>:
