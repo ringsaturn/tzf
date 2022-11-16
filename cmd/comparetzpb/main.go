@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	liteFinder *tzf.Finder
-	fullFinder *tzf.Finder
+	defaultfinder *tzf.DefaultFinder
+	fullFinder    *tzf.Finder
 )
 
 func init() {
@@ -23,12 +23,8 @@ func init() {
 }
 
 func initLite() {
-	input := &pb.Timezones{}
-	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
-		panic(err)
-	}
-	_finder, _ := tzf.NewFinderFromPB(input)
-	liteFinder = _finder
+	_finder, _ := tzf.NewDefaultFinder()
+	defaultfinder = _finder
 }
 
 func initFull() {
@@ -66,14 +62,14 @@ func main() {
 			_lng := float64(lng)
 			_lat := float64(lat)
 			fullRes := fullFinder.GetTimezoneName(_lng, _lat)
-			liteRes := liteFinder.GetTimezoneName(_lng, _lat)
-			if fullRes == liteRes {
+			defaultRes := defaultfinder.GetTimezoneName(_lng, _lat)
+			if fullRes == defaultRes {
 				continue
 			}
 			notEqualData.Features = append(notEqualData.Features, Features{
 				Type: "Feature",
 				Properties: map[string]interface{}{
-					"lite": liteRes,
+					"lite": defaultRes,
 					"full": fullRes,
 				},
 				Geometry: Geometry{
@@ -87,14 +83,14 @@ func main() {
 		_lng := city.Lng
 		_lat := city.Lat
 		fullRes := fullFinder.GetTimezoneName(_lng, _lat)
-		liteRes := liteFinder.GetTimezoneName(_lng, _lat)
-		if fullRes == liteRes {
+		defaultRes := defaultfinder.GetTimezoneName(_lng, _lat)
+		if fullRes == defaultRes {
 			continue
 		}
 		notEqualData.Features = append(notEqualData.Features, Features{
 			Type: "Feature",
 			Properties: map[string]interface{}{
-				"lite":      liteRes,
+				"lite":      defaultRes,
 				"full":      fullRes,
 				"worldCity": fmt.Sprintf("%v-%v", city.Country, city.Name),
 			},
