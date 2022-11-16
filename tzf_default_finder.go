@@ -54,7 +54,25 @@ func (f *DefaultFinder) GetTimezoneName(lng float64, lat float64) string {
 	if fuzzyRes != "" {
 		return fuzzyRes
 	}
-	return f.finder.GetTimezoneName(lng, lat)
+	name := f.finder.GetTimezoneName(lng, lat)
+	if name != "" {
+		return name
+	}
+	for _, dx := range []float64{-0.02, 0, 0.02} {
+		for _, dy := range []float64{-0.02, 0, 0.02} {
+			dlng := dx + lng
+			dlat := dy + lat
+			fuzzyRes := f.fuzzyFinder.GetTimezoneName(dlng, dlat)
+			if fuzzyRes != "" {
+				return fuzzyRes
+			}
+			name := f.finder.GetTimezoneName(dlng, dlat)
+			if name != "" {
+				return name
+			}
+		}
+	}
+	return ""
 }
 
 func (f *DefaultFinder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {

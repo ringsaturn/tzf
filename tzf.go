@@ -7,6 +7,7 @@ package tzf
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/ringsaturn/tzf/convert"
@@ -236,29 +237,11 @@ func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
 }
 
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
-	p := geometry.Point{
-		X: float64(lng),
-		Y: float64(lat),
-	}
-	candicates := f.getItemInRanges(lng, lat)
-	if len(candicates) == 0 {
+	names, err := f.GetTimezoneNames(lng, lat)
+	if err != nil {
 		return ""
 	}
-	// candicates := f.items
-	for _, item := range candicates {
-		minp := item.min
-		maxp := item.max
-		if lng < minp[0] || lng > maxp[0] {
-			continue
-		}
-		if lat < minp[1] || lat > maxp[1] {
-			continue
-		}
-		if item.ContainsPoint(p) {
-			return item.name
-		}
-	}
-	return ""
+	return names[0]
 }
 
 func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
@@ -270,6 +253,7 @@ func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
 	for i := 0; i < len(item); i++ {
 		ret = append(ret, item[i].name)
 	}
+	sort.Strings(ret)
 	return ret, nil
 }
 
