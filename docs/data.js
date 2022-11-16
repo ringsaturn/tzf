@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1668613730350,
+  "lastUpdate": 1668614816728,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -15647,6 +15647,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.003200914449718519",
             "extra": "mean: 2.380498320599986 sec\nrounds: 5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bf54f920c607fe35db6eeadaeac7baaf7d616e71",
+          "message": "fix performance regression since RTree option (#75)",
+          "timestamp": "2022-11-17T00:05:17+08:00",
+          "tree_id": "adde8147ecbd708c219d32884845540bc15b3b3a",
+          "url": "https://github.com/ringsaturn/tzf/commit/bf54f920c607fe35db6eeadaeac7baaf7d616e71"
+        },
+        "date": 1668614815887,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tzfpy/tests.py::test_tzfpy_random",
+            "value": 11601.589608062182,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000044394118660015836",
+            "extra": "mean: 86.19508479295627 usec\nrounds: 2512"
+          },
+          {
+            "name": "tzfpy/tests.py::test_iter_global",
+            "value": 0.3224991464020033,
+            "unit": "iter/sec",
+            "range": "stddev: 0.033525658171328465",
+            "extra": "mean: 3.1007834009999984 sec\nrounds: 5"
           }
         ]
       }
