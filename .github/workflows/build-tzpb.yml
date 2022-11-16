@@ -1,0 +1,65 @@
+name: build-tzpb
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-tzpb-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install go pkgs
+        run: |
+          make install
+
+      - name: Install test related deps
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
+
+      - name: Test
+        run: |
+          make test
+
+      - name: Download files
+        run: |
+          wget https://github.com/evansiroky/timezone-boundary-builder/releases/latest/download/timezones-with-oceans.geojson.zip
+          ls -alh
+          unzip timezones-with-oceans.geojson.zip
+          ls -alh
+          mkdir data
+          ls -alh
+          cp combined-with-oceans.json data/
+
+      - name: Install geojson2tzpb
+        run: cd cmd/geojson2tzpb;go install
+
+      - name: Install reducetzpb
+        run: cd cmd/reducetzpb;go install
+
+      - name: Install compresstzpb
+        run: cd cmd/compresstzpb;go install
+
+      - name: Install preindextzpb
+        run: cd cmd/preindextzpb;go install
+
+      - name: Convert GeoJSON to pb
+        run: |
+          geojson2tzpb data/combined-with-oceans.json | xargs reducetzpb | xargs compresstzpb
+          preindextzpb data/combined-with-oceans.reduce.pb
+          ls -alh data/
