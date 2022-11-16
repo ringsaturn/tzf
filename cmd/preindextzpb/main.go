@@ -16,7 +16,7 @@ var (
 	idxZoom            = 11
 	aggZoom            = 3
 	maxZoomLevelToKeep = 10
-	layerDrop          = 1
+	layerDrop          = 2
 )
 
 func main() {
