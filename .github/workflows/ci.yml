@@ -42,34 +42,6 @@ jobs:
         run: |
           make test
 
-      - name: Download files
-        run: |
-          wget https://github.com/evansiroky/timezone-boundary-builder/releases/latest/download/timezones-with-oceans.geojson.zip
-          ls -alh
-          unzip timezones-with-oceans.geojson.zip
-          ls -alh
-          mkdir data
-          ls -alh
-          cp combined-with-oceans.json data/
-
-      - name: Install geojson2tzpb
-        run: cd cmd/geojson2tzpb;go install
-
-      - name: Install reducetzpb
-        run: cd cmd/reducetzpb;go install
-
-      - name: Install compresstzpb
-        run: cd cmd/compresstzpb;go install
-
-      - name: Install preindextzpb
-        run: cd cmd/preindextzpb;go install
-
-      - name: Convert GeoJSON to pb
-        run: |
-          geojson2tzpb data/combined-with-oceans.json | xargs reducetzpb | xargs compresstzpb
-          preindextzpb data/combined-with-oceans.reduce.pb
-          ls -alh data/
-
       - name: Bench
         run: |
           make bench | tee benchmark_result.txt

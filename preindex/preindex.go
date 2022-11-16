@@ -22,6 +22,7 @@ package preindex
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/maptile"
@@ -75,6 +76,38 @@ func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 	return ret
 }
 
+func EnsureInside(geopolys []*geometry.Poly, tiles []maptile.Tile) []maptile.Tile {
+	insideTZTiles := []maptile.Tile{}
+	for _, tile := range tiles {
+		minLng := tile.Bound().Min.Lon()
+		minLat := tile.Bound().Min.Lat()
+		maxLng := tile.Bound().Max.Lon()
+		maxLat := tile.Bound().Max.Lat()
+
+		geometryPoints := []geometry.Point{
+			{X: minLng, Y: minLat},
+			{X: maxLng, Y: minLat},
+			{X: maxLng, Y: maxLat},
+			{X: minLng, Y: maxLat},
+			{X: minLng, Y: minLat},
+		}
+		tilePoly := geometry.NewPoly(geometryPoints, nil, nil)
+
+		for _, geopoly := range geopolys {
+			if !geopoly.ContainsPoly(tilePoly) {
+				continue
+			}
+			for _, point := range geometryPoints {
+				if !geopoly.ContainsPoint(point) {
+					continue
+				}
+			}
+		}
+		insideTZTiles = append(insideTZTiles, tile)
+	}
+	return insideTZTiles
+}
+
 // PreIndexTimezone will gen tiles at idxZoom level and merge up to aggZoom.
 //
 // The `idxZoom` level tiles will be removed before final return.
@@ -122,30 +155,8 @@ func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep m
 	}
 
 	// Iter all tile's polygon if inside original polygon
-	insideTZTiles := []maptile.Tile{}
 	geopolys := convert.FromTimezonePBToGeometryPoly(input)
-	for _, tile := range tiles {
-		minLon := tile.Bound().Min.Lon()
-		minLat := tile.Bound().Min.Lat()
-		maxLng := tile.Bound().Max.Lon()
-		maxLat := tile.Bound().Max.Lat()
-
-		geometryPoints := []geometry.Point{
-			{X: minLon, Y: minLat},
-			{X: maxLng, Y: minLat},
-			{X: maxLng, Y: maxLat},
-			{X: minLon, Y: maxLat},
-			{X: minLon, Y: minLat},
-		}
-		tilePoly := geometry.NewPoly(geometryPoints, nil, nil)
-
-		for _, geopoly := range geopolys {
-			if !geopoly.ContainsPoly(tilePoly) {
-				continue
-			}
-		}
-		insideTZTiles = append(insideTZTiles, tile)
-	}
+	insideTZTiles := EnsureInside(geopolys, tiles)
 
 	// Drop edge tiles
 	for i := 0; i < dropEdgeLayger; i++ {
@@ -159,7 +170,10 @@ func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep m
 	}
 
 	// Merge all filterd tiles
-	mergedtiles := tilecover.MergeUp(newtileset, aggZoom)
+	mergedtiles := maptile.Set{}
+	for _, tile := range EnsureInside(geopolys, maps.Keys(tilecover.MergeUp(newtileset, aggZoom))) {
+		mergedtiles[tile] = true
+	}
 
 	// // Dumps JSON for debug
 	// b, _ := json.Marshal(mergedtiles.ToFeatureCollection())
@@ -188,10 +202,13 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 		Keys:    make([]*pb.PreindexTimezone, 0),
 	}
 	for _, tz := range input.Timezones {
+		start := time.Now()
 		preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayger)
 		if err == nil {
 			ret.Keys = append(ret.Keys, preindexes...)
 		}
+		since := time.Since(start)
+		fmt.Println(tz.Name, since)
 	}
 	return ret
 }

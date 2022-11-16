@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	idxZoom            = 11
+	idxZoom            = 13
 	aggZoom            = 3
 	maxZoomLevelToKeep = 10
 	layerDrop          = 2
@@ -31,6 +31,12 @@ func main() {
 	}
 
 	output := preindex.PreIndexTimezones(input, maptile.Zoom(idxZoom), maptile.Zoom(aggZoom), maptile.Zoom(maxZoomLevelToKeep), layerDrop)
+
+	// file := preindex.PreIndexTimezonesToGeoJSON(output)
+	// err = os.WriteFile("preindex_tiles.geojson", file, 0644)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	outputPath := strings.Replace(originalProbufPath, ".pb", ".preindex.pb", 1)
 	outputBin, _ := proto.Marshal(output)
