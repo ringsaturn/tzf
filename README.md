@@ -2,6 +2,8 @@
 
 ![](https://github.com/ringsaturn/tzf/blob/gh-pages/docs/tzf-social-media.png?raw=true)
 
+NOTE: This package is also available in Rust, see [tzf-rs](https://github.com/ringsaturn/tzf-rs).
+
 ## Quick Start
 
 ### Go
@@ -186,6 +188,10 @@ ok  	github.com/ringsaturn/tzf	19.073s
   HTTP Server for debug
 - <https://github.com/ringsaturn/tz-benchmark>
   Continuous Benchmark Compared with other packages
+- <https://github.com/ringsaturn/tzf-rs>
+  Rust port of tzf
+- <https://github.com/ringsaturn/tzf-rs-py>
+  Rust port's Python binding
 
 ## Thanks
 
