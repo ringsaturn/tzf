@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1669041542399,
+  "lastUpdate": 1669041815375,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -10012,6 +10012,78 @@ window.BENCHMARK_DATA = {
             "value": 12336,
             "unit": "ns/op",
             "extra": "109809 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9447d0d4e5935cf7a42ad9d1d6e66a96bde69e3a",
+          "message": "Bump github.com/ringsaturn/tzf-rel from 0.0.2022-f4 to 0.0.2022-f5 (#77)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-11-21T22:41:43+08:00",
+          "tree_id": "6435b16ad4db81757d28fdfc5a0255f50cb9a930",
+          "url": "https://github.com/ringsaturn/tzf/commit/9447d0d4e5935cf7a42ad9d1d6e66a96bde69e3a"
+        },
+        "date": 1669041814801,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 3047,
+            "unit": "ns/op",
+            "extra": "383331 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1125,
+            "unit": "ns/op",
+            "extra": "946575 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6105,
+            "unit": "ns/op",
+            "extra": "194186 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 6660,
+            "unit": "ns/op",
+            "extra": "179487 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 9197,
+            "unit": "ns/op",
+            "extra": "127806 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 6566,
+            "unit": "ns/op",
+            "extra": "181713 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7182,
+            "unit": "ns/op",
+            "extra": "164694 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 11530,
+            "unit": "ns/op",
+            "extra": "105018 times\n2 procs"
           }
         ]
       }
