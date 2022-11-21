@@ -1,8 +1,11 @@
-# TZF: a fast timezone finder for Go&Python. [![Go Reference](https://pkg.go.dev/badge/github.com/ringsaturn/tzf.svg)](https://pkg.go.dev/github.com/ringsaturn/tzf) [![PyPI](https://img.shields.io/pypi/v/tzfpy)](https://pypi.org/project/tzfpy/) [![](https://img.shields.io/pypi/wheel/tzfpy.svg)](https://pypi.org/project/tzfpy/)
+# TZF: a fast timezone finder for Go. [![Go Reference](https://pkg.go.dev/badge/github.com/ringsaturn/tzf.svg)](https://pkg.go.dev/github.com/ringsaturn/tzf)
 
 ![](https://github.com/ringsaturn/tzf/blob/gh-pages/docs/tzf-social-media.png?raw=true)
 
-NOTE: This package is also available in Rust, see [tzf-rs](https://github.com/ringsaturn/tzf-rs).
+NOTE: This package is also available in:
+
+- Rust, see [tzf-rs](https://github.com/ringsaturn/tzf-rs).
+- Python, see [tzfpy](https://github.com/ringsaturn/tzfpy)
 
 ## Quick Start
 
@@ -55,22 +58,6 @@ func main() {
 	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
 }
 ```
-
-### Python
-
-```console
-pip install tzfpy
-```
-
-Use about 150MB memory for init, and 60MB after GC.
-
-```py
->>> from tzfpy import get_tz
->>> print(get_tz(121.4737, 31.2305))
-Asia/Shanghai
-```
-
-Python binding source codes: <https://github.com/ringsaturn/tzf/tree/main/python>
 
 ### CLI Tool
 

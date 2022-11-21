@@ -1,6 +1,0 @@
-pytest
-pytest-benchmark
-wheel
-pytz
-numpy
-filprofiler
