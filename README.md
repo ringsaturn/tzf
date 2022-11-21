@@ -177,7 +177,7 @@ ok  	github.com/ringsaturn/tzf	19.073s
   Continuous Benchmark Compared with other packages
 - <https://github.com/ringsaturn/tzf-rs>
   Rust port of tzf
-- <https://github.com/ringsaturn/tzf-rs-py>
+- <https://github.com/ringsaturn/tzfpy>
   Rust port's Python binding
 
 ## Thanks
