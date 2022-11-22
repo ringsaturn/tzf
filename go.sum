@@ -30,8 +30,8 @@ github.com/tidwall/cities v0.1.0/go.mod h1:lV/HDp2gCcRcHJWqgt6Di54GiDrTZwh1aG2ZU
 github.com/tidwall/geoindex v1.4.4/go.mod h1:rvVVNEFfkJVWGUdEfU8QaoOg/9zFX0h9ofWzA60mz1I=
 github.com/tidwall/geoindex v1.7.0 h1:jtk41sfgwIt8MEDyC3xyKSj75iXXf6rjReJGDNPtR5o=
 github.com/tidwall/geoindex v1.7.0/go.mod h1:rvVVNEFfkJVWGUdEfU8QaoOg/9zFX0h9ofWzA60mz1I=
-github.com/tidwall/geojson v1.4.2 h1:foR+7MWweUPLcFI8oWMTHp22Qkc7XHRJo15e9rCnv64=
-github.com/tidwall/geojson v1.4.2/go.mod h1:1cn3UWfSYCJOq53NZoQ9rirdw89+DM0vw+ZOAVvuReg=
+github.com/tidwall/geojson v1.4.3 h1:yae/k/DhJdc9psaTJQ3pNOdbol70eH+nCijy6O7TxBw=
+github.com/tidwall/geojson v1.4.3/go.mod h1:1cn3UWfSYCJOq53NZoQ9rirdw89+DM0vw+ZOAVvuReg=
 github.com/tidwall/gjson v1.12.1/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
 github.com/tidwall/lotsa v1.0.2 h1:dNVBH5MErdaQ/xd9s769R31/n2dXavsQ0Yf4TMEHHw8=
 github.com/tidwall/lotsa v1.0.2/go.mod h1:X6NiU+4yHA3fE3Puvpnn1XMDrFZrE9JO2/w+UMuqgR8=
