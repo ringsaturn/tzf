@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/loov/hrtime/hrtesting"
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
 )
@@ -31,7 +32,9 @@ func ExampleDefaultFinder_GetTimezoneName() {
 }
 
 func BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
 		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
 		_ = defaultFinder.GetTimezoneName(p.Lng, p.Lat)
 	}
