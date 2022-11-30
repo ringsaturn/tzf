@@ -150,16 +150,16 @@ goos: darwin
 goarch: amd64
 pkg: github.com/ringsaturn/tzf
 cpu: Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz
-BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities-16    	  443942	      2583 ns/op
-BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities-16      	 1580524	       769.3 ns/op
-BenchmarkGetTimezoneName-16                                     	  184234	      6983 ns/op
-BenchmarkGetTimezoneNameAtEdge-16                               	  145342	      8779 ns/op
-BenchmarkGetTimezoneName_Random_WorldCities-16                  	  130540	      9247 ns/op
-BenchmarkFullFinder_GetTimezoneName-16                          	  164649	      7256 ns/op
-BenchmarkFullFinder_GetTimezoneNameAtEdge-16                    	  136508	      9382 ns/op
-BenchmarkFullFinder_GetTimezoneName_Random_WorldCities-16       	   91137	     12385 ns/op
+BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities-16              441309              2778 ns/op              1000 ns/p50            10000 ns/p90            19000 ns/p99
+BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities-16               1000000              1077 ns/op              1000 ns/p50             2000 ns/p90             2000 ns/p99
+BenchmarkGetTimezoneName-16                                               226834              5190 ns/op              5000 ns/p50             5000 ns/p90            22000 ns/p99
+BenchmarkGetTimezoneNameAtEdge-16                                         211555              5606 ns/op              5000 ns/p50             6000 ns/p90            23000 ns/p99
+BenchmarkGetTimezoneName_Random_WorldCities-16                            163000              7279 ns/op              7000 ns/p50            10000 ns/p90            29000 ns/p99
+BenchmarkFullFinder_GetTimezoneName-16                                    212896              5556 ns/op              5000 ns/p50             6000 ns/p90            22000 ns/p99
+BenchmarkFullFinder_GetTimezoneNameAtEdge-16                              195381              6262 ns/op              6000 ns/p50             7000 ns/p90            23000 ns/p99
+BenchmarkFullFinder_GetTimezoneName_Random_WorldCities-16                 116652              9354 ns/op              8000 ns/p50            15000 ns/p90            31000 ns/p99
 PASS
-ok  	github.com/ringsaturn/tzf	19.073s
+ok      github.com/ringsaturn/tzf       18.321s
 ```
 
 - <https://ringsaturn.github.io/tzf/>:
