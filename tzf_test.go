@@ -8,6 +8,7 @@ import (
 
 	"sort"
 
+	"github.com/loov/hrtime/hrtesting"
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
 	tzfrel "github.com/ringsaturn/tzf-rel"
@@ -44,38 +45,50 @@ func initFull() {
 }
 
 func BenchmarkGetTimezoneName(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
 		_ = finder.GetTimezoneName(116.6386, 40.0786)
 	}
 }
 
 func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
 		_ = finder.GetTimezoneName(110.8571, 43.1483)
 	}
 }
 
 func BenchmarkGetTimezoneName_Random_WorldCities(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
 		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
 		_ = finder.GetTimezoneName(p.Lng, p.Lat)
 	}
 }
 
 func BenchmarkFullFinder_GetTimezoneName(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
 		_ = fullFinder.GetTimezoneName(116.6386, 40.0786)
 	}
 }
 
 func BenchmarkFullFinder_GetTimezoneNameAtEdge(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
 		_ = fullFinder.GetTimezoneName(110.8571, 43.1483)
 	}
 }
 
 func BenchmarkFullFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
-	for i := 0; i <= b.N; i++ {
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
 		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
 		_ = fullFinder.GetTimezoneName(p.Lng, p.Lat)
 	}
