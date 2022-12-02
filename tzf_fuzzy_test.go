@@ -66,7 +66,6 @@ func FuzzFuzzyFinder_GetTimezoneName(f *testing.F) {
 	f.Add(116.3883, 39.9289)
 	f.Fuzz(func(t *testing.T, a float64, b float64) {
 		ret, err := fuzzyFinder.GetTimezoneNames(a, b)
-
 		if err == nil && len(ret) == 0 {
 			t.Errorf("bad return %v, %v", ret, err)
 		}

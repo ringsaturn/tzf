@@ -1,8 +1,10 @@
 package tzf_test
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/ringsaturn/tzf"
 	tzfrel "github.com/ringsaturn/tzf-rel"
 	"github.com/ringsaturn/tzf/pb"
+	"github.com/tidwall/lotsa"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -163,4 +166,15 @@ func ExampleFinder_GetTimezoneShapeByShift() {
 
 	fmt.Println(strings.Join(pbnames, ","))
 	// Output: Asia/Brunei,Asia/Choibalsan,Asia/Hong_Kong,Asia/Irkutsk,Asia/Kuala_Lumpur,Asia/Kuching,Asia/Macau,Asia/Makassar,Asia/Manila,Asia/Shanghai,Asia/Singapore,Asia/Taipei,Asia/Ulaanbaatar,Australia/Perth,Etc/GMT-8
+}
+
+func Test_Finder_GetTimezoneName_Random_WorldCities_Alll(t *testing.T) {
+	wri := bytes.NewBufferString("")
+	lotsa.Output = wri
+	lotsa.Ops(len(gocitiesjson.Cities), runtime.NumCPU(), func(i, _ int) {
+		city := gocitiesjson.Cities[i]
+		_ = finder.GetTimezoneName(city.Lng, city.Lat)
+	})
+	testing.Verbose()
+	t.Log(wri.String())
 }

@@ -2,7 +2,6 @@ PROTO_FILES=$(shell find pb -name *.proto)
 
 install:
 	go mod download
-	go install github.com/mfridman/tparse@latest
 	go install github.com/golang/protobuf/protoc-gen-go@latest
 	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
 
@@ -19,7 +18,7 @@ pb:
 
 test:
 	golangci-lint run ./...
-	go test -json -race ./... -v -coverprofile=coverage.out  | tparse -all
+	go test -v -coverprofile=coverage.out ./...
 
 cover: test
 	go tool cover -html=coverage.out -o=coverage.html
