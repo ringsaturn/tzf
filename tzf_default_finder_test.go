@@ -1,13 +1,16 @@
 package tzf_test
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
+	"runtime"
 	"testing"
 
 	"github.com/loov/hrtime/hrtesting"
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
+	"github.com/tidwall/lotsa"
 )
 
 var (
@@ -38,4 +41,15 @@ func BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
 		_ = defaultFinder.GetTimezoneName(p.Lng, p.Lat)
 	}
+}
+
+func Test_DefaultFinder_GetTimezoneName_Random_WorldCities_Alll(t *testing.T) {
+	wri := bytes.NewBufferString("")
+	lotsa.Output = wri
+	lotsa.Ops(len(gocitiesjson.Cities), runtime.NumCPU(), func(i, _ int) {
+		city := gocitiesjson.Cities[i]
+		_ = defaultFinder.GetTimezoneName(city.Lng, city.Lat)
+	})
+	testing.Verbose()
+	t.Log(wri.String())
 }
