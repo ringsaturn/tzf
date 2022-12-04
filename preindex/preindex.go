@@ -22,7 +22,8 @@ package preindex
 import (
 	"encoding/json"
 	"fmt"
-	"time"
+	"runtime"
+	"sync"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/maptile"
@@ -30,6 +31,7 @@ import (
 	"github.com/ringsaturn/tzf/convert"
 	"github.com/ringsaturn/tzf/pb"
 	"github.com/tidwall/geojson/geometry"
+	"github.com/tidwall/lotsa"
 	"golang.org/x/exp/maps"
 )
 
@@ -201,15 +203,17 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 		AggZoom: int32(aggZoom),
 		Keys:    make([]*pb.PreindexTimezone, 0),
 	}
-	for _, tz := range input.Timezones {
-		start := time.Now()
+	lock := &sync.Mutex{}
+	lotsa.Ops(len(input.Timezones), runtime.NumCPU()*2, func(i, thread int) {
+		tz := input.Timezones[i]
 		preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayger)
-		if err == nil {
-			ret.Keys = append(ret.Keys, preindexes...)
+		if err != nil {
+			return
 		}
-		since := time.Since(start)
-		fmt.Println(tz.Name, since)
-	}
+		lock.Lock()
+		ret.Keys = append(ret.Keys, preindexes...)
+		lock.Unlock()
+	})
 	return ret
 }
 
