@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1670155578074,
+  "lastUpdate": 1670156328765,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -10516,6 +10516,78 @@ window.BENCHMARK_DATA = {
             "value": 12386,
             "unit": "ns/op\t     11500 ns/p50\t     19699 ns/p90\t     35600 ns/p99",
             "extra": "100741 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3dfdd65241bfe2b8d8f03f9469b94cf9fb62bccf",
+          "message": "Bump github.com/tidwall/lotsa from 1.0.2 to 1.0.3 (#85)\n\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2022-12-04T20:17:18+08:00",
+          "tree_id": "936179105aafe2621cdfe44b0123a36828abc5aa",
+          "url": "https://github.com/ringsaturn/tzf/commit/3dfdd65241bfe2b8d8f03f9469b94cf9fb62bccf"
+        },
+        "date": 1670156327857,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 3827,
+            "unit": "ns/op\t      1600 ns/p50\t     13902 ns/p90\t     26503 ns/p99",
+            "extra": "317022 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1539,
+            "unit": "ns/op\t      1400 ns/p50\t      2200 ns/p90\t      2700 ns/p99",
+            "extra": "749146 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 7982,
+            "unit": "ns/op\t      7901 ns/p50\t      8001 ns/p90\t      8201 ns/p99",
+            "extra": "149691 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 8611,
+            "unit": "ns/op\t      8601 ns/p50\t      8701 ns/p90\t      8802 ns/p99",
+            "extra": "129774 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 11531,
+            "unit": "ns/op\t     11802 ns/p50\t     17202 ns/p90\t     26400 ns/p99",
+            "extra": "93936 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 9442,
+            "unit": "ns/op\t      8500 ns/p50\t      8600 ns/p90\t     23100 ns/p99",
+            "extra": "136054 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 9152,
+            "unit": "ns/op\t      9101 ns/p50\t      9201 ns/p90\t      9401 ns/p99",
+            "extra": "123252 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 15657,
+            "unit": "ns/op\t     13401 ns/p50\t     23503 ns/p90\t     52906 ns/p99",
+            "extra": "82933 times\n2 procs"
           }
         ]
       }
