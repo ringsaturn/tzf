@@ -38,9 +38,14 @@ jobs:
       - name: Install test related deps
         run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
 
-      - name: Test
-        run: |
-          make test
+      - name: Lint
+        run: golangci-lint run ./...
+
+      - name: Run coverage
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
 
       - name: Bench
         run: |
