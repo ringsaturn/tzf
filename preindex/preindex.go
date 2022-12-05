@@ -22,8 +22,9 @@ package preindex
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"runtime"
-	"sync"
+	"time"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/maptile"
@@ -203,17 +204,32 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 		AggZoom: int32(aggZoom),
 		Keys:    make([]*pb.PreindexTimezone, 0),
 	}
-	lock := &sync.Mutex{}
-	lotsa.Ops(len(input.Timezones), runtime.NumCPU()*2, func(i, thread int) {
-		tz := input.Timezones[i]
+
+	// Timezone process time can be very different, so need to shuffle it
+	taskIds := []int{}
+	for i := 0; i < len(input.Timezones); i++ {
+		taskIds = append(taskIds, i)
+	}
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(taskIds), func(i, j int) { taskIds[i], taskIds[j] = taskIds[j], taskIds[i] })
+
+	m := map[string][]*pb.PreindexTimezone{}
+	lotsa.Ops(len(taskIds), runtime.NumCPU()*3, func(i, thread int) {
+		tz := input.Timezones[taskIds[i]]
 		preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayger)
 		if err != nil {
 			return
 		}
-		lock.Lock()
-		ret.Keys = append(ret.Keys, preindexes...)
-		lock.Unlock()
+		m[tz.Name] = preindexes
 	})
+	for _, tz := range input.Timezones {
+		values, ok := m[tz.Name]
+		if !ok {
+			continue
+		}
+		ret.Keys = append(ret.Keys, values...)
+	}
+
 	return ret
 }
 
