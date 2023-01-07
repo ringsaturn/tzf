@@ -91,8 +91,6 @@ graph TD
     FuzzyFinder[FuzzyFinder: Tile based Finder]
     DefaultFinder[DefaultFinder: combine FuzzyFinder and Compressed Finder]
 
-    tzfpy[tzfpy: tzf's Python binding]
-
     Raw --> |cmd/geojson2tzpb|Full
     Full --> |cmd/reducetzpb|Lite
     Lite --> |cmd/compresstzpb|Compressed
