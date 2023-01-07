@@ -102,8 +102,6 @@ graph TD
     Lite --> |tzf.NewFinderFromPB|Finder
     Compressed --> |tzf.NewFinderFromCompressed|Finder --> |tzf.NewDefaultFinder|DefaultFinder
     Preindex --> |tzf.NewFuzzyFinderFromPB|FuzzyFinder --> |tzf.NewDefaultFinder|DefaultFinder
-
-    DefaultFinder --> tzfpy
 ```
 
 The [full data(~80MB)][full-link] could work anywhere but requires more memory usage.
