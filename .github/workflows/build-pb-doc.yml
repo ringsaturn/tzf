@@ -3,8 +3,14 @@ name: build-pb-doc
 on:
   push:
     branches: [main]
+    paths:
+      - "pb/tzinfo.proto"
+      - ".github/workflows/build-pb-doc.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "pb/tzinfo.proto"
+      - ".github/workflows/build-pb-doc.yml"
 
 permissions:
   contents: write
