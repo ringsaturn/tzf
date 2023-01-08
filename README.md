@@ -2,10 +2,10 @@
 
 ![](https://github.com/ringsaturn/tzf/blob/gh-pages/docs/tzf-social-media.png?raw=true)
 
-NOTE: This package is also available in:
-
-- Rust, see [tzf-rs](https://github.com/ringsaturn/tzf-rs).
-- Python, see [tzfpy](https://github.com/ringsaturn/tzfpy)
+> **Note**: This package is also available in:
+>
+> - Rust, see [tzf-rs](https://github.com/ringsaturn/tzf-rs).
+> - Python, see [tzfpy](https://github.com/ringsaturn/tzfpy)
 
 ## Quick Start
 
