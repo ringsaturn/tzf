@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1673154931710,
+  "lastUpdate": 1673274667290,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -11308,6 +11308,78 @@ window.BENCHMARK_DATA = {
             "value": 11923,
             "unit": "ns/op\t     11100 ns/p50\t     18900 ns/p90\t     34900 ns/p99",
             "extra": "98810 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9eb9db6c619d1fea479dc8706c473d2f0001408f",
+          "message": "Bump actions/upload-artifact from 3.1.1 to 3.1.2 (#91)\n\nBumps [actions/upload-artifact](https://github.com/actions/upload-artifact) from 3.1.1 to 3.1.2.\r\n- [Release notes](https://github.com/actions/upload-artifact/releases)\r\n- [Commits](https://github.com/actions/upload-artifact/compare/v3.1.1...v3.1.2)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: actions/upload-artifact\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-patch\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2023-01-09T22:28:30+08:00",
+          "tree_id": "2d91d04e06d593081623992cf27f6808d9c08846",
+          "url": "https://github.com/ringsaturn/tzf/commit/9eb9db6c619d1fea479dc8706c473d2f0001408f"
+        },
+        "date": 1673274666738,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 3072,
+            "unit": "ns/op\t      1300 ns/p50\t     11500 ns/p90\t     21200 ns/p99",
+            "extra": "366400 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1210,
+            "unit": "ns/op\t      1100 ns/p50\t      1800 ns/p90\t      2100 ns/p99",
+            "extra": "872204 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6737,
+            "unit": "ns/op\t      6700 ns/p50\t      6800 ns/p90\t      6900 ns/p99",
+            "extra": "178006 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7233,
+            "unit": "ns/op\t      7200 ns/p50\t      7300 ns/p90\t      7400 ns/p99",
+            "extra": "165482 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 9427,
+            "unit": "ns/op\t      9800 ns/p50\t     13900 ns/p90\t     20800 ns/p99",
+            "extra": "126656 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7246,
+            "unit": "ns/op\t      7200 ns/p50\t      7300 ns/p90\t      7400 ns/p99",
+            "extra": "165997 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7776,
+            "unit": "ns/op\t      7701 ns/p50\t      7801 ns/p90\t      8000 ns/p99",
+            "extra": "152840 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 11704,
+            "unit": "ns/op\t     11000 ns/p50\t     18401 ns/p90\t     33600 ns/p99",
+            "extra": "98940 times\n2 procs"
           }
         ]
       }
