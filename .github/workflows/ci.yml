@@ -67,3 +67,11 @@ jobs:
           # gh-pages-branch: "master"
           benchmark-data-dir-path: "docs/"
           alert-comment-cc-users: "@ringsaturn"
+
+      - name: Summary
+        run: |
+          set +e
+          echo "## Go" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat benchmark_result.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
