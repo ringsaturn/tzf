@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1673708203258,
+  "lastUpdate": 1673973664676,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -11452,6 +11452,78 @@ window.BENCHMARK_DATA = {
             "value": 14439,
             "unit": "ns/op\t     12701 ns/p50\t     23101 ns/p90\t     45803 ns/p99",
             "extra": "79018 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4486aa1b64baec33032ae76290653e84a04410a6",
+          "message": "Bump github.com/tidwall/rtree from 1.9.2 to 1.9.4 (#93)\n\nBumps [github.com/tidwall/rtree](https://github.com/tidwall/rtree) from 1.9.2 to 1.9.4.\r\n- [Release notes](https://github.com/tidwall/rtree/releases)\r\n- [Commits](https://github.com/tidwall/rtree/compare/v1.9.2...v1.9.4)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: github.com/tidwall/rtree\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-patch\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2023-01-18T00:38:16+08:00",
+          "tree_id": "03c3e9115dc0acdf451e0382b99c5cd4223e7c36",
+          "url": "https://github.com/ringsaturn/tzf/commit/4486aa1b64baec33032ae76290653e84a04410a6"
+        },
+        "date": 1673973664084,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 3396,
+            "unit": "ns/op\t      1500 ns/p50\t     12100 ns/p90\t     23300 ns/p99",
+            "extra": "352594 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1405,
+            "unit": "ns/op\t      1300 ns/p50\t      2100 ns/p90\t      2600 ns/p99",
+            "extra": "843943 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6394,
+            "unit": "ns/op\t      6400 ns/p50\t      6400 ns/p90\t      6500 ns/p99",
+            "extra": "185743 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 8328,
+            "unit": "ns/op\t      8300 ns/p50\t      8300 ns/p90\t      8400 ns/p99",
+            "extra": "143922 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 9757,
+            "unit": "ns/op\t      9700 ns/p50\t     14700 ns/p90\t     22900 ns/p99",
+            "extra": "114343 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 6858,
+            "unit": "ns/op\t      6800 ns/p50\t      6900 ns/p90\t      7000 ns/p99",
+            "extra": "173082 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7532,
+            "unit": "ns/op\t      7500 ns/p50\t      7600 ns/p90\t      7700 ns/p99",
+            "extra": "158436 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 12371,
+            "unit": "ns/op\t     11200 ns/p50\t     19900 ns/p90\t     36700 ns/p99",
+            "extra": "99372 times\n2 procs"
           }
         ]
       }
