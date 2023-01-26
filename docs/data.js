@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1673973664676,
+  "lastUpdate": 1674723732441,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -11524,6 +11524,78 @@ window.BENCHMARK_DATA = {
             "value": 12371,
             "unit": "ns/op\t     11200 ns/p50\t     19900 ns/p90\t     36700 ns/p99",
             "extra": "99372 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "39e3e9c376da712552327c2efecd0086963502f6",
+          "message": "Bump github.com/ringsaturn/go-cities.json from 0.3.2 to 0.3.3 (#94)\n\nBumps [github.com/ringsaturn/go-cities.json](https://github.com/ringsaturn/go-cities.json) from 0.3.2 to 0.3.3.\r\n- [Release notes](https://github.com/ringsaturn/go-cities.json/releases)\r\n- [Commits](https://github.com/ringsaturn/go-cities.json/compare/v0.3.2...v0.3.3)\r\n\r\n---\r\nupdated-dependencies:\r\n- dependency-name: github.com/ringsaturn/go-cities.json\r\n  dependency-type: direct:production\r\n  update-type: version-update:semver-patch\r\n...\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\n\r\nSigned-off-by: dependabot[bot] <support@github.com>\r\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2023-01-26T16:59:20+08:00",
+          "tree_id": "bd2c7f57c3c8b8f7adc92836b21de99957efafdd",
+          "url": "https://github.com/ringsaturn/tzf/commit/39e3e9c376da712552327c2efecd0086963502f6"
+        },
+        "date": 1674723731870,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 2868,
+            "unit": "ns/op\t      1200 ns/p50\t     10200 ns/p90\t     20801 ns/p99",
+            "extra": "388188 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1091,
+            "unit": "ns/op\t      1000 ns/p50\t      1501 ns/p90\t      2200 ns/p99",
+            "extra": "1058556 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6051,
+            "unit": "ns/op\t      5501 ns/p50\t      7900 ns/p90\t      8200 ns/p99",
+            "extra": "192436 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 6694,
+            "unit": "ns/op\t      6100 ns/p50\t      8700 ns/p90\t      8901 ns/p99",
+            "extra": "175804 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 9054,
+            "unit": "ns/op\t      8701 ns/p50\t     13701 ns/p90\t     22901 ns/p99",
+            "extra": "136837 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 6465,
+            "unit": "ns/op\t      5900 ns/p50\t      8400 ns/p90\t      8601 ns/p99",
+            "extra": "179534 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7104,
+            "unit": "ns/op\t      6500 ns/p50\t      9201 ns/p90\t      9501 ns/p99",
+            "extra": "166207 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 10740,
+            "unit": "ns/op\t      9700 ns/p50\t     17201 ns/p90\t     31502 ns/p99",
+            "extra": "106281 times\n2 procs"
           }
         ]
       }
