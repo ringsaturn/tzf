@@ -21,8 +21,8 @@ github.com/ringsaturn/go-cities.json v0.3.3 h1:VLcihaYZjrxDgjah4dNUXOntV6GI+6JZ+
 github.com/ringsaturn/go-cities.json v0.3.3/go.mod h1:qpTYJsvNi40oTJs0WEdRdNAbWcLBWSL7oRHUxMrF4g8=
 github.com/ringsaturn/polyf v0.0.0-20221203140730-bfa046f8af27 h1:zKR4J+B+Aayd3ib6Y0BGuLqjJQCRlF2yVoA1RiDrUrU=
 github.com/ringsaturn/polyf v0.0.0-20221203140730-bfa046f8af27/go.mod h1:+oMllvWOIIjXhH69ceZhEAXfA7kmfo75wIJoC3MRsa4=
-github.com/ringsaturn/tzf-rel v0.0.2022-g h1:TfWjwTwTBSMRNmRidHNuC4tg0Ded5r/SGE7AAuNfJEo=
-github.com/ringsaturn/tzf-rel v0.0.2022-g/go.mod h1:TvyUIUpF3aCH98QYjTmMb1cqK7pFswdFLoIVZwGNV/M=
+github.com/ringsaturn/tzf-rel v0.0.2022-g1 h1:K7Ju6lJ95SlWfL5/Nlcrae3l0xxwvimmNX6WXLdYaHw=
+github.com/ringsaturn/tzf-rel v0.0.2022-g1/go.mod h1:TvyUIUpF3aCH98QYjTmMb1cqK7pFswdFLoIVZwGNV/M=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.3.0/go.mod h1:qt09Ya8vawLte6SNmTgCsAVtYtaKzEcn8ATUoHMkEqE=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
@@ -63,7 +63,6 @@ golang.org/x/net v0.0.0-20200226121028-0de0cce0169b/go.mod h1:z5CRVTTTmAJ677TzLL
 golang.org/x/net v0.0.0-20201021035429-f5854403a974/go.mod h1:sp8m0HH+o8qH0wwXwYZr8TS3Oi6o0r6Gce1SSxlDquU=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
-golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 h1:SQFwaSi55rU7vdNs9Yr0Z324VNlrF+0wMqRXT4St8ck=
 golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
