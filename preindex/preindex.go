@@ -93,6 +93,17 @@ func EnsureInside(geopolys []*geometry.Poly, tiles []maptile.Tile) []maptile.Til
 			{X: minLng, Y: maxLat},
 			{X: minLng, Y: minLat},
 		}
+		insideExcludeRegions := func() bool {
+			for _, geometryPoint := range geometryPoints {
+				if excludePreIndex(geometryPoint.X, geometryPoint.Y) {
+					return true
+				}
+			}
+			return false
+		}()
+		if insideExcludeRegions {
+			continue
+		}
 		tilePoly := geometry.NewPoly(geometryPoints, nil, nil)
 
 		for _, geopoly := range geopolys {
