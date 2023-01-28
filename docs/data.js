@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1674723732441,
+  "lastUpdate": 1674922611229,
   "repoUrl": "https://github.com/ringsaturn/tzf",
   "entries": {
     "Go Benchmark": [
@@ -11596,6 +11596,78 @@ window.BENCHMARK_DATA = {
             "value": 10740,
             "unit": "ns/op\t      9700 ns/p50\t     17201 ns/p90\t     31502 ns/p99",
             "extra": "106281 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ringsaturn.me@gmail.com",
+            "name": "ringsaturn",
+            "username": "ringsaturn"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bb606bee7b7cb4f547dfc959701f245eeca079d0",
+          "message": "Bypass regions that preindex not work correct (#95)",
+          "timestamp": "2023-01-29T00:14:05+08:00",
+          "tree_id": "ac78db0fc347e75b309ced6175b164300a49d81b",
+          "url": "https://github.com/ringsaturn/tzf/commit/bb606bee7b7cb4f547dfc959701f245eeca079d0"
+        },
+        "date": 1674922610724,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities",
+            "value": 3126,
+            "unit": "ns/op\t      1300 ns/p50\t     11600 ns/p90\t     21700 ns/p99",
+            "extra": "371692 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities",
+            "value": 1280,
+            "unit": "ns/op\t      1200 ns/p50\t      1801 ns/p90\t      2400 ns/p99",
+            "extra": "968836 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName",
+            "value": 6627,
+            "unit": "ns/op\t      6600 ns/p50\t      6700 ns/p90\t      6801 ns/p99",
+            "extra": "180301 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneNameAtEdge",
+            "value": 7290,
+            "unit": "ns/op\t      7300 ns/p50\t      7400 ns/p90\t      7500 ns/p99",
+            "extra": "162945 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGetTimezoneName_Random_WorldCities",
+            "value": 9635,
+            "unit": "ns/op\t     10000 ns/p50\t     14200 ns/p90\t     21400 ns/p99",
+            "extra": "121972 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName",
+            "value": 7119,
+            "unit": "ns/op\t      7100 ns/p50\t      7200 ns/p90\t      7300 ns/p99",
+            "extra": "166964 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneNameAtEdge",
+            "value": 7763,
+            "unit": "ns/op\t      7700 ns/p50\t      7900 ns/p90\t      7901 ns/p99",
+            "extra": "153415 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkFullFinder_GetTimezoneName_Random_WorldCities",
+            "value": 12165,
+            "unit": "ns/op\t     11300 ns/p50\t     19401 ns/p90\t     35701 ns/p99",
+            "extra": "96277 times\n2 procs"
           }
         ]
       }
