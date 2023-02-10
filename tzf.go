@@ -164,7 +164,7 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (*Finder, error) {
 				holes = append(holes, newHolePoints)
 			}
 
-			newPoly := geometry.NewPoly(newPoints, holes, nil)
+			newPoly := geometry.NewPoly(newPoints, holes, &geometry.IndexOptions{Kind: geometry.RTree, MinPoints: 64})
 			newItem.polys = append(newItem.polys, newPoly)
 		}
 		minp, maxp := newItem.GetMinMax()
