@@ -51,22 +51,22 @@ jobs:
         run: |
           make bench | tee benchmark_result.txt
 
-      - name: Continuous Benchmark
-        uses: benchmark-action/github-action-benchmark@v1.15.0
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          name: Go Benchmark
-          tool: "go"
-          output-file-path: benchmark_result.txt
-          github-token: ${{ secrets.CI_TOKEN }}
-          gh-repository: "github.com/ringsaturn/tzf"
-          auto-push: true
-          alert-threshold: "150%"
-          comment-on-alert: true
-          fail-on-alert: false
-          # gh-pages-branch: "master"
-          benchmark-data-dir-path: "docs/"
-          alert-comment-cc-users: "@ringsaturn"
+      # - name: Continuous Benchmark
+      #   uses: benchmark-action/github-action-benchmark@v1.15.0
+      #   if: ${{ github.ref == 'refs/heads/main' }}
+      #   with:
+      #     name: Go Benchmark
+      #     tool: "go"
+      #     output-file-path: benchmark_result.txt
+      #     github-token: ${{ secrets.CI_TOKEN }}
+      #     gh-repository: "github.com/ringsaturn/tzf"
+      #     auto-push: true
+      #     alert-threshold: "150%"
+      #     comment-on-alert: true
+      #     fail-on-alert: false
+      #     # gh-pages-branch: "master"
+      #     benchmark-data-dir-path: "docs/"
+      #     alert-comment-cc-users: "@ringsaturn"
 
       - name: Summary
         run: |
