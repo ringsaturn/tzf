@@ -6,7 +6,7 @@ require (
 	github.com/loov/hrtime v1.0.3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/paulmach/orb v0.9.0
-	github.com/ringsaturn/go-cities.json v0.3.4
+	github.com/ringsaturn/go-cities.json v0.3.5
 	github.com/ringsaturn/polyf v0.0.0-20221203140730-bfa046f8af27
 	github.com/ringsaturn/tzf-rel v0.0.2022-g1
 	github.com/tidwall/geojson v1.4.3
