@@ -73,9 +73,9 @@ Original data download from
 
 Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel>
 which has Go's `embed` support. Those files are Protocol Buffers messages for
-more efficiency binary distribution like Python wheels, you can view
-the [`pb/tzinfo.proto`](./pb/tzinfo.proto) or it's [HTML format docs][pb_html]
-for the internal format info.
+more efficiency binary distribution like Python wheels, you can view the
+[`pb/tzinfo.proto`](./pb/tzinfo.proto) or it's [HTML format docs][pb_html] for
+the internal format info.
 
 tzf's data pipeline can be drew as:
 
@@ -102,19 +102,20 @@ graph TD
     Preindex --> |tzf.NewFuzzyFinderFromPB|FuzzyFinder --> |tzf.NewDefaultFinder|DefaultFinder
 ```
 
-The [full data(~80MB)][full-link] could work anywhere but requires more memory usage.
+The [full data(~80MB)][full-link] could work anywhere but requires more memory
+usage.
 
 The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
 
 You can see points that results diff in this [page][points_not_equal].
 
-If a little longer init time is acceptable,
-the [compressed data(~5MB)][compressd-link] which come from lite data
-will be **more friendly for binary distribution.**
+If a little longer init time is acceptable, the
+[compressed data(~5MB)][compressd-link] which come from lite data will be **more
+friendly for binary distribution.**
 
-The [preindex data(~1.78MB)][preindex-link] are many tiles.
-It's used inside the `DefaultFinder`, which built on `FuzzyFinder`, to reduce
-raycasting algorithm execution times.
+The [preindex data(~1.78MB)][preindex-link] are many tiles. It's used inside the
+`DefaultFinder`, which built on `FuzzyFinder`, to reduce raycasting algorithm
+execution times.
 
 [pb_html]: https://ringsaturn.github.io/tzf/pb.html
 [full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
@@ -122,6 +123,10 @@ raycasting algorithm execution times.
 [preindex-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.preindex.pb
 [compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
 [points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
+
+I wrote an article about the history of tzf, it's Rust port, and it's Rust port'
+Python binding, view it
+[here](https://blog.ringsaturn.me/en/posts/2023-01-31-history-of-tzf/).
 
 ## Performance
 
@@ -158,23 +163,18 @@ PASS
 ok      github.com/ringsaturn/tzf       18.321s
 ```
 
-- <https://ringsaturn.github.io/tzf/>:
-  Continuous Benchmark Result
-- <https://ringsaturn.github.io/tz-benchmark/>
-  Continuous Benchmark Compared with other packages
+- <https://ringsaturn.github.io/tzf/>: Continuous Benchmark Result
+- <https://ringsaturn.github.io/tz-benchmark/> Continuous Benchmark Compared
+  with other packages
 
 ## Related Repos
 
-- <https://github.com/ringsaturn/tzf-rel>
-  Preprocessed probuf data release repo
-- <https://github.com/ringsaturn/tzf-server>
-  HTTP Server for debug
-- <https://github.com/ringsaturn/tz-benchmark>
-  Continuous Benchmark Compared with other packages
-- <https://github.com/ringsaturn/tzf-rs>
-  Rust port of tzf
-- <https://github.com/ringsaturn/tzfpy>
-  Rust port's Python binding
+- <https://github.com/ringsaturn/tzf-rel> Preprocessed probuf data release repo
+- <https://github.com/ringsaturn/tzf-server> HTTP Server for debug
+- <https://github.com/ringsaturn/tz-benchmark> Continuous Benchmark Compared
+  with other packages
+- <https://github.com/ringsaturn/tzf-rs> Rust port of tzf
+- <https://github.com/ringsaturn/tzfpy> Rust port's Python binding
 
 ## Thanks
 
