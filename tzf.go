@@ -53,7 +53,7 @@ func (i *tzitem) ContainsPoint(p geometry.Point) bool {
 	return false
 }
 
-func (i *tzitem) GetMinMax() ([2]float64, [2]float64) {
+func (i *tzitem) getMinMax() ([2]float64, [2]float64) {
 	retmin := [2]float64{
 		i.polys[0].Rect().Min.X,
 		i.polys[0].Rect().Min.Y,
@@ -167,7 +167,7 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (*Finder, error) {
 			newPoly := geometry.NewPoly(newPoints, holes, &geometry.IndexOptions{Kind: geometry.RTree, MinPoints: 64})
 			newItem.polys = append(newItem.polys, newPoly)
 		}
-		minp, maxp := newItem.GetMinMax()
+		minp, maxp := newItem.getMinMax()
 
 		newItem.min = minp
 		newItem.max = maxp
