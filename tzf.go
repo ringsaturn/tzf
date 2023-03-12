@@ -297,7 +297,7 @@ func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
 // Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
 func (f *Finder) GetTimezoneShapeByShift(shift int) ([]*pb.Timezone, error) {
 	if f.opt.DropPBTZ {
-		return nil, errors.New("tzf: not suppor when reduce mem")
+		return nil, errors.New("tzf: not support when reduce mem")
 	}
 	res := make([]*pb.Timezone, 0)
 	for _, item := range f.items {
