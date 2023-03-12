@@ -2,8 +2,7 @@ package tzf
 
 // Backports support for not updated systems
 //
-// tzf will try to maintain timezone name backport compatibility until
-// new major version release will remove too old names.
+// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
 var backportstz = map[string]string{
 	"Europe/Kyiv":           "Europe/Kiev",      // [2022b] https://github.com/evansiroky/timezone-boundary-builder/releases/tag/2022b commit https://github.com/evansiroky/timezone-boundary-builder/commit/ea87ea5c8bf435d8318a40eb2ab69ea2f7a375aa
 	"Europe/Uzhgorod":       "Europe/Kyiv",      // [2022d] https://github.com/evansiroky/timezone-boundary-builder/releases/tag/2022d

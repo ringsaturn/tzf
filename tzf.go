@@ -192,7 +192,7 @@ func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) 
 	return NewFinderFromPB(tzs, opts...)
 }
 
-func getRTreeRangeShifed(lng float64, lat float64) float64 {
+func getRTreeRangeShifted(lng float64, lat float64) float64 {
 	if 73 < lng && lng < 140 && 8 < lat && lat < 54 {
 		return 70.0
 	}
@@ -200,19 +200,19 @@ func getRTreeRangeShifed(lng float64, lat float64) float64 {
 }
 
 func (f *Finder) getItemInRanges(lng float64, lat float64) []*tzitem {
-	candicates := []*tzitem{}
+	candidates := []*tzitem{}
 
 	// TODO(ringsaturn): fix this range
-	shifted := getRTreeRangeShifed(lng, lat)
+	shifted := getRTreeRangeShifted(lng, lat)
 	f.tr.Search([2]float64{lng - shifted, lat - shifted}, [2]float64{lng + shifted, lat + shifted}, func(min, max [2]float64, data *tzitem) bool {
-		candicates = append(candicates, data)
+		candidates = append(candidates, data)
 		return true
 	})
-	if len(candicates) == 0 {
-		candicates = f.items
+	if len(candidates) == 0 {
+		candidates = f.items
 	}
 
-	return candicates
+	return candidates
 }
 
 func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
@@ -221,11 +221,11 @@ func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
 		Y: float64(lat),
 	}
 	ret := []*tzitem{}
-	candicates := f.getItemInRanges(lng, lat)
-	if len(candicates) == 0 {
+	candidates := f.getItemInRanges(lng, lat)
+	if len(candidates) == 0 {
 		return nil, ErrNoTimezoneFound
 	}
-	for _, item := range candicates {
+	for _, item := range candidates {
 		if item.ContainsPoint(p) {
 			ret = append(ret, item)
 		}
@@ -263,6 +263,7 @@ func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
 	return ret, nil
 }
 
+// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
 func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error) {
 	item, err := f.getItem(lng, lat)
 	if err != nil {
@@ -271,9 +272,10 @@ func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error
 	return item[0].location, nil
 }
 
+// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
 func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
 	if f.opt.DropPBTZ {
-		return nil, errors.New("tzf: not suppor when reduce mem")
+		return nil, errors.New("tzf: not support when reduce mem")
 	}
 	item, err := f.getItem(lng, lat)
 	if err != nil {
@@ -282,6 +284,7 @@ func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
 	return item[0].pbtz, nil
 }
 
+// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
 func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
 	for _, item := range f.items {
 		if item.name == name {
@@ -291,9 +294,10 @@ func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
 	return nil, fmt.Errorf("timezone=%v not found", name)
 }
 
+// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
 func (f *Finder) GetTimezoneShapeByShift(shift int) ([]*pb.Timezone, error) {
 	if f.opt.DropPBTZ {
-		return nil, errors.New("tzf: not suppor when reduce mem")
+		return nil, errors.New("tzf: not support when reduce mem")
 	}
 	res := make([]*pb.Timezone, 0)
 	for _, item := range f.items {
