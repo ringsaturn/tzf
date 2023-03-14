@@ -4,7 +4,8 @@
 
 > **Note**: This package is also available in:
 >
-> - Rust, see [tzf-rs](https://github.com/ringsaturn/tzf-rs).
+> - Ruby, see [tzf-rb](https://github.com/HarlemSquirrel/tzf-rb)
+> - Rust, see [tzf-rs](https://github.com/ringsaturn/tzf-rs)
 > - Python, see [tzfpy](https://github.com/ringsaturn/tzfpy)
 
 ## Quick Start
