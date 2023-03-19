@@ -18,7 +18,7 @@ type FuzzyFinder struct {
 	names   []string
 }
 
-func NewFuzzyFinderFromPB(input *pb.PreindexTimezones) (*FuzzyFinder, error) {
+func NewFuzzyFinderFromPB(input *pb.PreindexTimezones) (F, error) {
 	f := &FuzzyFinder{
 		m:       make(map[maptile.Tile][]string),
 		idxZoom: int(input.IdxZoom),

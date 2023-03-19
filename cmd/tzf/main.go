@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var finder *tzf.Finder
+var finder tzf.F
 
 func init() {
 	input := &pb.CompressedTimezones{}
