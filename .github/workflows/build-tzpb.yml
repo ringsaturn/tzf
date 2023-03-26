@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
 
+env:
+  TIMEZONE_BOUNDARY_VERSION: 2023b
+
 jobs:
   build-tzpb-pipeline:
     runs-on: ubuntu-latest
@@ -38,7 +41,7 @@ jobs:
 
       - name: Download files
         run: |
-          wget https://github.com/evansiroky/timezone-boundary-builder/releases/latest/download/timezones-with-oceans.geojson.zip
+          wget https://github.com/evansiroky/timezone-boundary-builder/releases/download/${TIMEZONE_BOUNDARY_VERSION}/timezones-with-oceans.geojson.zip
           ls -alh
           unzip timezones-with-oceans.geojson.zip
           ls -alh
