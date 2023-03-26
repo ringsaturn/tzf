@@ -53,6 +53,25 @@ func ExampleFuzzyFinder_GetTimezoneName() {
 	// Output: Asia/Shanghai
 }
 
+func ExampleFuzzyFinder_GetTimezoneNames() {
+	input := &pb.PreindexTimezones{}
+	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+		panic(err)
+	}
+	finder, _ := tzf.NewFuzzyFinderFromPB(input)
+	fmt.Println(finder.GetTimezoneNames(87.6168, 43.8254))
+	// Output: [Asia/Shanghai Asia/Urumqi] <nil>
+}
+
+func ExampleFuzzyFinder_TimezoneNames() {
+	input := &pb.PreindexTimezones{}
+	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+		panic(err)
+	}
+	finder, _ := tzf.NewFuzzyFinderFromPB(input)
+	fmt.Println(finder.TimezoneNames())
+}
+
 func BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()

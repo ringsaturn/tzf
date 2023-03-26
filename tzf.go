@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"time"
 
 	"github.com/ringsaturn/tzf/convert"
 	"github.com/ringsaturn/tzf/pb"
@@ -31,13 +30,11 @@ func SetDropPBTZ(opt *Option) {
 }
 
 type tzitem struct {
-	pbtz     *pb.Timezone
-	location *time.Location
-	name     string
-	shift    int
-	polys    []*geometry.Poly
-	min      [2]float64
-	max      [2]float64
+	pbtz  *pb.Timezone
+	name  string
+	polys []*geometry.Poly
+	min   [2]float64
+	max   [2]float64
 }
 
 func newNotFoundErr(lng float64, lat float64) error {
@@ -107,7 +104,6 @@ func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (F, e
 }
 
 func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
-	now := time.Now()
 	items := make([]*tzitem, 0)
 	names := make([]string, 0)
 
@@ -119,25 +115,9 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
 	tr := &rtree.RTreeG[*tzitem]{}
 	for _, timezone := range input.Timezones {
 		names = append(names, timezone.Name)
-		location, err := time.LoadLocation(timezone.Name)
-		if err != nil {
-			// check if changed
-			oldname, ok := backportstz[timezone.Name]
-			if !ok {
-				return nil, err
-			}
-			location, err = time.LoadLocation(oldname)
-			if err != nil {
-				return nil, err
-			}
-
-		}
-		_, tzOffset := now.In(location).Zone()
 
 		newItem := &tzitem{
-			location: location,
-			shift:    tzOffset,
-			name:     timezone.Name,
+			name: timezone.Name,
 		}
 		if !opt.DropPBTZ {
 			newItem.pbtz = timezone
@@ -261,54 +241,6 @@ func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
 	}
 	sort.Strings(ret)
 	return ret, nil
-}
-
-// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
-func (f *Finder) GetTimezoneLoc(lng float64, lat float64) (*time.Location, error) {
-	item, err := f.getItem(lng, lat)
-	if err != nil {
-		return nil, err
-	}
-	return item[0].location, nil
-}
-
-// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
-func (f *Finder) GetTimezone(lng float64, lat float64) (*pb.Timezone, error) {
-	if f.opt.DropPBTZ {
-		return nil, errors.New("tzf: not support when reduce mem")
-	}
-	item, err := f.getItem(lng, lat)
-	if err != nil {
-		return nil, err
-	}
-	return item[0].pbtz, nil
-}
-
-// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
-func (f *Finder) GetTimezoneShapeByName(name string) (*pb.Timezone, error) {
-	for _, item := range f.items {
-		if item.name == name {
-			return item.pbtz, nil
-		}
-	}
-	return nil, fmt.Errorf("timezone=%v not found", name)
-}
-
-// Deprecated: tzf will no longer support this feature. And wil remove in v0.13.0
-func (f *Finder) GetTimezoneShapeByShift(shift int) ([]*pb.Timezone, error) {
-	if f.opt.DropPBTZ {
-		return nil, errors.New("tzf: not support when reduce mem")
-	}
-	res := make([]*pb.Timezone, 0)
-	for _, item := range f.items {
-		if item.shift == shift {
-			res = append(res, item.pbtz)
-		}
-	}
-	if len(res) == 0 {
-		return nil, fmt.Errorf("shift=%v not found", shift)
-	}
-	return res, nil
 }
 
 func (f *Finder) TimezoneNames() []string {
