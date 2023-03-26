@@ -27,7 +27,9 @@ func ReducePoints(points []*pb.Point) []*pb.Point {
 }
 
 func Do(input *pb.Timezones, skip int, precise float64, minist float64) *pb.Timezones {
-	output := &pb.Timezones{}
+	output := &pb.Timezones{
+		Version: input.Version,
+	}
 	for _, timezone := range input.Timezones {
 		reducedTimezone := &pb.Timezone{
 			Name: timezone.Name,
