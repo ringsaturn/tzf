@@ -54,6 +54,7 @@ message Timezone {
 message Timezones {
   repeated Timezone timezones = 1;
   bool reduced = 2;  // Reduced data will toggle neighbor search as plan b
+  string version = 3;
 }
 
 enum CompressMethod {
@@ -76,6 +77,7 @@ message CompressedTimezone {
 message CompressedTimezones {
   CompressMethod method = 1;
   repeated CompressedTimezone timezones = 2;
+  string version = 3;
 }
 
 // PreindexTimezone tile item.
@@ -93,4 +95,5 @@ message PreindexTimezones {
   int32 idxZoom = 1;  // which zoom value the tiles generated
   int32 aggZoom = 2;  // which zoom value the tiles merge up with.
   repeated PreindexTimezone keys = 3;
+  string version = 4;
 }

@@ -28,7 +28,8 @@ func DecompressedPolylineBytesToPoints(input []byte) []*pb.Point {
 
 func CompressWithPolyline(input *pb.Timezones) *pb.CompressedTimezones {
 	output := &pb.CompressedTimezones{
-		Method: pb.CompressMethod_Polyline,
+		Method:  pb.CompressMethod_Polyline,
+		Version: input.Version,
 	}
 	for _, timezone := range input.Timezones {
 		reducedTimezone := &pb.CompressedTimezone{
@@ -61,7 +62,9 @@ func Compress(input *pb.Timezones, method pb.CompressMethod) (*pb.CompressedTime
 }
 
 func DecompressWithPolyline(input *pb.CompressedTimezones) *pb.Timezones {
-	output := &pb.Timezones{}
+	output := &pb.Timezones{
+		Version: input.Version,
+	}
 	for _, timezone := range input.Timezones {
 		reducedTimezone := &pb.Timezone{
 			Name: timezone.Name,

@@ -1,7 +1,9 @@
 package convert
 
 import (
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/ringsaturn/tzf/pb"
@@ -37,6 +39,10 @@ type BoundaryFile struct {
 }
 
 func Do(input *BoundaryFile) (*pb.Timezones, error) {
+	version := os.Getenv("TIMEZONE_BOUNDARY_VERSION")
+	if version == "" {
+		return nil, errors.New("tzf/convert: please specific version")
+	}
 	output := make([]*pb.Timezone, 0)
 
 	for _, item := range input.Features {
@@ -126,5 +132,6 @@ func Do(input *BoundaryFile) (*pb.Timezones, error) {
 
 	return &pb.Timezones{
 		Timezones: output,
+		Version:   version,
 	}, nil
 }

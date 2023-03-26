@@ -86,3 +86,7 @@ func (f *DefaultFinder) GetTimezoneNames(lng float64, lat float64) ([]string, er
 func (f *DefaultFinder) TimezoneNames() []string {
 	return f.finder.TimezoneNames()
 }
+
+func (f *DefaultFinder) DataVersion() [2]string {
+	return [2]string{f.finder.DataVersion(), f.fuzzyFinder.DataVersion()}
+}

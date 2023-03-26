@@ -15,6 +15,7 @@ type FuzzyFinder struct {
 	idxZoom int
 	aggZoom int
 	m       map[maptile.Tile][]string // timezones may have common area
+	version string
 	names   []string
 }
 
@@ -23,6 +24,7 @@ func NewFuzzyFinderFromPB(input *pb.PreindexTimezones) (F, error) {
 		m:       make(map[maptile.Tile][]string),
 		idxZoom: int(input.IdxZoom),
 		aggZoom: int(input.AggZoom),
+		version: input.Version,
 	}
 	namesMap := map[string]bool{}
 	for _, item := range input.Keys {
@@ -60,4 +62,8 @@ func (f *FuzzyFinder) GetTimezoneNames(lng float64, lat float64) ([]string, erro
 
 func (f *FuzzyFinder) TimezoneNames() []string {
 	return f.names
+}
+
+func (f *FuzzyFinder) DataVersion() string {
+	return f.version
 }

@@ -244,6 +244,7 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 		IdxZoom: int32(idxZoom),
 		AggZoom: int32(aggZoom),
 		Keys:    make([]*pb.PreindexTimezone, 0),
+		Version: input.Version,
 	}
 
 	// Timezone process time can be very different, so need to shuffle it

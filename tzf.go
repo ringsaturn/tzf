@@ -93,6 +93,7 @@ type Finder struct {
 	reduced bool
 	tr      *rtree.RTreeG[*tzitem]
 	opt     *Option
+	version string
 }
 
 func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (F, error) {
@@ -161,6 +162,7 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
 	finder.reduced = input.Reduced
 	finder.tr = tr
 	finder.opt = opt
+	finder.version = input.Version
 	return finder, nil
 }
 
@@ -245,4 +247,8 @@ func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
 
 func (f *Finder) TimezoneNames() []string {
 	return f.names
+}
+
+func (f *Finder) DataVersion() string {
+	return f.version
 }
