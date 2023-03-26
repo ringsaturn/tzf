@@ -34,6 +34,23 @@ func ExampleDefaultFinder_GetTimezoneName() {
 	// Output: Asia/Shanghai
 }
 
+func ExampleDefaultFinder_GetTimezoneNames() {
+	finder, err := tzf.NewDefaultFinder()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(finder.GetTimezoneNames(87.6168, 43.8254))
+	// Output: [Asia/Shanghai Asia/Urumqi] <nil>
+}
+
+func ExampleDefaultFinder_TimezoneNames() {
+	finder, err := tzf.NewDefaultFinder()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(finder.TimezoneNames())
+}
+
 func BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()

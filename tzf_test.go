@@ -96,19 +96,31 @@ func BenchmarkFullFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 
 func ExampleFinder_GetTimezoneName() {
 	input := &pb.Timezones{}
-
-	// Lite data, about 16.7MB
-	dataFile := tzfrel.LiteData
-
-	// Full data, about 83.5MB
-	// dataFile := tzfrel.FullData
-
-	if err := proto.Unmarshal(dataFile, input); err != nil {
+	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
 		panic(err)
 	}
 	finder, _ := tzf.NewFinderFromPB(input)
 	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
 	// Output: Asia/Shanghai
+}
+
+func ExampleFinder_GetTimezoneNames() {
+	input := &pb.Timezones{}
+	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
+		panic(err)
+	}
+	finder, _ := tzf.NewFinderFromPB(input)
+	fmt.Println(finder.GetTimezoneNames(87.6168, 43.8254))
+	// Output: [Asia/Shanghai Asia/Urumqi] <nil>
+}
+
+func ExampleFinder_TimezoneNames() {
+	input := &pb.Timezones{}
+	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
+		panic(err)
+	}
+	finder, _ := tzf.NewFinderFromPB(input)
+	fmt.Println(finder.TimezoneNames())
 }
 
 func Test_Finder_GetTimezoneName_Random_WorldCities_Alll(t *testing.T) {
