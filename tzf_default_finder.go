@@ -1,6 +1,7 @@
 package tzf
 
 import (
+	"fmt"
 	"runtime"
 
 	tzfrel "github.com/ringsaturn/tzf-rel"
@@ -37,6 +38,14 @@ func NewDefaultFinder() (F, error) {
 	}()
 	if err != nil {
 		return nil, err
+	}
+
+	if finder.DataVersion() != fuzzyFinder.DataVersion() {
+		return nil, fmt.Errorf(
+			"tzf: DefaultFinder only support same data version for Finder(version=%v) and FuzzyFinder(version=%v)",
+			finder.DataVersion(),
+			fuzzyFinder.DataVersion(),
+		)
 	}
 
 	f := &DefaultFinder{}
@@ -87,6 +96,6 @@ func (f *DefaultFinder) TimezoneNames() []string {
 	return f.finder.TimezoneNames()
 }
 
-func (f *DefaultFinder) DataVersion() [2]string {
-	return [2]string{f.finder.DataVersion(), f.fuzzyFinder.DataVersion()}
+func (f *DefaultFinder) DataVersion() string {
+	return f.finder.DataVersion()
 }
