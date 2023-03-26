@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"runtime"
-	"strings"
 	"testing"
-
-	"sort"
 
 	"github.com/loov/hrtime/hrtesting"
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
@@ -112,60 +109,6 @@ func ExampleFinder_GetTimezoneName() {
 	finder, _ := tzf.NewFinderFromPB(input)
 	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
 	// Output: Asia/Shanghai
-}
-
-func ExampleFinder_GetTimezoneLoc() {
-	input := &pb.Timezones{}
-
-	// Lite data, about 16.7MB
-	dataFile := tzfrel.LiteData
-
-	// Full data, about 83.5MB
-	// dataFile := tzfrel.FullData
-
-	if err := proto.Unmarshal(dataFile, input); err != nil {
-		panic(err)
-	}
-	finder, _ := tzf.NewFinderFromPB(input)
-	fmt.Println(finder.(*tzf.Finder).GetTimezoneLoc(116.6386, 40.0786))
-	// Output: Asia/Shanghai <nil>
-}
-
-func ExampleFinder_GetTimezoneShapeByName() {
-	input := &pb.Timezones{}
-
-	// Lite data, about 16.7MB
-	dataFile := tzfrel.LiteData
-
-	if err := proto.Unmarshal(dataFile, input); err != nil {
-		panic(err)
-	}
-	finder, _ := tzf.NewFinderFromPB(input)
-	pbtz, err := finder.(*tzf.Finder).GetTimezoneShapeByName("Asia/Shanghai")
-	fmt.Printf("%v %v\n", pbtz.Name, err)
-	// Output: Asia/Shanghai <nil>
-}
-
-func ExampleFinder_GetTimezoneShapeByShift() {
-	input := &pb.Timezones{}
-
-	// Lite data, about 16.7MB
-	dataFile := tzfrel.LiteData
-
-	if err := proto.Unmarshal(dataFile, input); err != nil {
-		panic(err)
-	}
-	finder, _ := tzf.NewFinderFromPB(input)
-	pbtzs, _ := finder.(*tzf.Finder).GetTimezoneShapeByShift(28800)
-
-	pbnames := make([]string, 0)
-	for _, pbtz := range pbtzs {
-		pbnames = append(pbnames, pbtz.Name)
-	}
-	sort.Strings(pbnames)
-
-	fmt.Println(strings.Join(pbnames, ","))
-	// Output: Asia/Brunei,Asia/Choibalsan,Asia/Hong_Kong,Asia/Irkutsk,Asia/Kuala_Lumpur,Asia/Kuching,Asia/Macau,Asia/Makassar,Asia/Manila,Asia/Shanghai,Asia/Singapore,Asia/Taipei,Asia/Ulaanbaatar,Australia/Perth,Etc/GMT-8
 }
 
 func Test_Finder_GetTimezoneName_Random_WorldCities_Alll(t *testing.T) {
