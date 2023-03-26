@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	defaultfinder *tzf.DefaultFinder
-	fullFinder    *tzf.Finder
+	defaultfinder tzf.F
+	fullFinder    tzf.F
 )
 
 func init() {

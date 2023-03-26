@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	fuzzyFinder *tzf.FuzzyFinder
+	fuzzyFinder tzf.F
 )
 
 func init() {

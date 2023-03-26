@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	defaultFinder *tzf.DefaultFinder
+	defaultFinder tzf.F
 )
 
 func init() {

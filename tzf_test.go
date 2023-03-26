@@ -20,8 +20,8 @@ import (
 )
 
 var (
-	finder     *tzf.Finder
-	fullFinder *tzf.Finder
+	finder     tzf.F
+	fullFinder tzf.F
 )
 
 func init() {
@@ -127,7 +127,7 @@ func ExampleFinder_GetTimezoneLoc() {
 		panic(err)
 	}
 	finder, _ := tzf.NewFinderFromPB(input)
-	fmt.Println(finder.GetTimezoneLoc(116.6386, 40.0786))
+	fmt.Println(finder.(*tzf.Finder).GetTimezoneLoc(116.6386, 40.0786))
 	// Output: Asia/Shanghai <nil>
 }
 
@@ -141,7 +141,7 @@ func ExampleFinder_GetTimezoneShapeByName() {
 		panic(err)
 	}
 	finder, _ := tzf.NewFinderFromPB(input)
-	pbtz, err := finder.GetTimezoneShapeByName("Asia/Shanghai")
+	pbtz, err := finder.(*tzf.Finder).GetTimezoneShapeByName("Asia/Shanghai")
 	fmt.Printf("%v %v\n", pbtz.Name, err)
 	// Output: Asia/Shanghai <nil>
 }
@@ -156,7 +156,7 @@ func ExampleFinder_GetTimezoneShapeByShift() {
 		panic(err)
 	}
 	finder, _ := tzf.NewFinderFromPB(input)
-	pbtzs, _ := finder.GetTimezoneShapeByShift(28800)
+	pbtzs, _ := finder.(*tzf.Finder).GetTimezoneShapeByShift(28800)
 
 	pbnames := make([]string, 0)
 	for _, pbtz := range pbtzs {

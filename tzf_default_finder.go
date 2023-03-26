@@ -12,12 +12,12 @@ import (
 //
 // It's designed for performance first and allow some not so correct return at some area.
 type DefaultFinder struct {
-	fuzzyFinder *FuzzyFinder
-	finder      *Finder
+	fuzzyFinder F
+	finder      F
 }
 
-func NewDefaultFinder() (*DefaultFinder, error) {
-	fuzzyFinder, err := func() (*FuzzyFinder, error) {
+func NewDefaultFinder() (F, error) {
+	fuzzyFinder, err := func() (F, error) {
 		input := &pb.PreindexTimezones{}
 		if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
 			panic(err)
@@ -28,7 +28,7 @@ func NewDefaultFinder() (*DefaultFinder, error) {
 		return nil, err
 	}
 
-	finder, err := func() (*Finder, error) {
+	finder, err := func() (F, error) {
 		input := &pb.CompressedTimezones{}
 		if err := proto.Unmarshal(tzfrel.LiteCompressData, input); err != nil {
 			panic(err)

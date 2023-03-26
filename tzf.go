@@ -98,7 +98,7 @@ type Finder struct {
 	opt     *Option
 }
 
-func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (*Finder, error) {
+func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (F, error) {
 	timezones, err := convert.Do(input)
 	if err != nil {
 		return nil, err
@@ -106,7 +106,7 @@ func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (*Fin
 	return NewFinderFromPB(timezones, opts...)
 }
 
-func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (*Finder, error) {
+func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
 	now := time.Now()
 	items := make([]*tzitem, 0)
 	names := make([]string, 0)
@@ -184,7 +184,7 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (*Finder, error) {
 	return finder, nil
 }
 
-func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) (*Finder, error) {
+func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) (F, error) {
 	tzs, err := reduce.Decompress(input)
 	if err != nil {
 		return nil, err
