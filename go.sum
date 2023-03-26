@@ -29,8 +29,10 @@ github.com/ringsaturn/go-cities.json v0.3.5 h1:MCRHTdXyXwh6EVbHp17otHrktDulK0Vu/
 github.com/ringsaturn/go-cities.json v0.3.5/go.mod h1:qpTYJsvNi40oTJs0WEdRdNAbWcLBWSL7oRHUxMrF4g8=
 github.com/ringsaturn/polyf v0.0.0-20221203140730-bfa046f8af27 h1:zKR4J+B+Aayd3ib6Y0BGuLqjJQCRlF2yVoA1RiDrUrU=
 github.com/ringsaturn/polyf v0.0.0-20221203140730-bfa046f8af27/go.mod h1:+oMllvWOIIjXhH69ceZhEAXfA7kmfo75wIJoC3MRsa4=
-github.com/ringsaturn/tzf-rel v0.0.2022-g1 h1:K7Ju6lJ95SlWfL5/Nlcrae3l0xxwvimmNX6WXLdYaHw=
-github.com/ringsaturn/tzf-rel v0.0.2022-g1/go.mod h1:TvyUIUpF3aCH98QYjTmMb1cqK7pFswdFLoIVZwGNV/M=
+github.com/ringsaturn/tzf-rel v0.0.2022-g1.0.20230326130439-db41fe04bde9 h1:JtA4RtC2VSboRyO3w/aEwX1jU/T9Y/AB95t73GGXoK8=
+github.com/ringsaturn/tzf-rel v0.0.2022-g1.0.20230326130439-db41fe04bde9/go.mod h1:TvyUIUpF3aCH98QYjTmMb1cqK7pFswdFLoIVZwGNV/M=
+github.com/ringsaturn/tzf-rel v0.0.2023-b h1:27Kt3ewlXJ/nkYFedYWmKbj7CUWzG0UxFYXQAjzPgBE=
+github.com/ringsaturn/tzf-rel v0.0.2023-b/go.mod h1:TvyUIUpF3aCH98QYjTmMb1cqK7pFswdFLoIVZwGNV/M=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.3.0/go.mod h1:qt09Ya8vawLte6SNmTgCsAVtYtaKzEcn8ATUoHMkEqE=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
