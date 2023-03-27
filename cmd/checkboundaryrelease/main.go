@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 
 	"github.com/ringsaturn/requests"
+	tzfrel "github.com/ringsaturn/tzf-rel"
+	"github.com/ringsaturn/tzf/pb"
+	"google.golang.org/protobuf/proto"
 )
 
 const API = "https://api.github.com/repos/evansiroky/timezone-boundary-builder/tags"
@@ -31,5 +35,16 @@ func main() {
 		panic(err)
 	}
 	latestTag := resp[0].Name
+
+	input := &pb.PreindexTimezones{}
+	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+		panic(err)
+	}
+	if input.Version == latestTag {
+		log.Println("Same version, bye!")
+		os.Exit(1)
+		return
+	}
+	log.Println("New version", latestTag)
 	os.Setenv("TIMEZONE_BOUNDARY_VERSION", latestTag)
 }
