@@ -31,6 +31,7 @@ type Commit struct {
 
 func main() {
 	verbose := flag.Bool("verbose", false, "show more logs")
+	flag.Parse()
 	ctx := context.Background()
 	resp := []*TagsResponseItem{}
 	err := requests.ReqWithExpectJSONResponse(ctx, http.DefaultClient, "GET", API, nil, &resp)
