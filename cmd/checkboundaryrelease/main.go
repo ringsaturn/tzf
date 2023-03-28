@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/ringsaturn/requests"
 	tzfrel "github.com/ringsaturn/tzf-rel"
@@ -49,7 +48,6 @@ func main() {
 	}
 	if input.Version == latestTag {
 		log.Println("Same version, bye!")
-		os.Exit(1)
 		return
 	}
 	fmt.Printf("TIMEZONE_BOUNDARY_VERSION=%s\n", latestTag)
