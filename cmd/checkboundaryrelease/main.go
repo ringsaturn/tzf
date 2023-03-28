@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -45,6 +46,5 @@ func main() {
 		os.Exit(1)
 		return
 	}
-	log.Println("New version", latestTag)
-	os.Setenv("TIMEZONE_BOUNDARY_VERSION", latestTag)
+	fmt.Printf("TIMEZONE_BOUNDARY_VERSION=%s", latestTag)
 }
