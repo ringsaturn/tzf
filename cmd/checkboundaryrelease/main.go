@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,6 +30,7 @@ type Commit struct {
 }
 
 func main() {
+	verbose := flag.Bool("verbose", false, "show more logs")
 	ctx := context.Background()
 	resp := []*TagsResponseItem{}
 	err := requests.ReqWithExpectJSONResponse(ctx, http.DefaultClient, "GET", API, nil, &resp)
@@ -40,6 +42,9 @@ func main() {
 	input := &pb.PreindexTimezones{}
 	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
 		panic(err)
+	}
+	if *verbose {
+		log.Printf("input.Version=%v, latestTag=%v\n", input.Version, latestTag)
 	}
 	if input.Version == latestTag {
 		log.Println("Same version, bye!")
