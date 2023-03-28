@@ -52,5 +52,5 @@ func main() {
 		os.Exit(1)
 		return
 	}
-	fmt.Printf("TIMEZONE_BOUNDARY_VERSION=%s", latestTag)
+	fmt.Printf("TIMEZONE_BOUNDARY_VERSION=%s\n", latestTag)
 }
