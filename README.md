@@ -2,7 +2,11 @@
 
 ![](https://github.com/ringsaturn/tzf/blob/gh-pages/docs/tzf-social-media.png?raw=true)
 
-TZF is a fast timezone finder package designed for Go. It allows you to quickly find the timezone for a given latitude and longitude, making it ideal for geo queries and services such as weather forecast APIs. With optimized performance and two different data options, TZF is a powerful tool for any Go developer's toolkit.
+TZF is a fast timezone finder package designed for Go. It allows you to quickly
+find the timezone for a given latitude and longitude, making it ideal for geo
+queries and services such as weather forecast APIs. With optimized performance
+and two different data options, TZF is a powerful tool for any Go developer's
+toolkit.
 
 > **Note**: This package is also available in:
 >
@@ -41,7 +45,8 @@ func main() {
 }
 ```
 
-If you require a query result that is 100% accurate, use the following to locate:
+If you require a query result that is 100% accurate, use the following to
+locate:
 
 ```go
 // Use about 900MB memory for init, and 660MB after GC.
@@ -72,13 +77,17 @@ func main() {
 
 ### CLI Tool
 
-In addition to using TZF as a library in your Go projects, you can also use the tzf command-line interface (CLI) tool to quickly get the timezone name for a set of coordinates. To use the CLI tool, you first need to install it using the following command:
+In addition to using TZF as a library in your Go projects, you can also use the
+tzf command-line interface (CLI) tool to quickly get the timezone name for a set
+of coordinates. To use the CLI tool, you first need to install it using the
+following command:
 
 ```bash
 go install github.com/ringsaturn/tzf/cmd/tzf@latest
 ```
 
-Once installed, you can use the tzf command followed by the latitude and longitude values to get the timezone name:
+Once installed, you can use the tzf command followed by the latitude and
+longitude values to get the timezone name:
 
 ```bash
 tzf -lng 116.3883 -lat 39.9289
@@ -86,9 +95,15 @@ tzf -lng 116.3883 -lat 39.9289
 
 ## Data
 
-You can download the original data from <https://github.com/evansiroky/timezone-boundary-builder>. 
+You can download the original data from
+<https://github.com/evansiroky/timezone-boundary-builder>.
 
-The preprocessed protobuf data can be obtained from <https://github.com/ringsaturn/tzf-rel>, which has Go's `embedded` support. These files are Protocol Buffers messages for more efficient binary distribution, similar to Python wheels. You can view the [`pb/tzinfo.proto file`](./pb/tzinfo.proto) or its [HTML format documentation][pb_html] for information about the internal format.
+The preprocessed protobuf data can be obtained from
+<https://github.com/ringsaturn/tzf-rel>, which has Go's `embedded` support.
+These files are Protocol Buffers messages for more efficient binary
+distribution, similar to Python wheels. You can view the
+[`pb/tzinfo.proto file`](./pb/tzinfo.proto) or its
+[HTML format documentation][pb_html] for information about the internal format.
 
 The data pipeline for tzf can be illustrated as follows:
 
@@ -115,15 +130,21 @@ graph TD
     Preindex --> |tzf.NewFuzzyFinderFromPB|FuzzyFinder --> |tzf.NewDefaultFinder|DefaultFinder
 ```
 
-The [complete dataset (~80MB)][full-link] can be used anywhere, but requires higher memory usage. 
+The [complete dataset (~80MB)][full-link] can be used anywhere, but requires
+higher memory usage.
 
-The [lightweight dataset (~10MB)][lite-link] may not function optimally in some border areas. 
+The [lightweight dataset (~10MB)][lite-link] may not function optimally in some
+border areas.
 
-You can observe points with different outcomes on this [page][points_not_equal]. 
+You can observe points with different outcomes on this [page][points_not_equal].
 
-If a slightly longer initialization time is tolerable, the [compressed dataset (~5MB)][compressd-link] derived from the lightweight dataset will be **more suitable for binary distribution.**
+If a slightly longer initialization time is tolerable, the
+[compressed dataset (~5MB)][compressd-link] derived from the lightweight dataset
+will be **more suitable for binary distribution.**
 
-The [pre-indexed dataset (~1.78MB)][preindex-link] consists of multiple tiles. It is used within the `DefaultFinder`, which is built on `FuzzyFinder`, to reduce execution times of the raycasting algorithm. 
+The [pre-indexed dataset (~1.78MB)][preindex-link] consists of multiple tiles.
+It is used within the `DefaultFinder`, which is built on `FuzzyFinder`, to
+reduce execution times of the raycasting algorithm.
 
 [pb_html]: https://ringsaturn.github.io/tzf/pb.html
 [full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
@@ -132,21 +153,30 @@ The [pre-indexed dataset (~1.78MB)][preindex-link] consists of multiple tiles. I
 [compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
 [points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
-I have written an article about the history of tzf, its Rust port, and its Rust port's Python binding; you can view it [here](https://blog.ringsaturn.me/en/posts/2023-01-31-history-of-tzf/).
+I have written an article about the history of tzf, its Rust port, and its Rust
+port's Python binding; you can view it
+[here](https://blog.ringsaturn.me/en/posts/2023-01-31-history-of-tzf/).
 
 ## Performance
 
-The tzf package is intended for high-performance geospatial query services, such as weather forecasting APIs. Most queries can be returned within a very short time, averaging around 2000 nanoseconds.
+The tzf package is intended for high-performance geospatial query services, such
+as weather forecasting APIs. Most queries can be returned within a very short
+time, averaging around 2000 nanoseconds.
 
 Here is what has been done to improve performance:
 
-1. Using pre-indexing to handle most queries takes approximately 1000 nanoseconds.
-2. Using an RTree to filter candidate polygons, instead of iterating through all polygons, reduces the execution times of the Ray Casting algorithm.
-3. Using a finely-tuned Ray Casting algorithm package <https://github.com/tidwall/geojson> to verify whether a polygon contains a point.
+1. Using pre-indexing to handle most queries takes approximately 1000
+   nanoseconds.
+2. Using an RTree to filter candidate polygons, instead of iterating through all
+   polygons, reduces the execution times of the Ray Casting algorithm.
+3. Using a finely-tuned Ray Casting algorithm package
+   <https://github.com/tidwall/geojson> to verify whether a polygon contains a
+   point.
 
 That's all. There are no black magic tricks inside the tzf package.
 
-The benchmark was conducted using version <https://github.com/ringsaturn/tzf/releases/tag/v0.10.0>
+The benchmark was conducted using version
+<https://github.com/ringsaturn/tzf/releases/tag/v0.10.0>
 
 ```
 goos: darwin
@@ -166,7 +196,8 @@ ok      github.com/ringsaturn/tzf       18.321s
 ```
 
 - <https://ringsaturn.github.io/tzf/> displays continuous benchmarking results.
-- <https://ringsaturn.github.io/tz-benchmark/> displays a continuous benchmark comparison with other packages.
+- <https://ringsaturn.github.io/tz-benchmark/> displays a continuous benchmark
+  comparison with other packages.
 
 ## Related Repos
 
