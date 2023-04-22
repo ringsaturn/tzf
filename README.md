@@ -2,6 +2,8 @@
 
 ![](https://github.com/ringsaturn/tzf/blob/gh-pages/docs/tzf-social-media.png?raw=true)
 
+TZF is a fast timezone finder package designed for Go. It allows you to quickly find the timezone for a given latitude and longitude, making it ideal for geo queries and services such as weather forecast APIs. With optimized performance and two different data options, TZF is a powerful tool for any Go developer's toolkit.
+
 > **Note**: This package is also available in:
 >
 > - Ruby, see [tzf-rb](https://github.com/HarlemSquirrel/tzf-rb)
@@ -11,6 +13,14 @@
 ## Quick Start
 
 ### Go
+
+To start using TZF in your Go project, you first need to install the package:
+
+```bash
+go get github.com/ringsaturn/tzf
+```
+
+Then, you can use the following code to locate:
 
 ```go
 // Use about 150MB memory for init, and 60MB after GC.
@@ -31,7 +41,7 @@ func main() {
 }
 ```
 
-If you need 100% accurate query result, use below to got a finder:
+If you require a query result that is 100% accurate, use the following to locate:
 
 ```go
 // Use about 900MB memory for init, and 660MB after GC.
@@ -62,23 +72,25 @@ func main() {
 
 ### CLI Tool
 
+In addition to using TZF as a library in your Go projects, you can also use the tzf command-line interface (CLI) tool to quickly get the timezone name for a set of coordinates. To use the CLI tool, you first need to install it using the following command:
+
 ```bash
 go install github.com/ringsaturn/tzf/cmd/tzf@latest
+```
+
+Once installed, you can use the tzf command followed by the latitude and longitude values to get the timezone name:
+
+```bash
 tzf -lng 116.3883 -lat 39.9289
 ```
 
 ## Data
 
-Original data download from
-<https://github.com/evansiroky/timezone-boundary-builder> .
+You can download the original data from <https://github.com/evansiroky/timezone-boundary-builder>. 
 
-Preprocessed probuf data can get from <https://github.com/ringsaturn/tzf-rel>
-which has Go's `embed` support. Those files are Protocol Buffers messages for
-more efficiency binary distribution like Python wheels, you can view the
-[`pb/tzinfo.proto`](./pb/tzinfo.proto) or it's [HTML format docs][pb_html] for
-the internal format info.
+The preprocessed protobuf data can be obtained from <https://github.com/ringsaturn/tzf-rel>, which has Go's `embedded` support. These files are Protocol Buffers messages for more efficient binary distribution, similar to Python wheels. You can view the [`pb/tzinfo.proto file`](./pb/tzinfo.proto) or its [HTML format documentation][pb_html] for information about the internal format.
 
-tzf's data pipeline can be drew as:
+The data pipeline for tzf can be illustrated as follows:
 
 ```mermaid
 graph TD
@@ -103,20 +115,15 @@ graph TD
     Preindex --> |tzf.NewFuzzyFinderFromPB|FuzzyFinder --> |tzf.NewDefaultFinder|DefaultFinder
 ```
 
-The [full data(~80MB)][full-link] could work anywhere but requires more memory
-usage.
+The [complete dataset (~80MB)][full-link] can be used anywhere, but requires higher memory usage. 
 
-The [lite data(~10MB)][lite-link] doesn't work well in some edge places.
+The [lightweight dataset (~10MB)][lite-link] may not function optimally in some border areas. 
 
-You can see points that results diff in this [page][points_not_equal].
+You can observe points with different outcomes on this [page][points_not_equal]. 
 
-If a little longer init time is acceptable, the
-[compressed data(~5MB)][compressd-link] which come from lite data will be **more
-friendly for binary distribution.**
+If a slightly longer initialization time is tolerable, the [compressed dataset (~5MB)][compressd-link] derived from the lightweight dataset will be **more suitable for binary distribution.**
 
-The [preindex data(~1.78MB)][preindex-link] are many tiles. It's used inside the
-`DefaultFinder`, which built on `FuzzyFinder`, to reduce raycasting algorithm
-execution times.
+The [pre-indexed dataset (~1.78MB)][preindex-link] consists of multiple tiles. It is used within the `DefaultFinder`, which is built on `FuzzyFinder`, to reduce execution times of the raycasting algorithm. 
 
 [pb_html]: https://ringsaturn.github.io/tzf/pb.html
 [full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
@@ -125,27 +132,21 @@ execution times.
 [compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
 [points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
-I wrote an article about the history of tzf, it's Rust port, and it's Rust port'
-Python binding, view it
-[here](https://blog.ringsaturn.me/en/posts/2023-01-31-history-of-tzf/).
+I have written an article about the history of tzf, its Rust port, and its Rust port's Python binding; you can view it [here](https://blog.ringsaturn.me/en/posts/2023-01-31-history-of-tzf/).
 
 ## Performance
 
-Package tzf is designed for high performance geo queries related services like
-weather forecast API. And most queries could return in very limited time,
-averagely like 2000 nanoseconds.
+The tzf package is intended for high-performance geospatial query services, such as weather forecasting APIs. Most queries can be returned within a very short time, averaging around 2000 nanoseconds.
 
-Here is what have been done for performance improvements:
+Here is what has been done to improve performance:
 
-1. Use preindexes to handle most queries, basically about 1000 nanoseconds
-2. Use RTree to filter candidate polygons instead of iter all polygons to reduce
-   Ray Casting algorithm execution times
-3. Use a fine tuned Ray Casting algorithm package
-   <https://github.com/tidwall/geojson> to check if polygon contain point
+1. Using pre-indexing to handle most queries takes approximately 1000 nanoseconds.
+2. Using an RTree to filter candidate polygons, instead of iterating through all polygons, reduces the execution times of the Ray Casting algorithm.
+3. Using a finely-tuned Ray Casting algorithm package <https://github.com/tidwall/geojson> to verify whether a polygon contains a point.
 
-That's all. There is no black magics inside package tzf.
+That's all. There are no black magic tricks inside the tzf package.
 
-Benchmark run version <https://github.com/ringsaturn/tzf/releases/tag/v0.10.0>
+The benchmark was conducted using version <https://github.com/ringsaturn/tzf/releases/tag/v0.10.0>
 
 ```
 goos: darwin
@@ -164,9 +165,8 @@ PASS
 ok      github.com/ringsaturn/tzf       18.321s
 ```
 
-- <https://ringsaturn.github.io/tzf/>: Continuous Benchmark Result
-- <https://ringsaturn.github.io/tz-benchmark/> Continuous Benchmark Compared
-  with other packages
+- <https://ringsaturn.github.io/tzf/> displays continuous benchmarking results.
+- <https://ringsaturn.github.io/tz-benchmark/> displays a continuous benchmark comparison with other packages.
 
 ## Related Repos
 
