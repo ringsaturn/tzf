@@ -42,7 +42,7 @@ jobs:
           make install
 
       - name: Setup protoc
-        uses: arduino/setup-protoc@v1.1.2
+        uses: arduino/setup-protoc@v1.2.0
 
       - name: Build doc
         run: |
