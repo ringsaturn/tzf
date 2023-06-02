@@ -25,8 +25,8 @@ github.com/paulmach/protoscan v0.2.1/go.mod h1:SpcSwydNLrxUGSDvXvO0P7g7AuhJ7lcKf
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/ringsaturn/go-cities.json v0.3.7 h1:GS/DfSRkhDtCpvFTmIg9VazRU+1cEOjHjFEtG+H4DgQ=
-github.com/ringsaturn/go-cities.json v0.3.7/go.mod h1:qpTYJsvNi40oTJs0WEdRdNAbWcLBWSL7oRHUxMrF4g8=
+github.com/ringsaturn/go-cities.json v0.3.8 h1:eabl93n5yrmsiYe4uLexMt0tEeAVj0Nd1eA+yWdll30=
+github.com/ringsaturn/go-cities.json v0.3.8/go.mod h1:qpTYJsvNi40oTJs0WEdRdNAbWcLBWSL7oRHUxMrF4g8=
 github.com/ringsaturn/polyf v0.0.0-20221203140730-bfa046f8af27 h1:zKR4J+B+Aayd3ib6Y0BGuLqjJQCRlF2yVoA1RiDrUrU=
 github.com/ringsaturn/polyf v0.0.0-20221203140730-bfa046f8af27/go.mod h1:+oMllvWOIIjXhH69ceZhEAXfA7kmfo75wIJoC3MRsa4=
 github.com/ringsaturn/requests v0.1.0 h1:3W152Lc80Man+V7AoeZamKhUiZEKuHZVfPWdzdVNJkM=
