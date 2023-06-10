@@ -16,8 +16,6 @@ toolkit.
 
 ## Quick Start
 
-### Go
-
 To start using TZF in your Go project, you first need to install the package:
 
 ```bash
@@ -75,7 +73,37 @@ func main() {
 }
 ```
 
-### CLI Tool
+### Best Practice
+
+It's expensive to init tzf's Finder/FuzzyFinder/DefaultFinder, please consider
+reuse it or as a global var. Below is a global var example:
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/ringsaturn/tzf"
+)
+
+var f tzf.F
+
+func init() {
+	var err error
+	f, err = tzf.NewDefaultFinder()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func main() {
+	fmt.Println(f.GetTimezoneName(116.3883, 39.9289))
+	fmt.Println(f.GetTimezoneName(-73.935242, 40.730610))
+}
+```
+
+## CLI Tool
 
 In addition to using TZF as a library in your Go projects, you can also use the
 tzf command-line interface (CLI) tool to quickly get the timezone name for a set
