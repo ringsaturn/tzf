@@ -230,11 +230,13 @@ ok      github.com/ringsaturn/tzf       18.321s
 ## Related Repos
 
 - <https://github.com/ringsaturn/tzf-rel> Preprocessed probuf data release repo
-- <https://github.com/ringsaturn/tzf-server> HTTP Server for debug
 - <https://github.com/ringsaturn/tz-benchmark> Continuous Benchmark Compared
   with other packages
 - <https://github.com/ringsaturn/tzf-rs> Rust port of tzf
 - <https://github.com/ringsaturn/tzfpy> Rust port's Python binding
+- <https://github.com/ringsaturn/tzf-server> HTTP&Redis server build with tzf
+- <https://github.com/ringsaturn/redizone> Redis compatible server build with
+  tzf-rs
 
 ## Thanks
 
