@@ -2,8 +2,6 @@ PROTO_FILES=$(shell find pb -name *.proto)
 
 install:
 	go mod download
-	go install github.com/golang/protobuf/protoc-gen-go@latest
-	go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
 
 fmt:
 	find pb/ -iname *.proto | xargs clang-format -i --style=Google
