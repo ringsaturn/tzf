@@ -7,13 +7,13 @@ package tzf
 import (
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/ringsaturn/tzf/convert"
 	"github.com/ringsaturn/tzf/pb"
 	"github.com/ringsaturn/tzf/reduce"
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/rtree"
+	"golang.org/x/exp/slices"
 )
 
 var ErrNoTimezoneFound = errors.New("tzf: no timezone found")
@@ -241,7 +241,7 @@ func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
 	for i := 0; i < len(item); i++ {
 		ret = append(ret, item[i].name)
 	}
-	sort.Strings(ret)
+	slices.Sort(ret)
 	return ret, nil
 }
 

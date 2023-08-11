@@ -11,70 +11,10 @@ permissions:
   deployments: write
 
 jobs:
-  build:
+  doc:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.19
-
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Install go pkgs
-        run: |
-          make install
-
-      - name: Install test related deps
-        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
-
-      - name: Lint
-        run: golangci-lint run ./...
-
-      - name: Run coverage
-        run: go test -race -coverprofile=coverage.txt -covermode=atomic
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-
-      - name: Bench
-        run: |
-          make bench | tee benchmark_result.txt
-
-      # - name: Continuous Benchmark
-      #   uses: benchmark-action/github-action-benchmark@v1.15.0
-      #   if: ${{ github.ref == 'refs/heads/main' }}
-      #   with:
-      #     name: Go Benchmark
-      #     tool: "go"
-      #     output-file-path: benchmark_result.txt
-      #     github-token: ${{ secrets.CI_TOKEN }}
-      #     gh-repository: "github.com/ringsaturn/tzf"
-      #     auto-push: true
-      #     alert-threshold: "150%"
-      #     comment-on-alert: true
-      #     fail-on-alert: false
-      #     # gh-pages-branch: "master"
-      #     benchmark-data-dir-path: "docs/"
-      #     alert-comment-cc-users: "@ringsaturn"
-
-      - name: Summary
-        run: |
-          set +e
-          echo "## Go" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat benchmark_result.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - uses: denoland/setup-deno@v1
         with:
@@ -83,3 +23,52 @@ jobs:
       - name: Lint README
         run: |
           deno fmt --check ./README.md
+
+  golangci:
+    name: golangci-lint
+    strategy:
+      matrix:
+        go: ["1.20", "1.21"]
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=5m
+  build:
+    strategy:
+      matrix:
+        go: ["1.20", "1.21"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Install go pkgs
+        run: |
+          make install
+
+      - name: Run coverage
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+
+      - name: Bench
+        run: make bench | tee benchmark_result.txt

@@ -31,7 +31,6 @@ import (
 	"fmt"
 	"math/rand"
 	"runtime"
-	"time"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/maptile"
@@ -252,7 +251,6 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 	for i := 0; i < len(input.Timezones); i++ {
 		taskIds = append(taskIds, i)
 	}
-	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(taskIds), func(i, j int) { taskIds[i], taskIds[j] = taskIds[j], taskIds[i] })
 
 	m := map[string][]*pb.PreindexTimezone{}
