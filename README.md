@@ -10,7 +10,7 @@ toolkit.
 
 ---
 
-> **NOTE**
+> [!NOTE]
 >
 > Here are some language or server which built with tzf or it's other language
 > bindings:
