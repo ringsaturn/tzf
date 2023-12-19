@@ -10,7 +10,7 @@ require (
 	github.com/ringsaturn/polyf v0.1.0
 	github.com/ringsaturn/requests v0.1.0
 	github.com/ringsaturn/tzf-rel v0.0.2023-b
-	github.com/tidwall/geojson v1.4.3
+	github.com/tidwall/geojson v1.4.5
 	github.com/tidwall/lotsa v1.0.3
 	github.com/tidwall/rtree v1.10.0
 	github.com/twpayne/go-polyline v1.1.1
