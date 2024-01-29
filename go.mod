@@ -9,7 +9,7 @@ require (
 	github.com/ringsaturn/go-cities.json v0.5.4
 	github.com/ringsaturn/polyf v0.1.0
 	github.com/ringsaturn/requests v0.1.0
-	github.com/ringsaturn/tzf-rel v0.0.2023-d
+	github.com/ringsaturn/tzf-rel v0.0.2023-d1
 	github.com/tidwall/geojson v1.4.5
 	github.com/tidwall/lotsa v1.0.3
 	github.com/tidwall/rtree v1.10.0
