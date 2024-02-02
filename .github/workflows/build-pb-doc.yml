@@ -38,7 +38,7 @@ jobs:
           go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
 
       - name: Setup protoc
-        uses: arduino/setup-protoc@v2.1.0
+        uses: arduino/setup-protoc@v3.0.0
 
       - name: Build doc
         run: |
