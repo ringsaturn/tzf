@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/ringsaturn/tzf"
-	tzfrel "github.com/ringsaturn/tzf-rel"
+	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
 	"github.com/ringsaturn/tzf/pb"
 	"google.golang.org/protobuf/proto"
 )
@@ -15,7 +15,7 @@ var finder tzf.F
 
 func init() {
 	input := &pb.CompressedTimezones{}
-	dataFile := tzfrel.LiteCompressData
+	dataFile := tzfrellite.LiteCompressData
 	err := proto.Unmarshal(dataFile, input)
 	if err != nil {
 		panic(err)

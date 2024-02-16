@@ -1,6 +1,8 @@
 module github.com/ringsaturn/tzf
 
-go 1.21
+go 1.22
+
+toolchain go1.22.0
 
 require (
 	github.com/loov/hrtime v1.0.3
@@ -8,18 +10,17 @@ require (
 	github.com/paulmach/orb v0.11.1
 	github.com/ringsaturn/go-cities.json v0.5.4
 	github.com/ringsaturn/polyf v0.1.0
-	github.com/ringsaturn/requests v0.1.0
-	github.com/ringsaturn/tzf-rel v0.0.2023-d1
+	github.com/ringsaturn/tzf-rel-lite v0.0.2024-a
 	github.com/tidwall/geojson v1.4.5
 	github.com/tidwall/lotsa v1.0.3
 	github.com/tidwall/rtree v1.10.0
 	github.com/twpayne/go-polyline v1.1.1
-	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326
+	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f
 	google.golang.org/protobuf v1.33.0
 )
 
 require (
-	github.com/stretchr/testify v1.7.1 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/tidwall/geoindex v1.7.0 // indirect
-	go.mongodb.org/mongo-driver v1.11.4 // indirect
+	go.mongodb.org/mongo-driver v1.14.0 // indirect
 )

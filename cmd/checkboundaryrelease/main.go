@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/ringsaturn/requests"
-	tzfrel "github.com/ringsaturn/tzf-rel"
+	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
 	"github.com/ringsaturn/tzf/pb"
 	"google.golang.org/protobuf/proto"
 )
@@ -28,19 +28,32 @@ type Commit struct {
 	URL string `json:"url"`
 }
 
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 	verbose := flag.Bool("verbose", false, "show more logs")
 	flag.Parse()
 	ctx := context.Background()
+
+	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodGet, API, nil)
+	must(err)
+
+	httpResponse, err := http.DefaultClient.Do(httpRequest)
+	must(err)
+	defer httpResponse.Body.Close()
+
 	resp := []*TagsResponseItem{}
-	err := requests.ReqWithExpectJSONResponse(ctx, http.DefaultClient, "GET", API, nil, &resp)
-	if err != nil {
-		panic(err)
-	}
+	err = json.NewDecoder(httpResponse.Body).Decode(&resp)
+	must(err)
+
 	latestTag := resp[0].Name
 
 	input := &pb.PreindexTimezones{}
-	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.PreindexData, input); err != nil {
 		panic(err)
 	}
 	if *verbose {
