@@ -26,7 +26,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21
+          go-version: 1.22
 
       - name: Install go pkgs
         run: |
@@ -66,7 +66,13 @@ jobs:
           name: "Probuf HTML File"
           path: "./docs"
 
+      - name: Check if there are any changes
+        id: verify_diff
+        run: |
+          git diff --quiet . || echo "changed=true" >> $GITHUB_OUTPUT
+
       - name: Push file update
+        if: steps.verify_diff.outputs.changed == 'true'
         run: |
           git add ./docs/pb.html
           git config user.name github-actions

@@ -10,7 +10,7 @@ import (
 	"github.com/loov/hrtime/hrtesting"
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
-	tzfrel "github.com/ringsaturn/tzf-rel"
+	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
 	"github.com/ringsaturn/tzf/pb"
 	"github.com/tidwall/lotsa"
 	"google.golang.org/protobuf/proto"
@@ -23,25 +23,15 @@ var (
 
 func init() {
 	initLite()
-	initFull()
 }
 
 func initLite() {
 	input := &pb.Timezones{}
-	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.LiteData, input); err != nil {
 		panic(err)
 	}
 	_finder, _ := tzf.NewFinderFromPB(input)
 	finder = _finder
-}
-
-func initFull() {
-	input := &pb.Timezones{}
-	if err := proto.Unmarshal(tzfrel.FullData, input); err != nil {
-		panic(err)
-	}
-	_finder, _ := tzf.NewFinderFromPB(input)
-	fullFinder = _finder
 }
 
 func BenchmarkGetTimezoneName(b *testing.B) {
@@ -96,7 +86,7 @@ func BenchmarkFullFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 
 func ExampleFinder_GetTimezoneName() {
 	input := &pb.Timezones{}
-	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.LiteData, input); err != nil {
 		panic(err)
 	}
 	finder, _ := tzf.NewFinderFromPB(input)
@@ -106,7 +96,7 @@ func ExampleFinder_GetTimezoneName() {
 
 func ExampleFinder_GetTimezoneNames() {
 	input := &pb.Timezones{}
-	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.LiteData, input); err != nil {
 		panic(err)
 	}
 	finder, _ := tzf.NewFinderFromPB(input)
@@ -116,7 +106,7 @@ func ExampleFinder_GetTimezoneNames() {
 
 func ExampleFinder_TimezoneNames() {
 	input := &pb.Timezones{}
-	if err := proto.Unmarshal(tzfrel.LiteData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.LiteData, input); err != nil {
 		panic(err)
 	}
 	finder, _ := tzf.NewFinderFromPB(input)

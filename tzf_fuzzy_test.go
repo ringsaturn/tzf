@@ -8,7 +8,7 @@ import (
 	"github.com/loov/hrtime/hrtesting"
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
-	tzfrel "github.com/ringsaturn/tzf-rel"
+	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
 	"github.com/ringsaturn/tzf/pb"
 	"google.golang.org/protobuf/proto"
 )
@@ -19,7 +19,7 @@ var (
 
 func init() {
 	input := &pb.PreindexTimezones{}
-	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.PreindexData, input); err != nil {
 		panic(err)
 	}
 	_fuzzyFinder, err := tzf.NewFuzzyFinderFromPB(input)
@@ -45,7 +45,7 @@ func TestFuzzySupports(t *testing.T) {
 
 func ExampleFuzzyFinder_GetTimezoneName() {
 	input := &pb.PreindexTimezones{}
-	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.PreindexData, input); err != nil {
 		panic(err)
 	}
 	finder, _ := tzf.NewFuzzyFinderFromPB(input)
@@ -55,7 +55,7 @@ func ExampleFuzzyFinder_GetTimezoneName() {
 
 func ExampleFuzzyFinder_GetTimezoneNames() {
 	input := &pb.PreindexTimezones{}
-	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.PreindexData, input); err != nil {
 		panic(err)
 	}
 	finder, _ := tzf.NewFuzzyFinderFromPB(input)
@@ -65,7 +65,7 @@ func ExampleFuzzyFinder_GetTimezoneNames() {
 
 func ExampleFuzzyFinder_TimezoneNames() {
 	input := &pb.PreindexTimezones{}
-	if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+	if err := proto.Unmarshal(tzfrellite.PreindexData, input); err != nil {
 		panic(err)
 	}
 	finder, _ := tzf.NewFuzzyFinderFromPB(input)

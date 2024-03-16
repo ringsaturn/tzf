@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
-	tzfrel "github.com/ringsaturn/tzf-rel"
+	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
 	"github.com/ringsaturn/tzf/pb"
 	"google.golang.org/protobuf/proto"
 )
@@ -20,7 +20,7 @@ type DefaultFinder struct {
 func NewDefaultFinder() (F, error) {
 	fuzzyFinder, err := func() (F, error) {
 		input := &pb.PreindexTimezones{}
-		if err := proto.Unmarshal(tzfrel.PreindexData, input); err != nil {
+		if err := proto.Unmarshal(tzfrellite.PreindexData, input); err != nil {
 			panic(err)
 		}
 		return NewFuzzyFinderFromPB(input)
@@ -31,7 +31,7 @@ func NewDefaultFinder() (F, error) {
 
 	finder, err := func() (F, error) {
 		input := &pb.CompressedTimezones{}
-		if err := proto.Unmarshal(tzfrel.LiteCompressData, input); err != nil {
+		if err := proto.Unmarshal(tzfrellite.LiteCompressData, input); err != nil {
 			panic(err)
 		}
 		return NewFinderFromCompressed(input, SetDropPBTZ)

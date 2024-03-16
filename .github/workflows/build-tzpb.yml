@@ -5,14 +5,14 @@ on:
     branches: [main]
 
 env:
-  TIMEZONE_BOUNDARY_VERSION: 2023b
+  TIMEZONE_BOUNDARY_VERSION: 2024a
 
 jobs:
   build-tzpb-pipeline:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ["1.20", "1.21"]
+        go: ["1.21", "1.22"]
 
     steps:
       - uses: actions/checkout@v4
