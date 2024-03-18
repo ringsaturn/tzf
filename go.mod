@@ -9,7 +9,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/paulmach/orb v0.11.1
 	github.com/ringsaturn/go-cities.json v0.5.4
-	github.com/ringsaturn/polyf v0.1.0
+	github.com/ringsaturn/polyf v0.2.0
 	github.com/ringsaturn/tzf-rel-lite v0.0.2024-a
 	github.com/tidwall/geojson v1.4.5
 	github.com/tidwall/lotsa v1.0.3
