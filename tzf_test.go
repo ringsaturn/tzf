@@ -16,23 +16,17 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var (
-	finder     tzf.F
-	fullFinder tzf.F
-)
-
-func init() {
-	initLite()
-}
-
-func initLite() {
+var finder tzf.F = func() tzf.F {
 	input := &pb.Timezones{}
 	if err := proto.Unmarshal(tzfrellite.LiteData, input); err != nil {
 		panic(err)
 	}
-	_finder, _ := tzf.NewFinderFromPB(input)
-	finder = _finder
-}
+	finder, err := tzf.NewFinderFromPB(input)
+	if err != nil {
+		panic(err)
+	}
+	return finder
+}()
 
 func BenchmarkGetTimezoneName(b *testing.B) {
 	bench := hrtesting.NewBenchmark(b)
@@ -56,31 +50,6 @@ func BenchmarkGetTimezoneName_Random_WorldCities(b *testing.B) {
 	for bench.Next() {
 		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
 		_ = finder.GetTimezoneName(p.Lng, p.Lat)
-	}
-}
-
-func BenchmarkFullFinder_GetTimezoneName(b *testing.B) {
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = fullFinder.GetTimezoneName(116.6386, 40.0786)
-	}
-}
-
-func BenchmarkFullFinder_GetTimezoneNameAtEdge(b *testing.B) {
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = fullFinder.GetTimezoneName(110.8571, 43.1483)
-	}
-}
-
-func BenchmarkFullFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
-		_ = fullFinder.GetTimezoneName(p.Lng, p.Lat)
 	}
 }
 
