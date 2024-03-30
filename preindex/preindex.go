@@ -91,7 +91,7 @@ func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 			maptile.New(tile.X+1, tile.Y+1, tile.Z),
 		}
 
-		var allNeighorIn bool = func() bool {
+		var allNeighborIn bool = func() bool {
 			for _, neighborTile := range neighbors {
 				if _, ok := tilehash[neighborTile]; !ok {
 					return false
@@ -99,7 +99,7 @@ func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 			}
 			return true
 		}()
-		if !allNeighorIn {
+		if !allNeighborIn {
 			continue
 		}
 		ret = append(ret, tile)
@@ -212,7 +212,7 @@ func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep m
 		newtileset[tile] = true
 	}
 
-	// Merge all filterd tiles
+	// Merge all filtered tiles
 	mergedtiles := maptile.Set{}
 	for _, tile := range EnsureInside(geopolys, maps.Keys(tilecover.MergeUp(newtileset, aggZoom))) {
 		mergedtiles[tile] = true

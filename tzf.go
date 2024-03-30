@@ -85,7 +85,7 @@ func (i *tzitem) getMinMax() ([2]float64, [2]float64) {
 
 // Finder is based on point-in-polygon search algo.
 //
-// Memeory will use about 100MB if lite data and 1G if full data.
+// Memory will use about 100MB if lite data and 1G if full data.
 // Performance is very stable and very accuate.
 type Finder struct {
 	items   []*tzitem
