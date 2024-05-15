@@ -28,8 +28,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/ringsaturn/go-cities.json v0.5.5 h1:09QV2+DWaMqhPQ6CfiJkUDaVwvIN+pgviIuUi/c2iOQ=
 github.com/ringsaturn/go-cities.json v0.5.5/go.mod h1:qpTYJsvNi40oTJs0WEdRdNAbWcLBWSL7oRHUxMrF4g8=
-github.com/ringsaturn/polyf v0.2.0 h1:1wV/hKLFtcd35Db9r7QLPyI4Yxd+fu0oXmjWyElod88=
-github.com/ringsaturn/polyf v0.2.0/go.mod h1:0+PnAZooWRyH6ULFdxTC86pe15L4VT3e71CQVPG67CE=
+github.com/ringsaturn/polyf v0.2.2 h1:71ua1Giawwpb+bvqFelcZygup+0HFuV5hYLA+8YO2ZM=
+github.com/ringsaturn/polyf v0.2.2/go.mod h1:0+PnAZooWRyH6ULFdxTC86pe15L4VT3e71CQVPG67CE=
 github.com/ringsaturn/tzf-rel-lite v0.0.2024-a h1:olA5Zh7jE5tXhtHby2hFlZWo4nZJxIzTL7ctGFOa+Uw=
 github.com/ringsaturn/tzf-rel-lite v0.0.2024-a/go.mod h1:Kb32pggRZUJ06a6Y261pDbVeThW0Pvkr8CWP0ZIMvzg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
