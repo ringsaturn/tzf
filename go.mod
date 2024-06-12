@@ -16,7 +16,7 @@ require (
 	github.com/tidwall/rtree v1.10.0
 	github.com/twpayne/go-polyline v1.1.1
 	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 )
 
 require (
