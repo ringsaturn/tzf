@@ -1,13 +1,12 @@
 module github.com/ringsaturn/tzf
 
-go 1.22
-toolchain go1.23.0
+go 1.23
 
 require (
 	github.com/loov/hrtime v1.0.3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/paulmach/orb v0.11.1
-	github.com/ringsaturn/go-cities.json v0.6.1
+	github.com/ringsaturn/go-cities.json v0.6.2
 	github.com/ringsaturn/polyf v0.2.2
 	github.com/ringsaturn/tzf-rel-lite v0.0.2024-a
 	github.com/tidwall/geojson v1.4.5

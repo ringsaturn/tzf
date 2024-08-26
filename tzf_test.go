@@ -3,7 +3,6 @@ package tzf_test
 import (
 	"bytes"
 	"fmt"
-	"math/rand"
 	"runtime"
 	"testing"
 
@@ -48,7 +47,7 @@ func BenchmarkGetTimezoneName_Random_WorldCities(b *testing.B) {
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
-		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
+		p := gocitiesjson.Random()
 		_ = finder.GetTimezoneName(p.Lng, p.Lat)
 	}
 }

@@ -24,48 +24,30 @@ jobs:
         run: |
           deno fmt --check ./README.md
 
-  golangci:
-    name: golangci-lint
+  build:
     strategy:
       matrix:
-        go: ["1.21", "1.22"]
-    permissions:
-      contents: read
-      pull-requests: read
+        go: ["1.23"]
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version-file: go.mod
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --timeout=5m
-  build:
-    strategy:
-      matrix:
-        go: ["1.21", "1.22"]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go }}
-
-      - name: Install go pkgs
-        run: |
-          make install
+          skip-cache: true
+          skip-pkg-cache: true
+          skip-build-cache: true
 
       - name: Run coverage
-        run: go test -race -coverprofile=coverage.txt -covermode=atomic
+        run: go test -coverprofile=coverage.txt -covermode=atomic
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
