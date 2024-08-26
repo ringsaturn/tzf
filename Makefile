@@ -1,8 +1,5 @@
 PROTO_FILES=$(shell find pb -name *.proto)
 
-install:
-	go mod download
-
 fmt:
 	find pb/ -iname *.proto | xargs clang-format -i --style=Google
 	go fmt ./...

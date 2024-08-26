@@ -2,7 +2,6 @@ package tzf_test
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/loov/hrtime/hrtesting"
@@ -31,7 +30,7 @@ func init() {
 
 func TestFuzzySupports(t *testing.T) {
 	failCount := 0
-	for _, city := range gocitiesjson.Cities {
+	for city := range gocitiesjson.All(false) {
 		name := fuzzyFinder.GetTimezoneName(city.Lng, city.Lat)
 		if name == "" {
 			failCount += 1
@@ -76,7 +75,7 @@ func BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
-		p := gocitiesjson.Cities[rand.Intn(len(gocitiesjson.Cities))]
+		p := gocitiesjson.Random()
 		_ = fuzzyFinder.GetTimezoneName(p.Lng, p.Lat)
 	}
 }
