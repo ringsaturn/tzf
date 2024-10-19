@@ -15,18 +15,18 @@ toolkit.
 > Here are some language or server which built with tzf or it's other language
 > bindings:
 
-| Language or Sever | Link                                                                    | Note                |
-| ----------------- | ----------------------------------------------------------------------- | ------------------- |
-| Go                | [`ringsaturn/tzf`](https://github.com/ringsaturn/tzf)                   |                     |
-| Ruby              | [`HarlemSquirrel/tzf-rb`](https://github.com/HarlemSquirrel/tzf-rb)     |                     |
-| Rust              | [`ringsaturn/tzf-rs`](https://github.com/ringsaturn/tzf-rs)             |                     |
-| Python            | [`ringsaturn/tzfpy`](https://github.com/ringsaturn/tzfpy)               |                     |
-| HTTP API          | [`ringsaturn/tzf-server`](https://github.com/ringsaturn/tzf-server)     | build with tzf      |
-| HTTP API          | [`racemap/rust-tz-service`](https://github.com/racemap/rust-tz-service) | build with tzf-rs   |
-| Redis Server      | [`ringsaturn/tzf-server`](https://github.com/ringsaturn/tzf-server)     | build with tzf      |
-| Redis Server      | [`ringsaturn/redizone`](https://github.com/ringsaturn/redizone)         | build with tzf-rs   |
-| Wasm              | [`ringsaturn/tzf-wasm`](https://github.com/ringsaturn/tzf-wasm)         | build with tzf-rs   |
-| Online            | [`ringsaturn/tzf-web`](https://github.com/ringsaturn/tzf-web)           | build with tzf-wasm |
+| Language or Sever         | Link                                                                    | Note                |
+| ------------------------- | ----------------------------------------------------------------------- | ------------------- |
+| Go                        | [`ringsaturn/tzf`](https://github.com/ringsaturn/tzf)                   |                     |
+| Ruby                      | [`HarlemSquirrel/tzf-rb`](https://github.com/HarlemSquirrel/tzf-rb)     |                     |
+| Rust                      | [`ringsaturn/tzf-rs`](https://github.com/ringsaturn/tzf-rs)             |                     |
+| Python                    | [`ringsaturn/tzfpy`](https://github.com/ringsaturn/tzfpy)               |                     |
+| HTTP API                  | [`ringsaturn/tzf-server`](https://github.com/ringsaturn/tzf-server)     | build with tzf      |
+| HTTP API                  | [`racemap/rust-tz-service`](https://github.com/racemap/rust-tz-service) | build with tzf-rs   |
+| Redis Server              | [`ringsaturn/tzf-server`](https://github.com/ringsaturn/tzf-server)     | build with tzf      |
+| Redis Server              | [`ringsaturn/redizone`](https://github.com/ringsaturn/redizone)         | build with tzf-rs   |
+| JS via Wasm(browser only) | [`ringsaturn/tzf-wasm`](https://github.com/ringsaturn/tzf-wasm)         | build with tzf-rs   |
+| Online                    | [`ringsaturn/tzf-web`](https://github.com/ringsaturn/tzf-web)           | build with tzf-wasm |
 
 ## Quick Start
 
