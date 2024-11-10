@@ -20,3 +20,8 @@ cover: test
 
 bench:
 	go test -v -bench=. ./...
+
+
+dep-licenses:
+	go-licenses save ./ --save_path=THIRD_PARTY_LICENSES 
+	build_notice.sh
