@@ -8,7 +8,7 @@ updates:
   - package-ecosystem: "gomod" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "daily"
+      interval: "monthly"
     groups:
       # Specify a name for the group, which will be used in pull request titles
       # and branch names
@@ -20,7 +20,7 @@ updates:
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "daily"
+      interval: "monthly"
     groups:
       # Specify a name for the group, which will be used in pull request titles
       # and branch names
