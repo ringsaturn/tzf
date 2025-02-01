@@ -8,7 +8,7 @@ require (
 	github.com/paulmach/orb v0.11.1
 	github.com/ringsaturn/go-cities.json v0.6.6
 	github.com/ringsaturn/polyf v0.2.2
-	github.com/ringsaturn/tzf-rel-lite v0.0.2024-b
+	github.com/ringsaturn/tzf-rel-lite v0.0.2025-a
 	github.com/tidwall/geojson v1.4.5
 	github.com/tidwall/lotsa v1.0.3
 	github.com/tidwall/rtree v1.10.0
