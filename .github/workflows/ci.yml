@@ -13,6 +13,8 @@ permissions:
 jobs:
   doc:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -24,13 +26,12 @@ jobs:
         run: |
           deno fmt --check ./README.md
 
-      - uses: bufbuild/buf-setup-action@v1
+      - uses: bufbuild/buf-action@v1
         with:
-          version: "latest"
-      - uses: bufbuild/buf-lint-action@v1
-      # - uses: bufbuild/buf-breaking-action@v1
-      #   with:
-      #     against: "https://github.com/ringsaturn/tzf.git#branch=main"
+          token: ${{ secrets.BUF_TOKEN }}
+          pr_comment: true
+          # breaking-against: "https://github.com/ringsaturn/tzf.git#branch=main"
+
 
   build:
     runs-on: ubuntu-latest

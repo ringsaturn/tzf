@@ -28,12 +28,11 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - uses: bufbuild/buf-setup-action@v1
+      - uses: bufbuild/buf-action@v1
         with:
-          version: "latest"
+          token: ${{ secrets.BUF_TOKEN }}
 
-      - name: Build doc
-        run: |
+      - run: |
           buf generate
 
       - name: Upload a Build Artifact
@@ -71,3 +70,8 @@ jobs:
           git config user.email github-actions@github.com
           git commit -m "Update Probuf HTML doc"
           git push
+
+      - uses: bufbuild/buf-action@v1
+        with:
+          token: ${{ secrets.BUF_TOKEN }}
+          push: true
