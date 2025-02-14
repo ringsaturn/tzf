@@ -6,3 +6,7 @@ lint:
 breaking:
   use:
     - FILE
+
+modules:
+  - path: pb/v1
+    name: buf.build/ringsaturn/tzf
