@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - "pb/tzinfo.proto"
+      - "pb/v1/tzinfo.proto"
       - ".github/workflows/build-pb-doc.yml"
   pull_request:
     branches: [main]
     paths:
-      - "pb/tzinfo.proto"
+      - "pb/v1/tzinfo.proto"
       - ".github/workflows/build-pb-doc.yml"
 
 permissions:
@@ -26,26 +26,22 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23
+          go-version-file: go.mod
 
-      - name: Install pb pkgs
-        run: |
-          go install github.com/golang/protobuf/protoc-gen-go@latest
-          go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
-
-      - name: Setup protoc
-        uses: arduino/setup-protoc@v3.0.0
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: "latest"
 
       - name: Build doc
         run: |
-          make pb
+          buf generate
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4
         if: ${{ github.ref_name == 'main' }}
         with:
           name: "Probuf HTML File"
-          path: "pb/pb.html"
+          path: "gen/doc/pb/v1/index.html"
 
   push-doc:
     needs: build-doc
