@@ -36,7 +36,7 @@ import (
 	"github.com/paulmach/orb/maptile"
 	"github.com/paulmach/orb/maptile/tilecover"
 	"github.com/ringsaturn/tzf/convert"
-	"github.com/ringsaturn/tzf/pb"
+	pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/lotsa"
 	"golang.org/x/exp/maps"

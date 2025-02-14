@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package pb;
+package pb.v1;
 
-option go_package = "github.com/ringsaturn/tzf/pb;pb";
+option go_package = "github.com/ringsaturn/tzf/gen/go/pb/v1;v1";
 
-// Basic Point data define.
+// Basic point data define.
 message Point {
   float lng = 1;
   float lat = 2;
@@ -41,8 +41,8 @@ message Point {
 // [GJ2008]: https://geojson.org/geojson-spec
 //
 message Polygon {
-  repeated Point points = 1;   // define the "exterior ring"
-  repeated Polygon holes = 2;  // define the "interior rings" as holes
+  repeated Point points = 1; // define the "exterior ring"
+  repeated Polygon holes = 2; // define the "interior rings" as holes
 }
 
 // Timezone is a timezone's all data.
@@ -53,14 +53,13 @@ message Timezone {
 
 message Timezones {
   repeated Timezone timezones = 1;
-  bool reduced = 2;  // Reduced data will toggle neighbor search as plan b
+  bool reduced = 2; // Reduced data will toggle neighbor search as plan b
   string version = 3;
 }
 
 enum CompressMethod {
-  Unknown = 0;
-  Polyline =
-      1;  // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+  COMPRESS_METHOD_UNSPECIFIED = 0;
+  COMPRESS_METHOD_POLYLINE = 1; // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 }
 
 message CompressedPolygon {
@@ -92,8 +91,8 @@ message PreindexTimezone {
 
 // PreindexTimezones is all preindex timezone's dumps.
 message PreindexTimezones {
-  int32 idxZoom = 1;  // which zoom value the tiles generated
-  int32 aggZoom = 2;  // which zoom value the tiles merge up with.
+  int32 idx_zoom = 1; // which zoom value the tiles generated
+  int32 agg_zoom = 2; // which zoom value the tiles merge up with.
   repeated PreindexTimezone keys = 3;
   string version = 4;
 }

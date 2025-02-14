@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
-	"github.com/ringsaturn/tzf/pb"
+	pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
 	"google.golang.org/protobuf/proto"
 )
 

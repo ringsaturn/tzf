@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/paulmach/orb/maptile"
-	"github.com/ringsaturn/tzf/pb"
+	pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
 	"github.com/ringsaturn/tzf/preindex"
 	"google.golang.org/protobuf/proto"
 )
