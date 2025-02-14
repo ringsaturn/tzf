@@ -33,6 +33,7 @@ jobs:
           token: ${{ secrets.BUF_TOKEN }}
           breaking: false
           lint: false
+          pr_comment: false
 
       - run: |
           buf generate
