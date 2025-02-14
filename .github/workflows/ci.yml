@@ -25,9 +25,6 @@ jobs:
           deno fmt --check ./README.md
 
   build:
-    strategy:
-      matrix:
-        go: ["1.23"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
