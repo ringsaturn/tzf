@@ -1,6 +1,8 @@
 # tzf's protobuf define
 
-The published data of [tzf-rel](https://github.com/ringsaturn/tzf-rel) and [tzf-rel-lite](https://github.com/ringsaturn/tzf-rel-lite) are defined in this directory.
+The published data of [tzf-rel](https://github.com/ringsaturn/tzf-rel) and
+[tzf-rel-lite](https://github.com/ringsaturn/tzf-rel-lite) are defined in this
+directory.
 
 Related projects:
 
