@@ -240,10 +240,10 @@ func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep m
 
 func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep maptile.Zoom, dropEdgeLayger int) *pb.PreindexTimezones {
 	ret := &pb.PreindexTimezones{
-		IdxZoom: int32(idxZoom),
-		AggZoom: int32(aggZoom),
-		Keys:    make([]*pb.PreindexTimezone, 0),
-		Version: input.Version,
+		PreindexIdxZoom: int32(idxZoom),
+		PreindexAggZoom: int32(aggZoom),
+		Keys:            make([]*pb.PreindexTimezone, 0),
+		Version:         input.Version,
 	}
 
 	// Timezone process time can be very different, so need to shuffle it
