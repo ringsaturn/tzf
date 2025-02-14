@@ -5,14 +5,11 @@ on:
     branches: [main]
 
 env:
-  TIMEZONE_BOUNDARY_VERSION: 2024a
+  TIMEZONE_BOUNDARY_VERSION: 2025a
 
 jobs:
   build-tzpb-pipeline:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: ["1.22", "1.23"]
 
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version-file: go.mod
 
       - name: Download files
         run: |
