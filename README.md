@@ -69,7 +69,7 @@ import (
 
 	"github.com/ringsaturn/tzf"
 	tzfrel "github.com/ringsaturn/tzf-rel"
-	pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
+	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -8,7 +8,7 @@ import (
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
 	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
-	pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
+	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"google.golang.org/protobuf/proto"
 )
 

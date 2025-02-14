@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/ringsaturn/tzf/convert"
-	pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
+	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/reduce"
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/rtree"

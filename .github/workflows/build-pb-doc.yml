@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - "pb/v1/tzinfo.proto"
+      - "pb/tzf/v1/tzinfo.proto"
       - ".github/workflows/build-pb-doc.yml"
   pull_request:
     branches: [main]
     paths:
-      - "pb/v1/tzinfo.proto"
+      - "pb/tzf/v1/tzinfo.proto"
       - ".github/workflows/build-pb-doc.yml"
 
 permissions:

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package pb.v1;
+package tzf.v1;
 
-option go_package = "github.com/ringsaturn/tzf/gen/go/pb/v1;v1";
+option go_package = "github.com/ringsaturn/tzf/gen/go/tzf/v1;v1";
 
 // Basic point data define.
 message Point {

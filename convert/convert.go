@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/mitchellh/mapstructure"
-	pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
+	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 )
 
 const (

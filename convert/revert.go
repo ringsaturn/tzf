@@ -1,6 +1,6 @@
 package convert
 
-import pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
+import pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 
 func FromPbPolygonToGeoMultipolygon(pbpoly []*pb.Polygon) MultiPolygonCoordinates {
 	res := MultiPolygonCoordinates{}

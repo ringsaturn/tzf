@@ -3,7 +3,7 @@ package tzf
 import (
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/maptile"
-	pb "github.com/ringsaturn/tzf/gen/go/pb/v1"
+	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )

@@ -3,10 +3,12 @@ version: v2
 lint:
   use:
     - STANDARD
+  ignore:
+    - PACKAGE_DIRECTORY_MATCH
 breaking:
   use:
     - FILE
 
 modules:
-  - path: pb/v1
+  - path: pb
     name: buf.build/ringsaturn/tzf
