@@ -43,7 +43,7 @@ jobs:
         if: ${{ github.ref_name == 'main' }}
         with:
           name: "Probuf HTML File"
-          path: "gen/doc/pb/v1/index.html"
+          path: "gen/doc/tzf/v1/index.html"
 
   push-doc:
     needs: build-doc
