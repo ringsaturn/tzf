@@ -58,7 +58,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: "Probuf HTML File"
-          path: "./docs"
+          path: "./outputs"
+
+      - run: |
+          ls -alh
+          ls -alh ./outputs
+          cp outputs/index.html ./docs/pb.html
 
       - name: Check if there are any changes
         id: verify_diff
@@ -73,8 +78,3 @@ jobs:
           git config user.email github-actions@github.com
           git commit -m "Update Probuf HTML doc"
           git push
-
-      - uses: bufbuild/buf-action@v1
-        with:
-          token: ${{ secrets.BUF_TOKEN }}
-          push: true
