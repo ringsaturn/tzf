@@ -37,9 +37,9 @@ import (
 	"github.com/paulmach/orb/maptile/tilecover"
 	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/maps"
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/lotsa"
-	"golang.org/x/exp/maps"
 )
 
 // Drop most outside layer of tile, since tile may cover area not included in timezone.
