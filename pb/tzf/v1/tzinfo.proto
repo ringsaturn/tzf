@@ -6,6 +6,11 @@ syntax = "proto3";
 // [tzf-rel-lite](https://github.com/ringsaturn/tzf-rel-lite) are defined in this
 // directory.
 //
+// Avaliable docs:
+//
+//  - [`tzf.v1` on buf.build](https://buf.build/ringsaturn/tzf/docs/main:tzf.v1)
+//  - [Plain HTML](https://ringsaturn.github.io/tzf/pb.html)
+//
 // Related projects:
 //
 // - [tzf](https://github.com/ringsaturn/tzf)
