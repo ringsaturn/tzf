@@ -59,7 +59,7 @@ func BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 	}
 }
 
-func Test_DefaultFinder_GetTimezoneName_Random_WorldCities_Alll(t *testing.T) {
+func Test_DefaultFinder_GetTimezoneName_Random_WorldCities_All(t *testing.T) {
 	wri := bytes.NewBufferString("")
 	lotsa.Output = wri
 	lotsa.Ops(len(gocitiesjson.Cities), runtime.NumCPU(), func(i, _ int) {

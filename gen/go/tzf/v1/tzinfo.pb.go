@@ -10,7 +10,7 @@
 // [tzf-rel-lite](https://github.com/ringsaturn/tzf-rel-lite) are defined in this
 // directory.
 //
-// Avaliable docs:
+// Available docs:
 //
 //  - [`tzf.v1` on buf.build](https://buf.build/ringsaturn/tzf/docs/main:tzf.v1)
 //  - [Plain HTML](https://ringsaturn.github.io/tzf/pb.html)

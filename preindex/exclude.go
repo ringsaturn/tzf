@@ -12,12 +12,12 @@ var (
 	excludesFinder *polyf.F[any]
 
 	//go:embed exclude.geojson
-	exludeGeoJSONBytes []byte
+	excludeGeoJSONBytes []byte
 )
 
 func init() {
 	boundaryFile := &featurecollection.BoundaryFile[any]{}
-	err := json.Unmarshal(exludeGeoJSONBytes, boundaryFile)
+	err := json.Unmarshal(excludeGeoJSONBytes, boundaryFile)
 	if err != nil {
 		panic(err)
 	}

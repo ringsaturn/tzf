@@ -181,7 +181,7 @@ border areas.
 You can observe points with different outcomes on this [page][points_not_equal].
 
 If a slightly longer initialization time is tolerable, the
-[compressed dataset (~5MB)][compressd-link] derived from the lightweight dataset
+[compressed dataset (~5MB)][compressed-link] derived from the lightweight dataset
 will be **more suitable for binary distribution.**
 
 The [pre-indexed dataset (~1.78MB)][preindex-link] consists of multiple tiles.
@@ -192,7 +192,7 @@ reduce execution times of the raycasting algorithm.
 [full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
 [lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
 [preindex-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.preindex.pb
-[compressd-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
+[compressed-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
 [points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
 I have written an article about the history of tzf, its Rust port, and its Rust
