@@ -30,7 +30,7 @@ jobs:
         with:
           token: ${{ secrets.BUF_TOKEN }}
           pr_comment: true
-          breaking: false
+          breaking: true
           breaking_against: "https://github.com/ringsaturn/tzf.git#branch=main"
 
 
