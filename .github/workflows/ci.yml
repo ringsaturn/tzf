@@ -31,7 +31,7 @@ jobs:
           token: ${{ secrets.BUF_TOKEN }}
           pr_comment: true
           breaking: false
-          # breaking-against: "https://github.com/ringsaturn/tzf.git#branch=main"
+          breaking_against: "https://github.com/ringsaturn/tzf.git#branch=main"
 
 
   build:
@@ -50,8 +50,6 @@ jobs:
           version: latest
           args: --timeout=5m
           skip-cache: true
-          skip-pkg-cache: true
-          skip-build-cache: true
 
       - name: Run coverage
         run: go test -coverprofile=coverage.txt -covermode=atomic
