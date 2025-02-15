@@ -1,6 +1,6 @@
 module github.com/ringsaturn/tzf
 
-go 1.23
+go 1.24
 
 require (
 	github.com/loov/hrtime v1.0.3
@@ -18,7 +18,6 @@ require (
 )
 
 require (
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/tidwall/geoindex v1.7.0 // indirect
-	go.mongodb.org/mongo-driver v1.14.0 // indirect
+	go.mongodb.org/mongo-driver v1.11.4 // indirect
 )
