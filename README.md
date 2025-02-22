@@ -135,6 +135,14 @@ longitude values to get the timezone name:
 tzf -lng 116.3883 -lat 39.9289
 ```
 
+Alternatively if you want to look up multiple coordinates efficiently you can
+specify the ordering and pipe them to the tzf command one pair of coordinates
+per line:
+
+```bash
+echo -e "116.3883 39.9289\n116.3883, 39.9289" | tzf -stdin-order lng-lat
+```
+
 ## Data
 
 You can download the original data from
