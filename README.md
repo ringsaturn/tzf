@@ -182,8 +182,8 @@ border areas.
 You can observe points with different outcomes on this [page][points_not_equal].
 
 If a slightly longer initialization time is tolerable, the
-[compressed dataset (~5MB)][compressed-link] derived from the lightweight dataset
-will be **more suitable for binary distribution.**
+[compressed dataset (~5MB)][compressed-link] derived from the lightweight
+dataset will be **more suitable for binary distribution.**
 
 The [pre-indexed dataset (~1.78MB)][preindex-link] consists of multiple tiles.
 It is used within the `DefaultFinder`, which is built on `FuzzyFinder`, to
