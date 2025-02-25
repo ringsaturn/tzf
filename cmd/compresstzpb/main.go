@@ -23,7 +23,7 @@ func main() {
 	}
 	output := reduce.CompressWithPolyline(input)
 
-	outputPath := strings.Replace(originalProbufPath, ".pb", ".compress.pb", 1)
+	outputPath := strings.Replace(originalProbufPath, ".bin", ".compress.bin", 1)
 	outputBin, _ := proto.Marshal(output)
 	f, err := os.Create(outputPath)
 	if err != nil {

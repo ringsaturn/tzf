@@ -29,7 +29,7 @@ func main() {
 	}
 	output := reduce.Do(input, SKIP, PRECISE, MINDISTENCE)
 
-	outputPath := strings.Replace(originalProbufPath, ".pb", ".reduce.pb", 1)
+	outputPath := strings.Replace(originalProbufPath, ".bin", ".reduce.bin", 1)
 	outputBin, _ := proto.Marshal(output)
 	f, err := os.Create(outputPath)
 	if err != nil {
