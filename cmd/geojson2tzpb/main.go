@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	outputPath := strings.Replace(jsonFilePath, ".json", ".pb", 1)
+	outputPath := strings.Replace(jsonFilePath, ".json", ".bin", 1)
 	outputBin, _ := proto.Marshal(output)
 
 	f, err := os.Create(outputPath)

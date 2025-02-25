@@ -198,10 +198,10 @@ It is used within the `DefaultFinder`, which is built on `FuzzyFinder`, to
 reduce execution times of the raycasting algorithm.
 
 [pb_html]: https://ringsaturn.github.io/tzf/pb.html
-[full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.pb
-[lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.pb
-[preindex-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.preindex.pb
-[compressed-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.pb
+[full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.bin
+[lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.bin
+[preindex-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.preindex.bin
+[compressed-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.bin
 [points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
 
 I have written an article about the history of tzf, its Rust port, and its Rust

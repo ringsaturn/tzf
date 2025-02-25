@@ -38,7 +38,7 @@ func main() {
 	// 	panic(err)
 	// }
 
-	outputPath := strings.Replace(originalProbufPath, ".pb", ".preindex.pb", 1)
+	outputPath := strings.Replace(originalProbufPath, ".bin", ".preindex.bin", 1)
 	outputBin, _ := proto.Marshal(output)
 	f, err := os.Create(outputPath)
 	if err != nil {
