@@ -44,7 +44,11 @@ func main() {
 
 	httpResponse, err := http.DefaultClient.Do(httpRequest)
 	must(err)
-	defer httpResponse.Body.Close()
+	defer func() {
+		if err := httpResponse.Body.Close(); err != nil {
+			log.Printf("error closing body: %v", err)
+		}
+	}()
 
 	resp := []*TagsResponseItem{}
 	err = json.NewDecoder(httpResponse.Body).Decode(&resp)

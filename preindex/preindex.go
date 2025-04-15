@@ -91,7 +91,7 @@ func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 			maptile.New(tile.X+1, tile.Y+1, tile.Z),
 		}
 
-		var allNeighborIn bool = func() bool {
+		var allNeighborIn = func() bool {
 			for _, neighborTile := range neighbors {
 				if _, ok := tilehash[neighborTile]; !ok {
 					return false

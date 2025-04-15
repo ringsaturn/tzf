@@ -45,14 +45,16 @@ func main() {
 	flag.Float64Var(&lng, "lng", 0.0, "Longitude")
 	flag.Float64Var(&lat, "lat", 0.0, "Latitude")
 	flag.Func("stdin-order", "Read multiple coordinates from stdin in given order", func(s string) error {
-		if s == "lng-lat" || s == "lon-lat" {
+		switch s {
+		case "lng-lat", "lon-lat":
 			stdinOrder = LngLat
-		} else if s == "lat-lng" || s == "lat-lon" {
+			return nil
+		case "lat-lng", "lat-lon":
 			stdinOrder = LatLng
-		} else {
+			return nil
+		default:
 			return errors.New("invalid order, must be one of lng-lat, lat-lng")
 		}
-		return nil
 	})
 	flag.Parse()
 	hasLng := false
