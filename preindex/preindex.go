@@ -202,7 +202,7 @@ func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep m
 	insideTZTiles := EnsureInside(geopolys, tiles)
 
 	// Drop edge tiles
-	for i := 0; i < dropEdgeLayger; i++ {
+	for range dropEdgeLayger {
 		insideTZTiles = DropEdgeTiles(insideTZTiles)
 	}
 
@@ -248,7 +248,7 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 
 	// Timezone process time can be very different, so need to shuffle it
 	taskIds := []int{}
-	for i := 0; i < len(input.Timezones); i++ {
+	for i := range input.Timezones {
 		taskIds = append(taskIds, i)
 	}
 	rand.Shuffle(len(taskIds), func(i, j int) { taskIds[i], taskIds[j] = taskIds[j], taskIds[i] })
