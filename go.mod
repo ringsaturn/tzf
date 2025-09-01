@@ -13,7 +13,7 @@ require (
 	github.com/tidwall/lotsa v1.0.3
 	github.com/tidwall/rtree v1.10.0
 	github.com/twpayne/go-polyline v1.1.1
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.8
 )
 
 require (
