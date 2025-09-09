@@ -29,7 +29,7 @@ func ExampleDefaultFinder_GetTimezoneName() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
+	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786)) // In longitude-latitude order
 	// Output: Asia/Shanghai
 }
 
@@ -38,7 +38,7 @@ func ExampleDefaultFinder_GetTimezoneNames() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(finder.GetTimezoneNames(87.6168, 43.8254))
+	fmt.Println(finder.GetTimezoneNames(87.6168, 43.8254)) // In longitude-latitude order
 	// Output: [Asia/Shanghai Asia/Urumqi] <nil>
 }
 

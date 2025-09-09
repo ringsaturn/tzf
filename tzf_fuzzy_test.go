@@ -48,7 +48,7 @@ func ExampleFuzzyFinder_GetTimezoneName() {
 		panic(err)
 	}
 	finder, _ := tzf.NewFuzzyFinderFromPB(input)
-	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
+	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786)) // In longitude-latitude order
 	// Output: Asia/Shanghai
 }
 

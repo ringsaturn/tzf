@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
+	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))  // In longitude-latitude order
 }
 ```
 
@@ -84,7 +84,7 @@ func main() {
 		panic(err)
 	}
 	finder, _ := tzf.NewFinderFromPB(input)
-	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))
+	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))  // In longitude-latitude order
 }
 ```
 
@@ -113,6 +113,7 @@ func init() {
 }
 
 func main() {
+	// In longitude-latitude order
 	fmt.Println(f.GetTimezoneName(116.3883, 39.9289))
 	fmt.Println(f.GetTimezoneName(-73.935242, 40.730610))
 }
