@@ -5,12 +5,11 @@ on:
     branches: [main]
     paths:
       - "pb/tzf/v1/tzinfo.proto"
-      - ".github/workflows/build-pb-doc.yml"
   pull_request:
     branches: [main]
     paths:
       - "pb/tzf/v1/tzinfo.proto"
-      - ".github/workflows/build-pb-doc.yml"
+  workflow_dispatch:
 
 permissions:
   contents: write
