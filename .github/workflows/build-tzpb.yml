@@ -46,3 +46,14 @@ jobs:
           geojson2tzpb data/combined-with-oceans.json | xargs reducetzpb | xargs compresstzpb
           preindextzpb data/combined-with-oceans.reduce.bin
           ls -alh data/
+
+      - name: Upload tzpb artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tzpb-files
+          path: |
+            data/combined-with-oceans.json
+            data/combined-with-oceans.bin
+            data/combined-with-oceans.reduce.bin
+            data/combined-with-oceans.reduce.compress.bin
+            data/combined-with-oceans.reduce.preindex.bin
