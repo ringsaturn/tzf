@@ -30,8 +30,8 @@ github.com/ringsaturn/go-cities.json v0.6.11 h1:Nf5z1+ShypeEjq+ihAS+Xj7uxXrTdMmz
 github.com/ringsaturn/go-cities.json v0.6.11/go.mod h1:RWApnQPG6nU558XXbY1try5mi9u9Hd667J6vr948VBo=
 github.com/ringsaturn/polyf v0.2.2 h1:71ua1Giawwpb+bvqFelcZygup+0HFuV5hYLA+8YO2ZM=
 github.com/ringsaturn/polyf v0.2.2/go.mod h1:0+PnAZooWRyH6ULFdxTC86pe15L4VT3e71CQVPG67CE=
-github.com/ringsaturn/tzf-rel-lite v0.0.2025-b1 h1:eE+K71ZpYD2xrWhZ5EFSpuFedHe6Orp2slfkzc+W220=
-github.com/ringsaturn/tzf-rel-lite v0.0.2025-b1/go.mod h1:SyVF6OU+Le0vKajtTA7PvYabdYCJsDlmplHuXeCZDrw=
+github.com/ringsaturn/tzf-rel-lite v0.0.2025-b2 h1:jkUranZSHWhvl/f8iYNr0bcG9jeTcJCHq0jNwGVNqHE=
+github.com/ringsaturn/tzf-rel-lite v0.0.2025-b2/go.mod h1:SyVF6OU+Le0vKajtTA7PvYabdYCJsDlmplHuXeCZDrw=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.3.0/go.mod h1:qt09Ya8vawLte6SNmTgCsAVtYtaKzEcn8ATUoHMkEqE=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
