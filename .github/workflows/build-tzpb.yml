@@ -3,6 +3,12 @@ name: build-tzpb
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      timezone-boundary-version:
+        description: "Timezone boundary version to use"
+        required: false
+        default: "2025b"
 
 jobs:
   build-tzpb-pipeline:
@@ -16,14 +22,20 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Fetch tag
+      - name: Fetch latest tag
         id: set-latest-version
         run: |
           go run ./cmd/checkboundaryrelease/main.go >> $GITHUB_OUTPUT
 
-      - name: Set env
+      - name: Set latest tag to env
+        if: ${{ github.event.inputs.timezone-boundary-version == '' }}
         run: |
           echo TIMEZONE_BOUNDARY_VERSION=${{ steps.set-latest-version.outputs.TIMEZONE_BOUNDARY_VERSION }} >> $GITHUB_ENV
+
+      - name: Set tag when provided
+        if: ${{ github.event.inputs.timezone-boundary-version != '' }}
+        run: |
+          echo TIMEZONE_BOUNDARY_VERSION=${{ github.event.inputs.timezone-boundary-version }} >> $GITHUB_ENV
 
       - name: Download files
         run: |
