@@ -38,7 +38,7 @@ jobs:
           buf generate
 
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: ${{ github.ref_name == 'main' }}
         with:
           name: "Probuf HTML File"
@@ -54,7 +54,7 @@ jobs:
           ref: gh-pages
 
       - name: Download a Build Artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: "Probuf HTML File"
           path: "./outputs"
