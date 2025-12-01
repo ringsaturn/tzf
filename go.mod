@@ -3,7 +3,7 @@ module github.com/ringsaturn/tzf
 go 1.25
 
 require (
-	github.com/loov/hrtime v1.0.3
+	github.com/loov/hrtime v1.0.4
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/paulmach/orb v0.12.0
 	github.com/ringsaturn/go-cities.json v0.6.13
