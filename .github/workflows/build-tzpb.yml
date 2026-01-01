@@ -65,25 +65,25 @@ jobs:
           preindextzpb data/combined-with-oceans.reduce.bin
           ls -alh data/
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: combined-with-oceans.bin
           path: |
             data/combined-with-oceans.bin
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: combined-with-oceans.reduce.bin
           path: |
             data/combined-with-oceans.reduce.bin
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: combined-with-oceans.reduce.compress.bin
           path: |
             data/combined-with-oceans.reduce.compress.bin
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: combined-with-oceans.reduce.preindex.bin
           path: |
