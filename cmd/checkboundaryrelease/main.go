@@ -36,6 +36,7 @@ func must(err error) {
 
 func main() {
 	verbose := flag.Bool("verbose", false, "show more logs")
+	force := flag.Bool("force", false, "force update even if the version is the same")
 	flag.Parse()
 	ctx := context.Background()
 
@@ -63,7 +64,7 @@ func main() {
 	if *verbose {
 		log.Printf("input.Version=%v, latestTag=%v\n", input.Version, latestTag)
 	}
-	if input.Version == latestTag {
+	if input.Version == latestTag && !*force {
 		log.Println("Same version, bye!")
 		return
 	}

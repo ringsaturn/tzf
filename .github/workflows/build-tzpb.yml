@@ -25,7 +25,7 @@ jobs:
       - name: Fetch latest tag
         id: set-latest-version
         run: |
-          go run ./cmd/checkboundaryrelease/main.go >> $GITHUB_OUTPUT
+          go run ./cmd/checkboundaryrelease/main.go --force >> $GITHUB_OUTPUT
 
       - name: Set latest tag to env
         if: ${{ github.event.inputs.timezone-boundary-version == '' }}
