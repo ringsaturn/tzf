@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"math/rand"
 	"runtime"
+	"sync"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/maptile"
@@ -254,13 +255,16 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 	rand.Shuffle(len(taskIds), func(i, j int) { taskIds[i], taskIds[j] = taskIds[j], taskIds[i] })
 
 	m := map[string][]*pb.PreindexTimezone{}
+	var mu sync.Mutex
 	lotsa.Ops(len(taskIds), runtime.NumCPU()*3, func(i, thread int) {
 		tz := input.Timezones[taskIds[i]]
 		preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayger)
 		if err != nil {
 			return
 		}
+		mu.Lock()
 		m[tz.Name] = preindexes
+		mu.Unlock()
 	})
 	for _, tz := range input.Timezones {
 		values, ok := m[tz.Name]
