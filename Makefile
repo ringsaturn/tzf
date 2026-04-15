@@ -16,8 +16,6 @@ bench:
 	go test -v -bench=. ./...
 
 dep-licenses:
-	go-licenses save ./ --save_path=THIRD_PARTY_LICENSES 
-	build_notice.sh
-
-modernize:
-	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix=true ./...
+	rm -rf THIRD_PARTY_LICENSES
+	go run github.com/google/go-licenses/v2@latest save ./ --save_path=THIRD_PARTY_LICENSES 
+	bash build_notice.sh

@@ -3,38 +3,38 @@ NOTICE
 This product includes software developed by [github.com/ringsaturn/tzf].
 ------------------------------------------------------------------------
 
-protobuf
+google.golang.org/protobuf
 License: MIT
 Copyright (c) 2018 The Go Authors. All rights reserved.
 
-mongo-driver
+go.mongodb.org/mongo-driver/v2
 License: Apache
       "Licensor" shall mean the copyright owner or entity authorized by
 
-mapstructure
+github.com/mitchellh/mapstructure
 License: MIT
 Copyright (c) 2013 Mitchell Hashimoto
 
-go-polyline
+github.com/twpayne/go-polyline
 License: MIT
 Copyright (c) 2013, Tom Payne
 
-geometry
+github.com/tidwall/geojson/geometry
 License: MIT
 Copyright (c) 2018 Josh Baker
 
-child
+github.com/tidwall/geoindex/child
 License: MIT
 Copyright (c) 2018 Josh Baker
 
-rtree
+github.com/tidwall/rtree
 License: MIT
 Copyright (c) 2021 Josh Baker
 
-tzf
+github.com/ringsaturn/tzf
 License: MIT
 Copyright (c) 2022 ringsaturn
 
-maps
+github.com/ringsaturn/tzf/internal/maps
 License: MIT
 Copyright 2009 The Go Authors.
