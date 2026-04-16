@@ -116,3 +116,54 @@ message PreindexTimezones {
   repeated PreindexTimezone keys = 3;
   string version = 4;
 }
+
+// Wrapper for a sequence of inline points used inside a RingSegment oneof.
+// (proto3 does not allow repeated fields directly in a oneof.)
+message InlinePoints {
+  repeated Point points = 1;
+}
+
+// A ring segment: either inline points or a reference to a shared edge.
+// Shared edges are stored once in TopoTimezones.shared_edges and referenced
+// by their index; edge_reversed references the same edge but traversed in
+// the opposite direction.
+message RingSegment {
+  oneof content {
+    InlinePoints inline = 1;
+    int32 edge_forward = 2;   // index into TopoTimezones.shared_edges (canonical direction)
+    int32 edge_reversed = 3;  // index into TopoTimezones.shared_edges (reversed direction)
+  }
+}
+
+// A timezone polygon in topology format.
+// The exterior ring is represented as an ordered sequence of segments.
+// Holes are nested TopoPolygons.
+message TopoPolygon {
+  repeated RingSegment exterior = 1;
+  repeated TopoPolygon holes = 2;
+}
+
+// A timezone in topology format.
+message TopoTimezone {
+  repeated TopoPolygon polygons = 1;
+  string name = 2;
+}
+
+// A shared boundary edge stored once in the global edge library.
+// Rings reference it by index (forward or reversed) instead of repeating
+// the point sequence.
+message SharedEdge {
+  int32 id = 1;
+  repeated Point points = 2;
+}
+
+// Timezones in topology format with shared-edge deduplication.
+// Shared timezone boundaries are stored exactly once in shared_edges;
+// rings reference them by ID rather than duplicating the point sequences.
+// This format targets full-precision data where ~52% of boundary edges are
+// shared, reducing the 96 MB full dataset by ~30–35 MB.
+message TopoTimezones {
+  repeated SharedEdge shared_edges = 1;
+  repeated TopoTimezone timezones = 2;
+  string version = 3;
+}
