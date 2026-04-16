@@ -147,6 +147,12 @@ func DoWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, Stats) {
 	}
 
 	output := normalizeTimezones(input)
+	// Normalize winding order before topology analysis so that adjacent rings
+	// always traverse their shared boundary in opposite directions. Without this,
+	// hole rings stored with incorrect CCW winding (instead of CW) appear to share
+	// edges in the same direction as the adjacent exterior ring, causing them to be
+	// misclassified as disputed-territory overlaps and skipped.
+	normalizeWindings(output)
 	snapVertices(output, &stats)
 	rings, edgeIndex, vertexIndex := collectRings(output)
 	stats.InputRings = len(rings)

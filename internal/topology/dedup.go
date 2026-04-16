@@ -20,8 +20,12 @@ func BuildTopoTimezones(input *pb.Timezones) *pb.TopoTimezones {
 		return nil
 	}
 
-	// Normalize coordinates and snap T-junction vertices across rings.
+	// Normalize coordinates then fix winding order before topology analysis.
+	// Same rationale as DoWithStats: hole rings in the source data are sometimes
+	// stored CCW (exterior winding) instead of CW, causing their shared edges to
+	// appear same-direction as the adjacent land polygon exterior and be skipped.
 	normalized := normalizeTimezones(input)
+	normalizeWindings(normalized)
 	snapVertices(normalized, nil)
 
 	// Build topology structures: shared edge detection and fixed-vertex marking.
