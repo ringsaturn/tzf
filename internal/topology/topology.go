@@ -471,7 +471,35 @@ func markSharedEdges(rings map[ringRef]*ringData, edgeIndex map[edgeKey][]edgeUs
 	}
 }
 
+// markFixedVertices marks ring vertices that must not be moved during
+// Douglas-Peucker simplification. Only true multi-way topological nodes
+// (3+ distinct rings meeting at a point) are fixed. Two-ring transition
+// points (shared↔non-shared boundary, or partner-change) are intentionally
+// left unfixed so that D-P can see longer continuous segments.
 func markFixedVertices(rings map[ringRef]*ringData, vertexIndex map[pointKey]map[ringRef]struct{}, stats *Stats) {
+	for ref, ring := range rings {
+		unique := ringUniquePoints(ring.Points)
+		if len(unique) == 0 {
+			continue
+		}
+		for idx, point := range unique {
+			vertexKey := newPointKey(point)
+			if len(vertexIndex[vertexKey]) > 2 {
+				ring.Fixed[idx] = struct{}{}
+			}
+		}
+		if stats != nil {
+			stats.FixedVertices += len(ring.Fixed)
+		}
+		rings[ref] = ring
+	}
+}
+
+// markFixedVerticesForDedup marks ring vertices that serve as segment
+// boundaries for the shared-edge deduplication pass. Unlike the simplification
+// variant, this also fixes two-ring transition points so that rings are
+// correctly split into purely-shared vs purely-non-shared segments.
+func markFixedVerticesForDedup(rings map[ringRef]*ringData, vertexIndex map[pointKey]map[ringRef]struct{}) {
 	for ref, ring := range rings {
 		unique := ringUniquePoints(ring.Points)
 		if len(unique) == 0 {
@@ -482,31 +510,20 @@ func markFixedVertices(rings map[ringRef]*ringData, vertexIndex map[pointKey]map
 			next := ring.Edges[idx]
 			vertexKey := newPointKey(point)
 
-			// Transition between a shared edge and a non-shared edge: this point
-			// is a chain endpoint and must not move.
+			// Transition between a shared edge and a non-shared edge.
 			if prev.Shared != next.Shared {
 				ring.Fixed[idx] = struct{}{}
 				continue
 			}
-			// Both adjacent edges are shared but with different partners: this is
-			// a junction between two distinct shared chains and must be fixed.
+			// Both adjacent edges are shared but with different partners.
 			if prev.Shared && next.Shared && prev.PartnerRing != next.PartnerRing {
 				ring.Fixed[idx] = struct{}{}
 				continue
 			}
-			// Three or more rings meet at this vertex: it is a multi-way
-			// topological node and must not move.
+			// Three or more rings meet at this vertex.
 			if len(vertexIndex[vertexKey]) > 2 {
 				ring.Fixed[idx] = struct{}{}
 			}
-			// If neither condition above fired, both adjacent edges belong to the
-			// same shared chain (same partner ring on both sides). This vertex is
-			// interior to a shared segment and must NOT be fixed — doing so would
-			// fragment the chain into many short sub-segments, destroying
-			// compression opportunities.
-		}
-		if stats != nil {
-			stats.FixedVertices += len(ring.Fixed)
 		}
 		rings[ref] = ring
 	}

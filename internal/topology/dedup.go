@@ -31,7 +31,7 @@ func BuildTopoTimezones(input *pb.Timezones) *pb.TopoTimezones {
 	// Build topology structures: shared edge detection and fixed-vertex marking.
 	rings, edgeIndex, vertexIndex := collectRings(normalized)
 	markSharedEdges(rings, edgeIndex)
-	markFixedVertices(rings, vertexIndex, nil)
+	markFixedVerticesForDedup(rings, vertexIndex)
 
 	// Decompose every ring into segments, building the shared edge library.
 	sharedEdges := make([]*pb.SharedEdge, 0)
