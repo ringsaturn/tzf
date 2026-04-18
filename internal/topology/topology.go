@@ -15,6 +15,12 @@ import (
 
 const snapTolerance = 1e-6
 
+// selfIntersectionMaxPoints is the maximum number of unique points in a
+// simplified ring for which the O(n²) self-intersection check is run.
+// Larger rings are skipped because they rarely self-intersect after D-P
+// and the check would dominate processing time.
+const selfIntersectionMaxPoints = 100
+
 // Minimum number of points in an open path before attempting Douglas-Peucker.
 // Paths this short have at most one interior vertex, so simplification cannot
 // meaningfully reduce them and risks destabilising degenerate rings.
@@ -154,6 +160,12 @@ func DoWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, Stats) {
 	// misclassified as disputed-territory overlaps and skipped.
 	normalizeWindings(output)
 	snapVertices(output, &stats)
+	// Remove zero-length edges (adjacent identical points, including wrap-around)
+	// before topology analysis. Such edges exist in some source rings (e.g. the
+	// Macau border-crossing building outline). markSharedEdges treats them as
+	// same-direction and skips them, preventing isEntirelyShared from recognising
+	// complete enclave pairs and causing independent simplification of partner rings.
+	removeZeroLengthEdges(output)
 	rings, edgeIndex, vertexIndex := collectRings(output)
 	stats.InputRings = len(rings)
 	for _, ring := range rings {
@@ -166,18 +178,47 @@ func DoWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, Stats) {
 	for ref, ring := range rings {
 		simplified := simplifyRing(ring, epsilon, sharedCache, &stats)
 		result := cleanRing(simplified)
-		if len(ringUniquePoints(result)) < 3 {
-			// Topology simplification produced a degenerate ring; keep the
-			// original unmodified input geometry instead of a corrupted result.
+		unique := ringUniquePoints(result)
+		needsFallback := false
+		if len(unique) < 3 {
+			// Simplification produced a degenerate ring (< 3 unique points).
+			needsFallback = true
+		} else if ringHasZeroLengthEdge(unique) {
+			// Two non-adjacent points became identical after float32 rounding,
+			// creating a zero-length edge that the validator would reject.
+			needsFallback = true
+		} else if len(unique) <= selfIntersectionMaxPoints && hasSelfIntersection(unique) {
+			// Simplification collapsed a complex local shape (e.g. a building
+			// outline with many tight turns) into a self-intersecting polygon.
+			// This happens when epsilon is large relative to the feature size.
+			// The check is O(n²) so it is skipped for large rings, which rarely
+			// self-intersect after Douglas-Peucker.
+			needsFallback = true
+		}
+		if needsFallback {
 			stats.RingsFallbackOriginal++
 			stats.RingsFallbackPoints += ring.OriginalLen
-			result = cloneRing(getOriginalRing(input, ref))
+			// cleanRing removes consecutive duplicates; cleanRingRemoveZeroEdges
+			// then removes any remaining zero-length edges (including wrap-around)
+			// that may exist in the source data.
+			result = cleanRingRemoveZeroEdges(cleanRing(getOriginalRing(input, ref)))
 		}
 		assignRing(output, ref, result)
 	}
 	normalizeWindings(output)
 
 	return output, stats
+}
+
+func removeZeroLengthEdges(input *pb.Timezones) {
+	for _, tz := range input.Timezones {
+		for _, poly := range tz.Polygons {
+			poly.Points = cleanRingRemoveZeroEdges(poly.Points)
+			for _, hole := range poly.Holes {
+				hole.Points = cleanRingRemoveZeroEdges(hole.Points)
+			}
+		}
+	}
 }
 
 func normalizeWindings(input *pb.Timezones) {
@@ -535,6 +576,39 @@ func markFixedVerticesForDedup(rings map[ringRef]*ringData, vertexIndex map[poin
 		}
 		rings[ref] = ring
 	}
+}
+
+// cleanRingRemoveZeroEdges removes zero-length edges (adjacent identical
+// points, including the wrap-around between last and first) from an already
+// cleanRing-processed ring. This handles source data that has non-consecutive
+// duplicate vertices which cleanRing alone does not eliminate.
+func cleanRingRemoveZeroEdges(points []*pb.Point) []*pb.Point {
+	unique := ringUniquePoints(points)
+	if len(unique) < 3 {
+		return points
+	}
+	if !ringHasZeroLengthEdge(unique) {
+		return points
+	}
+	cleaned := make([]*pb.Point, 0, len(unique))
+	for i, p := range unique {
+		if !samePoint(p, unique[(i+1)%len(unique)]) {
+			cleaned = append(cleaned, clonePoint(p))
+		}
+	}
+	if len(cleaned) < 3 {
+		return points // cannot fix, return as-is
+	}
+	return closeRing(cleaned)
+}
+
+func ringHasZeroLengthEdge(unique []*pb.Point) bool {
+	for i, p := range unique {
+		if samePoint(p, unique[(i+1)%len(unique)]) {
+			return true
+		}
+	}
+	return false
 }
 
 func getOriginalRing(input *pb.Timezones, ref ringRef) []*pb.Point {
