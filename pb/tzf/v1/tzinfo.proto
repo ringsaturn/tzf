@@ -167,3 +167,47 @@ message TopoTimezones {
   repeated TopoTimezone timezones = 2;
   string version = 3;
 }
+
+// CompressedSharedEdge stores a shared boundary edge with its point sequence
+// polyline-encoded (delta + zigzag, same algorithm as CompressedPolygon).
+message CompressedSharedEdge {
+  int32 id = 1;
+  bytes points = 2; // polyline-encoded point sequence
+}
+
+// CompressedInlinePoints stores a short inline ring segment as polyline bytes.
+message CompressedInlinePoints {
+  bytes points = 1; // polyline-encoded point sequence
+}
+
+// CompressedRingSegment mirrors RingSegment with polyline-encoded inline points.
+message CompressedRingSegment {
+  oneof content {
+    CompressedInlinePoints inline = 1;
+    int32 edge_forward = 2;
+    int32 edge_reversed = 3;
+  }
+}
+
+// CompressedTopoPolygon mirrors TopoPolygon with compressed ring segments.
+message CompressedTopoPolygon {
+  repeated CompressedRingSegment exterior = 1;
+  repeated CompressedTopoPolygon holes = 2;
+}
+
+// CompressedTopoTimezone mirrors TopoTimezone with compressed polygons.
+message CompressedTopoTimezone {
+  repeated CompressedTopoPolygon polygons = 1;
+  string name = 2;
+}
+
+// CompressedTopoTimezones combines shared-edge deduplication with polyline
+// coordinate compression. Shared edge point sequences and inline segments are
+// stored as polyline bytes instead of repeated Point messages, significantly
+// reducing file size on top of the deduplication savings.
+message CompressedTopoTimezones {
+  CompressMethod method = 1;
+  repeated CompressedSharedEdge shared_edges = 2;
+  repeated CompressedTopoTimezone timezones = 3;
+  string version = 4;
+}
