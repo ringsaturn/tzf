@@ -165,7 +165,15 @@ func DoWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, Stats) {
 
 	for ref, ring := range rings {
 		simplified := simplifyRing(ring, epsilon, sharedCache, &stats)
-		assignRing(output, ref, cleanRing(simplified))
+		result := cleanRing(simplified)
+		if len(ringUniquePoints(result)) < 3 {
+			// Topology simplification produced a degenerate ring; keep the
+			// original unmodified input geometry instead of a corrupted result.
+			stats.RingsFallbackOriginal++
+			stats.RingsFallbackPoints += ring.OriginalLen
+			result = cloneRing(getOriginalRing(input, ref))
+		}
+		assignRing(output, ref, result)
 	}
 	normalizeWindings(output)
 
@@ -529,6 +537,50 @@ func markFixedVerticesForDedup(rings map[ringRef]*ringData, vertexIndex map[poin
 	}
 }
 
+func getOriginalRing(input *pb.Timezones, ref ringRef) []*pb.Point {
+	tz := input.Timezones[ref.TimezoneIdx]
+	poly := tz.Polygons[ref.PolygonIdx]
+	if ref.HoleIdx == -1 {
+		return poly.Points
+	}
+	return poly.Holes[ref.HoleIdx].Points
+}
+
+// isEntirelyShared returns true when every edge in the ring is shared with the
+// same single partner ring. This identifies complete enclaves: a hole ring
+// whose shape exactly matches another timezone's exterior polygon.
+func isEntirelyShared(edges []edgeMeta) bool {
+	if len(edges) == 0 {
+		return false
+	}
+	if !edges[0].Shared {
+		return false
+	}
+	partner := edges[0].PartnerRing
+	for _, e := range edges[1:] {
+		if !e.Shared || e.PartnerRing != partner {
+			return false
+		}
+	}
+	return true
+}
+
+// findCanonicalStart returns the index of the lexicographically smallest point
+// (by Lng then Lat). Using this as the rotation origin ensures that two partner
+// rings sharing all their edges — traversing in opposite directions — both
+// independently rotate to the same start vertex, making their open-path
+// signatures consistent for the shared segment cache.
+func findCanonicalStart(points []*pb.Point) int {
+	best := 0
+	for i, p := range points {
+		b := points[best]
+		if p.Lng < b.Lng || (p.Lng == b.Lng && p.Lat < b.Lat) {
+			best = i
+		}
+	}
+	return best
+}
+
 func simplifyRing(ring *ringData, epsilon float64, sharedCache map[sharedSegmentKey][]*pb.Point, stats *Stats) []*pb.Point {
 	points := ring.Points
 	fixed := ring.Fixed
@@ -561,18 +613,40 @@ func simplifyRing(ring *ringData, epsilon float64, sharedCache map[sharedSegment
 	var simplified []*pb.Point
 	switch len(fixedIndices) {
 	case 0:
-		simplified = simplifyClosedRing(unique, epsilon, stats)
-	case 1:
-		rotated := rotatePoints(unique, fixedIndices[0])
-		path := make([]*pb.Point, 0, len(rotated)+1)
-		path = append(path, clonePoints(rotated)...)
-		path = append(path, clonePoint(rotated[0]))
-		reduced := simplifyOpenPath(path, epsilon)
-		recordSegmentStats(stats, len(path), len(reduced), false)
-		if stats != nil && len(path) <= minSimplifyPoints {
-			stats.SegmentsSkippedShort++
+		if isEntirelyShared(ring.Edges) {
+			// The entire ring boundary is shared with one partner ring (classic
+			// enclave: a hole in an outer timezone whose shape matches the inner
+			// timezone's exterior). Rotate to the lexicographically smallest
+			// vertex so both this ring and its partner independently arrive at
+			// the same canonical open-path representation, enabling the shared
+			// segment cache to produce identical simplification results.
+			canonStart := findCanonicalStart(unique)
+			rotated := rotatePoints(unique, canonStart)
+			rotatedEdges := rotateEdges(ring.Edges, canonStart)
+			openPath := make([]*pb.Point, 0, len(rotated)+1)
+			openPath = append(openPath, clonePoints(rotated)...)
+			openPath = append(openPath, clonePoint(rotated[0]))
+			simplified = closeRing(simplifySegment(openPath, rotatedEdges, epsilon, sharedCache, stats))
+		} else {
+			simplified = simplifyClosedRing(unique, epsilon, stats)
 		}
-		simplified = closeRing(reduced)
+	case 1:
+		start := fixedIndices[0]
+		rotated := rotatePoints(unique, start)
+		rotatedEdges := rotateEdges(ring.Edges, start)
+		openPath := make([]*pb.Point, 0, len(rotated)+1)
+		openPath = append(openPath, clonePoints(rotated)...)
+		openPath = append(openPath, clonePoint(rotated[0]))
+		if isEntirelyShared(rotatedEdges) {
+			simplified = closeRing(simplifySegment(openPath, rotatedEdges, epsilon, sharedCache, stats))
+		} else {
+			reduced := simplifyOpenPath(openPath, epsilon)
+			recordSegmentStats(stats, len(openPath), len(reduced), false)
+			if stats != nil && len(openPath) <= minSimplifyPoints {
+				stats.SegmentsSkippedShort++
+			}
+			simplified = closeRing(reduced)
+		}
 	default:
 		start := fixedIndices[0]
 		rotated := rotatePoints(unique, start)
@@ -589,13 +663,6 @@ func simplifyRing(ring *ringData, epsilon float64, sharedCache map[sharedSegment
 		simplified = simplifyFixedSegments(rotated, rotatedEdges, adjusted, epsilon, sharedCache, stats)
 	}
 
-	if len(ringUniquePoints(simplified)) < 3 {
-		if stats != nil {
-			stats.RingsFallbackOriginal++
-			stats.RingsFallbackPoints += ring.OriginalLen
-		}
-		return cloneRing(points)
-	}
 	return simplified
 }
 
