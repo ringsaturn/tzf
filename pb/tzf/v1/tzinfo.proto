@@ -130,8 +130,8 @@ message InlinePoints {
 message RingSegment {
   oneof content {
     InlinePoints inline = 1;
-    int32 edge_forward = 2;   // index into TopoTimezones.shared_edges (canonical direction)
-    int32 edge_reversed = 3;  // index into TopoTimezones.shared_edges (reversed direction)
+    int32 edge_forward = 2; // index into TopoTimezones.shared_edges (canonical direction)
+    int32 edge_reversed = 3; // index into TopoTimezones.shared_edges (reversed direction)
   }
 }
 
