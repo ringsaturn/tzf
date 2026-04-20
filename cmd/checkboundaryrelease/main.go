@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 
-	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
+	tzfdist "github.com/ringsaturn/tzf-dist"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -58,7 +58,7 @@ func main() {
 	latestTag := resp[0].Name
 
 	input := &pb.PreindexTimezones{}
-	if err := proto.Unmarshal(tzfrellite.PreindexData, input); err != nil {
+	if err := proto.Unmarshal(tzfdist.PreindexData, input); err != nil {
 		panic(err)
 	}
 	if *verbose {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
-	tzfrellite "github.com/ringsaturn/tzf-rel-lite"
+	tzfdist "github.com/ringsaturn/tzf-dist"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -20,7 +20,7 @@ type DefaultFinder struct {
 func NewDefaultFinder() (F, error) {
 	fuzzyFinder, err := func() (F, error) {
 		input := &pb.PreindexTimezones{}
-		if err := proto.Unmarshal(tzfrellite.PreindexData, input); err != nil {
+		if err := proto.Unmarshal(tzfdist.PreindexData, input); err != nil {
 			panic(err)
 		}
 		return NewFuzzyFinderFromPB(input)
@@ -30,11 +30,11 @@ func NewDefaultFinder() (F, error) {
 	}
 
 	finder, err := func() (F, error) {
-		input := &pb.CompressedTimezones{}
-		if err := proto.Unmarshal(tzfrellite.LiteCompressData, input); err != nil {
+		input := &pb.CompressedTopoTimezones{}
+		if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
 			panic(err)
 		}
-		return NewFinderFromCompressed(input, SetDropPBTZ)
+		return NewFinderFromCompressedTopo(input, SetDropPBTZ)
 	}()
 	if err != nil {
 		return nil, err
@@ -53,6 +53,38 @@ func NewDefaultFinder() (F, error) {
 	f.finder = finder
 
 	// Force free mem by probuf, about 80MB
+	runtime.GC()
+
+	return f, nil
+}
+
+// newDefaultFinderFromCompressedTopo builds a [DefaultFinder] from the tzf-dist data files:
+//   - preindex:       combined-with-oceans.topology.preindex.bin  → [pb.PreindexTimezones]
+//   - compressedTopo: combined-with-oceans.topology.compress.topo.bin or
+//     combined-with-oceans.compress.topo.bin → [pb.CompressedTopoTimezones]
+func newDefaultFinderFromCompressedTopo(preindex *pb.PreindexTimezones, compressedTopo *pb.CompressedTopoTimezones) (F, error) {
+	fuzzyFinder, err := NewFuzzyFinderFromPB(preindex)
+	if err != nil {
+		return nil, err
+	}
+
+	finder, err := NewFinderFromCompressedTopo(compressedTopo, SetDropPBTZ)
+	if err != nil {
+		return nil, err
+	}
+
+	if finder.DataVersion() != fuzzyFinder.DataVersion() {
+		return nil, fmt.Errorf(
+			"tzf: DefaultFinder only support same data version for Finder(version=%v) and FuzzyFinder(version=%v)",
+			finder.DataVersion(),
+			fuzzyFinder.DataVersion(),
+		)
+	}
+
+	f := &DefaultFinder{}
+	f.fuzzyFinder = fuzzyFinder
+	f.finder = finder
+
 	runtime.GC()
 
 	return f, nil

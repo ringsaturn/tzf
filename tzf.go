@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"slices"
 
+	tzfdist "github.com/ringsaturn/tzf-dist"
 	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/reduce"
 	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/rtree"
+	"google.golang.org/protobuf/proto"
 )
 
 var ErrNoTimezoneFound = errors.New("tzf: no timezone found")
@@ -172,6 +174,100 @@ func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) 
 		return nil, err
 	}
 	return NewFinderFromPB(tzs, opts...)
+}
+
+// NewFullFinder builds a [DefaultFinder] from the tzf-dist embedded data with no
+// parameters required. It combines a [FuzzyFinder] (topology.preindex) with a
+// [Finder] (topology.compress.topo) for fast lookups with accurate fallback.
+func NewFullFinder() (F, error) {
+	preindex := &pb.PreindexTimezones{}
+	if err := proto.Unmarshal(tzfdist.PreindexData, preindex); err != nil {
+		return nil, err
+	}
+	topo := &pb.CompressedTopoTimezones{}
+	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, topo); err != nil {
+		return nil, err
+	}
+	return newDefaultFinderFromCompressedTopo(preindex, topo)
+}
+
+// NewFinderFromCompressedTopo builds a [Finder] directly from a [pb.CompressedTopoTimezones]
+// input without materialising an intermediate [pb.Timezones], reducing peak memory usage.
+//
+// It accepts both the full-precision combined-with-oceans.compress.topo.bin and the
+// topology-aware simplified combined-with-oceans.topology.compress.topo.bin from tzf-dist.
+func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...OptionFunc) (F, error) {
+	opt := &Option{}
+	for _, optFunc := range opts {
+		optFunc(opt)
+	}
+
+	// Decompress shared edges once into geometry.Point slices indexed by edge ID.
+	// This replaces the two intermediate proto objects (TopoTimezones + pb.Timezones).
+	edges := make([][]geometry.Point, len(input.SharedEdges))
+	for _, e := range input.SharedEdges {
+		raw := reduce.DecompressedPolylineBytesToPoints(e.Points)
+		pts := make([]geometry.Point, len(raw))
+		for j, p := range raw {
+			pts[j] = geometry.Point{X: float64(p.Lng), Y: float64(p.Lat)}
+		}
+		edges[e.Id] = pts
+	}
+
+	items := make([]*tzitem, 0, len(input.Timezones))
+	names := make([]string, 0, len(input.Timezones))
+	tr := &rtree.RTreeG[*tzitem]{}
+
+	for _, tz := range input.Timezones {
+		names = append(names, tz.Name)
+		newItem := &tzitem{name: tz.Name}
+
+		for _, poly := range tz.Polygons {
+			exterior := expandCompressedRing(poly.Exterior, edges)
+			holes := make([][]geometry.Point, 0, len(poly.Holes))
+			for _, hole := range poly.Holes {
+				holes = append(holes, expandCompressedRing(hole.Exterior, edges))
+			}
+			newPoly := geometry.NewPoly(exterior, holes, &geometry.IndexOptions{Kind: geometry.RTree, MinPoints: 64})
+			newItem.polys = append(newItem.polys, newPoly)
+		}
+
+		minp, maxp := newItem.getMinMax()
+		newItem.min = minp
+		newItem.max = maxp
+		items = append(items, newItem)
+		tr.Insert(minp, maxp, newItem)
+	}
+
+	return &Finder{
+		items:   items,
+		names:   names,
+		tr:      tr,
+		opt:     opt,
+		version: input.Version,
+	}, nil
+}
+
+// expandCompressedRing expands a compressed ring's segments into a flat geometry.Point
+// slice, resolving edge-forward/reversed references against the pre-decoded edge table.
+func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geometry.Point) []geometry.Point {
+	var pts []geometry.Point
+	for _, seg := range segs {
+		switch s := seg.Content.(type) {
+		case *pb.CompressedRingSegment_Inline:
+			for _, p := range reduce.DecompressedPolylineBytesToPoints(s.Inline.Points) {
+				pts = append(pts, geometry.Point{X: float64(p.Lng), Y: float64(p.Lat)})
+			}
+		case *pb.CompressedRingSegment_EdgeForward:
+			pts = append(pts, edges[s.EdgeForward]...)
+		case *pb.CompressedRingSegment_EdgeReversed:
+			edge := edges[s.EdgeReversed]
+			for i := len(edge) - 1; i >= 0; i-- {
+				pts = append(pts, edge[i])
+			}
+		}
+	}
+	return pts
 }
 
 func getRTreeRangeShifted(lng float64, lat float64) float64 {
