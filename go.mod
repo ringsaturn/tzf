@@ -9,14 +9,12 @@ require (
 	github.com/ringsaturn/tzf-dist v0.0.0
 	github.com/tidwall/lotsa v1.0.5
 	github.com/tidwall/rtree v1.10.0
-	github.com/twpayne/go-polyline v1.1.1
 	google.golang.org/protobuf v1.36.11
 )
 
 require (
 	github.com/tidwall/geoindex v1.7.0 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/ringsaturn/tzf-dist => ../tzf-dist
