@@ -6,7 +6,6 @@ package tzf
 
 import (
 	"errors"
-	"fmt"
 	"slices"
 
 	tzfdist "github.com/ringsaturn/tzf-dist"
@@ -14,7 +13,6 @@ import (
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/reduce"
-	"github.com/tidwall/rtree"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -37,10 +35,6 @@ type tzitem struct {
 	polys []*geom.Polygon
 	min   [2]float64
 	max   [2]float64
-}
-
-func newNotFoundErr(lng float64, lat float64) error {
-	return fmt.Errorf("tzf: not found for %v,%v", lng, lat)
 }
 
 func (i *tzitem) ContainsPoint(p geom.Point) bool {
@@ -83,7 +77,6 @@ type Finder struct {
 	items   []*tzitem
 	names   []string
 	reduced bool
-	tr      *rtree.RTreeG[*tzitem]
 	opt     *Option
 	version string
 }
@@ -105,7 +98,6 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
 		optFunc(opt)
 	}
 
-	tr := &rtree.RTreeG[*tzitem]{}
 	for _, timezone := range input.Timezones {
 		names = append(names, timezone.Name)
 
@@ -138,13 +130,11 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
 		newItem.max = maxp
 
 		items = append(items, newItem)
-		tr.Insert(minp, maxp, newItem)
 	}
 	finder := &Finder{}
 	finder.items = items
 	finder.names = names
 	finder.reduced = input.Reduced
-	finder.tr = tr
 	finder.opt = opt
 	finder.version = input.Version
 	return finder, nil
@@ -198,7 +188,6 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 
 	items := make([]*tzitem, 0, len(input.Timezones))
 	names := make([]string, 0, len(input.Timezones))
-	tr := &rtree.RTreeG[*tzitem]{}
 
 	for _, tz := range input.Timezones {
 		names = append(names, tz.Name)
@@ -217,13 +206,11 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 		newItem.min = minp
 		newItem.max = maxp
 		items = append(items, newItem)
-		tr.Insert(minp, maxp, newItem)
 	}
 
 	return &Finder{
 		items:   items,
 		names:   names,
-		tr:      tr,
 		opt:     opt,
 		version: input.Version,
 	}, nil
@@ -251,47 +238,6 @@ func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geom.Point
 	return pts
 }
 
-func getRTreeRangeShifted(lng float64, lat float64) float64 {
-	if 73 < lng && lng < 140 && 8 < lat && lat < 54 {
-		return 70.0
-	}
-	return 30.0
-}
-
-func (f *Finder) getItemInRanges(lng float64, lat float64) []*tzitem {
-	candidates := []*tzitem{}
-
-	// TODO(ringsaturn): fix this range
-	shifted := getRTreeRangeShifted(lng, lat)
-	f.tr.Search([2]float64{lng - shifted, lat - shifted}, [2]float64{lng + shifted, lat + shifted}, func(min, max [2]float64, data *tzitem) bool {
-		candidates = append(candidates, data)
-		return true
-	})
-	if len(candidates) == 0 {
-		candidates = f.items
-	}
-
-	return candidates
-}
-
-func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
-	p := geom.Point{X: lng, Y: lat}
-	ret := []*tzitem{}
-	candidates := f.getItemInRanges(lng, lat)
-	if len(candidates) == 0 {
-		return nil, ErrNoTimezoneFound
-	}
-	for _, item := range candidates {
-		if item.ContainsPoint(p) {
-			ret = append(ret, item)
-		}
-	}
-	if len(ret) == 0 {
-		return nil, newNotFoundErr(lng, lat)
-	}
-	return ret, nil
-}
-
 // GetTimezoneName will use alphabet order and return first matched result.
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
 	p := geom.Point{X: lng, Y: lat}
@@ -304,16 +250,15 @@ func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
 }
 
 func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
-	item, err := f.getItem(lng, lat)
-	if err != nil {
-		return nil, err
+	p := geom.Point{X: lng, Y: lat}
+	res := []string{}
+	for i := range f.items {
+		if f.items[i].ContainsPoint(p) {
+			res = append(res, f.items[i].name)
+		}
 	}
-	ret := []string{}
-	for i := range item {
-		ret = append(ret, item[i].name)
-	}
-	slices.Sort(ret)
-	return ret, nil
+	slices.Sort(res)
+	return res, nil
 }
 
 func (f *Finder) TimezoneNames() []string {
