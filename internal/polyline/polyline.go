@@ -2,7 +2,7 @@
 //
 // See https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 //
-// This package is a modified version of github.com/twpayne/go-polyline (MIT licence).
+// This package is a modified version of github.com/twpayne/go-polyline (BSD-2-Clause).
 package polyline
 
 import (
