@@ -12,8 +12,8 @@ import (
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/reduce"
-	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/rtree"
 	"google.golang.org/protobuf/proto"
 )
@@ -34,7 +34,7 @@ func SetDropPBTZ(opt *Option) {
 type tzitem struct {
 	pbtz  *pb.Timezone
 	name  string
-	polys []*geometry.Poly
+	polys []*geom.Polygon
 	min   [2]float64
 	max   [2]float64
 }
@@ -43,7 +43,7 @@ func newNotFoundErr(lng float64, lat float64) error {
 	return fmt.Errorf("tzf: not found for %v,%v", lng, lat)
 }
 
-func (i *tzitem) ContainsPoint(p geometry.Point) bool {
+func (i *tzitem) ContainsPoint(p geom.Point) bool {
 	for _, poly := range i.polys {
 		if poly.ContainsPoint(p) {
 			return true
@@ -53,33 +53,23 @@ func (i *tzitem) ContainsPoint(p geometry.Point) bool {
 }
 
 func (i *tzitem) getMinMax() ([2]float64, [2]float64) {
-	retmin := [2]float64{
-		i.polys[0].Rect().Min.X,
-		i.polys[0].Rect().Min.Y,
-	}
-	retmax := [2]float64{
-		i.polys[0].Rect().Max.X,
-		i.polys[0].Rect().Max.Y,
-	}
+	r0 := i.polys[0].Rect()
+	retmin := [2]float64{r0.Min.X, r0.Min.Y}
+	retmax := [2]float64{r0.Max.X, r0.Max.Y}
 
-	for _, poly := range i.polys {
-		minx := poly.Rect().Min.X
-		miny := poly.Rect().Min.Y
-		if minx < retmin[0] {
-			retmin[0] = minx
+	for _, poly := range i.polys[1:] {
+		r := poly.Rect()
+		if r.Min.X < retmin[0] {
+			retmin[0] = r.Min.X
 		}
-		if miny < retmin[1] {
-			retmin[1] = miny
+		if r.Min.Y < retmin[1] {
+			retmin[1] = r.Min.Y
 		}
-
-		maxx := poly.Rect().Max.X
-		maxy := poly.Rect().Max.Y
-		if maxx > retmax[0] {
-			retmax[0] = maxx
-
+		if r.Max.X > retmax[0] {
+			retmax[0] = r.Max.X
 		}
-		if maxy > retmax[1] {
-			retmax[1] = maxy
+		if r.Max.Y > retmax[1] {
+			retmax[1] = r.Max.Y
 		}
 	}
 	return retmin, retmax
@@ -126,29 +116,21 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
 			newItem.pbtz = timezone
 		}
 		for _, polygon := range timezone.Polygons {
-
-			newPoints := make([]geometry.Point, 0)
+			newPoints := make([]geom.Point, 0, len(polygon.Points))
 			for _, point := range polygon.Points {
-				newPoints = append(newPoints, geometry.Point{
-					X: float64(point.Lng),
-					Y: float64(point.Lat),
-				})
+				newPoints = append(newPoints, geom.Point{X: float64(point.Lng), Y: float64(point.Lat)})
 			}
 
-			holes := [][]geometry.Point{}
+			holes := make([][]geom.Point, 0, len(polygon.Holes))
 			for _, holePoly := range polygon.Holes {
-				newHolePoints := make([]geometry.Point, 0)
+				newHolePoints := make([]geom.Point, 0, len(holePoly.Points))
 				for _, point := range holePoly.Points {
-					newHolePoints = append(newHolePoints, geometry.Point{
-						X: float64(point.Lng),
-						Y: float64(point.Lat),
-					})
+					newHolePoints = append(newHolePoints, geom.Point{X: float64(point.Lng), Y: float64(point.Lat)})
 				}
 				holes = append(holes, newHolePoints)
 			}
 
-			newPoly := geometry.NewPoly(newPoints, holes, &geometry.IndexOptions{Kind: geometry.RTree, MinPoints: 64})
-			newItem.polys = append(newItem.polys, newPoly)
+			newItem.polys = append(newItem.polys, geom.NewPolygon(newPoints, holes))
 		}
 		minp, maxp := newItem.getMinMax()
 
@@ -202,14 +184,14 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 		optFunc(opt)
 	}
 
-	// Decompress shared edges once into geometry.Point slices indexed by edge ID.
+	// Decompress shared edges once into geom.Point slices indexed by edge ID.
 	// This replaces the two intermediate proto objects (TopoTimezones + pb.Timezones).
-	edges := make([][]geometry.Point, len(input.SharedEdges))
+	edges := make([][]geom.Point, len(input.SharedEdges))
 	for _, e := range input.SharedEdges {
 		raw := reduce.DecompressedPolylineBytesToPoints(e.Points)
-		pts := make([]geometry.Point, len(raw))
+		pts := make([]geom.Point, len(raw))
 		for j, p := range raw {
-			pts[j] = geometry.Point{X: float64(p.Lng), Y: float64(p.Lat)}
+			pts[j] = geom.Point{X: float64(p.Lng), Y: float64(p.Lat)}
 		}
 		edges[e.Id] = pts
 	}
@@ -224,12 +206,11 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 
 		for _, poly := range tz.Polygons {
 			exterior := expandCompressedRing(poly.Exterior, edges)
-			holes := make([][]geometry.Point, 0, len(poly.Holes))
+			holes := make([][]geom.Point, 0, len(poly.Holes))
 			for _, hole := range poly.Holes {
 				holes = append(holes, expandCompressedRing(hole.Exterior, edges))
 			}
-			newPoly := geometry.NewPoly(exterior, holes, &geometry.IndexOptions{Kind: geometry.RTree, MinPoints: 64})
-			newItem.polys = append(newItem.polys, newPoly)
+			newItem.polys = append(newItem.polys, geom.NewPolygon(exterior, holes))
 		}
 
 		minp, maxp := newItem.getMinMax()
@@ -248,15 +229,15 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 	}, nil
 }
 
-// expandCompressedRing expands a compressed ring's segments into a flat geometry.Point
+// expandCompressedRing expands a compressed ring's segments into a flat geom.Point
 // slice, resolving edge-forward/reversed references against the pre-decoded edge table.
-func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geometry.Point) []geometry.Point {
-	var pts []geometry.Point
+func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geom.Point) []geom.Point {
+	var pts []geom.Point
 	for _, seg := range segs {
 		switch s := seg.Content.(type) {
 		case *pb.CompressedRingSegment_Inline:
 			for _, p := range reduce.DecompressedPolylineBytesToPoints(s.Inline.Points) {
-				pts = append(pts, geometry.Point{X: float64(p.Lng), Y: float64(p.Lat)})
+				pts = append(pts, geom.Point{X: float64(p.Lng), Y: float64(p.Lat)})
 			}
 		case *pb.CompressedRingSegment_EdgeForward:
 			pts = append(pts, edges[s.EdgeForward]...)
@@ -294,10 +275,7 @@ func (f *Finder) getItemInRanges(lng float64, lat float64) []*tzitem {
 }
 
 func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
-	p := geometry.Point{
-		X: float64(lng),
-		Y: float64(lat),
-	}
+	p := geom.Point{X: lng, Y: lat}
 	ret := []*tzitem{}
 	candidates := f.getItemInRanges(lng, lat)
 	if len(candidates) == 0 {
@@ -316,10 +294,7 @@ func (f *Finder) getItem(lng float64, lat float64) ([]*tzitem, error) {
 
 // GetTimezoneName will use alphabet order and return first matched result.
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
-	p := geometry.Point{
-		X: float64(lng),
-		Y: float64(lat),
-	}
+	p := geom.Point{X: lng, Y: lat}
 	for _, item := range f.items {
 		if item.ContainsPoint(p) {
 			return item.name

@@ -38,8 +38,8 @@ import (
 	"github.com/paulmach/orb/maptile/tilecover"
 	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/internal/maps"
-	"github.com/tidwall/geojson/geometry"
 	"github.com/tidwall/lotsa"
 )
 
@@ -109,15 +109,16 @@ func DropEdgeTiles(tiles []maptile.Tile) []maptile.Tile {
 	return ret
 }
 
-func EnsureInside(geopolys []*geometry.Poly, tiles []maptile.Tile) []maptile.Tile {
+func EnsureInside(geopolys []*geom.Polygon, tiles []maptile.Tile) []maptile.Tile {
 	insideTZTiles := []maptile.Tile{}
 	for _, tile := range tiles {
-		minLng := tile.Bound().Min.Lon()
-		minLat := tile.Bound().Min.Lat()
-		maxLng := tile.Bound().Max.Lon()
-		maxLat := tile.Bound().Max.Lat()
+		b := tile.Bound()
+		minLng := b.Min.Lon()
+		minLat := b.Min.Lat()
+		maxLng := b.Max.Lon()
+		maxLat := b.Max.Lat()
 
-		geometryPoints := []geometry.Point{
+		corners := []geom.Point{
 			{X: minLng, Y: minLat},
 			{X: maxLng, Y: minLat},
 			{X: maxLng, Y: maxLat},
@@ -125,8 +126,8 @@ func EnsureInside(geopolys []*geometry.Poly, tiles []maptile.Tile) []maptile.Til
 			{X: minLng, Y: minLat},
 		}
 		insideExcludeRegions := func() bool {
-			for _, geometryPoint := range geometryPoints {
-				if excludePreIndex(geometryPoint.X, geometryPoint.Y) {
+			for _, pt := range corners {
+				if excludePreIndex(pt.X, pt.Y) {
 					return true
 				}
 			}
@@ -135,14 +136,14 @@ func EnsureInside(geopolys []*geometry.Poly, tiles []maptile.Tile) []maptile.Til
 		if insideExcludeRegions {
 			continue
 		}
-		tilePoly := geometry.NewPoly(geometryPoints, nil, nil)
+		tilePoly := geom.NewPolygon(corners, nil)
 
 		for _, geopoly := range geopolys {
 			if !geopoly.ContainsPoly(tilePoly) {
 				continue
 			}
-			for _, point := range geometryPoints {
-				if !geopoly.ContainsPoint(point) {
+			for _, pt := range corners {
+				if !geopoly.ContainsPoint(pt) {
 					continue
 				}
 			}
