@@ -103,6 +103,6 @@ func BenchmarkDecodeCoords(b *testing.B) {
 	enc := EncodeCoords(coords)
 	b.ResetTimer()
 	for range b.N {
-		DecodeCoords(enc)
+		_, _, _ = DecodeCoords(enc)
 	}
 }
