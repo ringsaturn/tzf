@@ -1,11 +1,11 @@
 package convert
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 
-	"github.com/mitchellh/mapstructure"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 )
 
@@ -19,8 +19,8 @@ type PolygonCoordinates [][][2]float64
 type MultiPolygonCoordinates []PolygonCoordinates
 
 type GeometryDefine struct {
-	Coordinates any    `json:"coordinates"`
-	Type        string `json:"type"`
+	Coordinates json.RawMessage `json:"coordinates"`
+	Type        string          `json:"type"`
 }
 
 type PropertiesDefine struct {
@@ -53,14 +53,11 @@ func Do(input *BoundaryFile) (*pb.Timezones, error) {
 		var coordinates MultiPolygonCoordinates
 
 		MultiPolygonTypeHandler := func() error {
-			if err := mapstructure.Decode(item.Geometry.Coordinates, &coordinates); err != nil {
-				return err
-			}
-			return nil
+			return json.Unmarshal(item.Geometry.Coordinates, &coordinates)
 		}
 		PolygonTypeHandler := func() error {
 			var polygonCoordinates PolygonCoordinates
-			if err := mapstructure.Decode(item.Geometry.Coordinates, &polygonCoordinates); err != nil {
+			if err := json.Unmarshal(item.Geometry.Coordinates, &polygonCoordinates); err != nil {
 				return err
 			}
 			coordinates = append(coordinates, polygonCoordinates)

@@ -1,6 +1,10 @@
 package convert
 
-import pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+import (
+	"encoding/json"
+
+	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+)
 
 func FromPbPolygonToGeoMultipolygon(pbpoly []*pb.Polygon) MultiPolygonCoordinates {
 	res := MultiPolygonCoordinates{}
@@ -26,6 +30,10 @@ func FromPbPolygonToGeoMultipolygon(pbpoly []*pb.Polygon) MultiPolygonCoordinate
 }
 
 func RevertItem(input *pb.Timezone) *FeatureItem {
+	raw, err := json.Marshal(FromPbPolygonToGeoMultipolygon(input.Polygons))
+	if err != nil {
+		panic(err) // only fails if the coordinate data is not marshalable, which cannot happen
+	}
 	return &FeatureItem{
 		Type: FeatureType,
 		Properties: PropertiesDefine{
@@ -33,7 +41,7 @@ func RevertItem(input *pb.Timezone) *FeatureItem {
 		},
 		Geometry: GeometryDefine{
 			Type:        MultiPolygonType,
-			Coordinates: FromPbPolygonToGeoMultipolygon(input.Polygons),
+			Coordinates: raw,
 		},
 	}
 }

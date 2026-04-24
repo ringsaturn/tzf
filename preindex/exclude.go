@@ -4,8 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	"github.com/ringsaturn/polyf"
-	"github.com/ringsaturn/polyf/integration/featurecollection"
+	"github.com/ringsaturn/tzf/internal/polyf"
 )
 
 var (
@@ -16,12 +15,12 @@ var (
 )
 
 func init() {
-	boundaryFile := &featurecollection.BoundaryFile[any]{}
-	err := json.Unmarshal(excludeGeoJSONBytes, boundaryFile)
-	if err != nil {
+	boundaryFile := &polyf.BoundaryFile[any]{}
+	if err := json.Unmarshal(excludeGeoJSONBytes, boundaryFile); err != nil {
 		panic(err)
 	}
-	excludesFinder, err = featurecollection.Do(boundaryFile)
+	var err error
+	excludesFinder, err = polyf.Do(boundaryFile)
 	if err != nil {
 		panic(err)
 	}
