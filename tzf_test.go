@@ -1,9 +1,7 @@
 package tzf_test
 
 import (
-	"bytes"
 	"fmt"
-	"runtime"
 	"testing"
 
 	"github.com/loov/hrtime/hrtesting"
@@ -11,7 +9,6 @@ import (
 	"github.com/ringsaturn/tzf"
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/tidwall/lotsa"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -117,15 +114,4 @@ func ExampleFinder_TimezoneNames() {
 	}
 	finder, _ := tzf.NewFinderFromCompressedTopo(input)
 	fmt.Println(finder.TimezoneNames())
-}
-
-func Test_Finder_GetTimezoneName_Random_WorldCities_All(t *testing.T) {
-	wri := bytes.NewBufferString("")
-	lotsa.Output = wri
-	lotsa.Ops(len(gocitiesjson.Cities), runtime.NumCPU(), func(i, _ int) {
-		city := gocitiesjson.Cities[i]
-		_ = finder.GetTimezoneName(city.Lng, city.Lat)
-	})
-	testing.Verbose()
-	t.Log(wri.String())
 }

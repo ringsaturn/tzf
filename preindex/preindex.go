@@ -40,7 +40,7 @@ import (
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/internal/maps"
-	"github.com/tidwall/lotsa"
+	"golang.org/x/sync/errgroup"
 )
 
 // Drop most outside layer of tile, since tile may cover area not included in timezone.
@@ -257,16 +257,25 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 
 	m := map[string][]*pb.PreindexTimezone{}
 	var mu sync.Mutex
-	lotsa.Ops(len(taskIds), runtime.NumCPU()*3, func(i, thread int) {
-		tz := input.Timezones[taskIds[i]]
-		preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayger)
-		if err != nil {
-			return
-		}
-		mu.Lock()
-		m[tz.Name] = preindexes
-		mu.Unlock()
-	})
+
+	errGroup := errgroup.Group{}
+	errGroup.SetLimit(runtime.NumCPU() * 3)
+
+	for _, tz := range input.Timezones {
+		tz := tz
+		errGroup.Go(func() error {
+			preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayger)
+			if err != nil {
+				return nil
+			}
+			mu.Lock()
+			m[tz.Name] = preindexes
+			mu.Unlock()
+			return nil
+		})
+	}
+	errGroup.Wait()
+
 	for _, tz := range input.Timezones {
 		values, ok := m[tz.Name]
 		if !ok {
