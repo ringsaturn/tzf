@@ -274,7 +274,10 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 			return nil
 		})
 	}
-	errGroup.Wait()
+	processErr := errGroup.Wait()
+	if processErr != nil {
+		panic(processErr)
+	}
 
 	for _, tz := range input.Timezones {
 		values, ok := m[tz.Name]
