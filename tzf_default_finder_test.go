@@ -47,11 +47,31 @@ func ExampleDefaultFinder_TimezoneNames() {
 	fmt.Println(finder.TimezoneNames())
 }
 
+func BenchmarkDefaultFinder_GetTimezoneName_FixedCity(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		_ = defaultFinder.GetTimezoneName(116.3883, 39.9289)
+	}
+}
+
 func BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
+	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
 		p := gocitiesjson.Random()
 		_ = defaultFinder.GetTimezoneName(p.Lng, p.Lat)
+	}
+}
+
+func BenchmarkDefaultFinder_GetTimezoneNames_Random_WorldCities(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		p := gocitiesjson.Random()
+		_, _ = defaultFinder.GetTimezoneNames(p.Lng, p.Lat)
 	}
 }

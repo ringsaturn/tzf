@@ -71,12 +71,32 @@ func ExampleFuzzyFinder_TimezoneNames() {
 	fmt.Println(finder.TimezoneNames())
 }
 
+func BenchmarkFuzzyFinder_GetTimezoneName_FixedCity(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		_ = fuzzyFinder.GetTimezoneName(116.3883, 39.9289)
+	}
+}
+
 func BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
+	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
 		p := gocitiesjson.Random()
 		_ = fuzzyFinder.GetTimezoneName(p.Lng, p.Lat)
+	}
+}
+
+func BenchmarkFuzzyFinder_GetTimezoneNames_Random_WorldCities(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		p := gocitiesjson.Random()
+		_, _ = fuzzyFinder.GetTimezoneNames(p.Lng, p.Lat)
 	}
 }
 

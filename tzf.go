@@ -157,7 +157,7 @@ func NewFullFinder() (F, error) {
 		return nil, err
 	}
 	topo := &pb.CompressedTopoTimezones{}
-	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, topo); err != nil {
+	if err := proto.Unmarshal(tzfdist.CompressTopoData, topo); err != nil {
 		return nil, err
 	}
 	return newDefaultFinderFromCompressedTopo(preindex, topo)

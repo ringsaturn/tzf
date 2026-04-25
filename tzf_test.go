@@ -45,6 +45,7 @@ var fullFinderWithoutPreindex tzf.F = func() tzf.F {
 }()
 
 func BenchmarkGetTimezoneName(b *testing.B) {
+	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
@@ -53,6 +54,7 @@ func BenchmarkGetTimezoneName(b *testing.B) {
 }
 
 func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
+	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
@@ -61,6 +63,7 @@ func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
 }
 
 func BenchmarkGetTimezoneName_Random_WorldCities(b *testing.B) {
+	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
@@ -69,7 +72,18 @@ func BenchmarkGetTimezoneName_Random_WorldCities(b *testing.B) {
 	}
 }
 
+func BenchmarkGetTimezoneNames_Random_WorldCities(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		p := gocitiesjson.Random()
+		_, _ = finder.GetTimezoneNames(p.Lng, p.Lat)
+	}
+}
+
 func BenchmarkGetTimezoneName_Random_WorldCities_FullFinder(b *testing.B) {
+	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
@@ -78,7 +92,18 @@ func BenchmarkGetTimezoneName_Random_WorldCities_FullFinder(b *testing.B) {
 	}
 }
 
+func BenchmarkGetTimezoneNames_Random_WorldCities_FullFinder(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		p := gocitiesjson.Random()
+		_, _ = fullFinder.GetTimezoneNames(p.Lng, p.Lat)
+	}
+}
+
 func BenchmarkGetTimezoneName_Random_WorldCities_FullFinderWithoutPreindex(b *testing.B) {
+	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
