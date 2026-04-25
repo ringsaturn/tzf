@@ -1,45 +1,22 @@
-# TZF: a fast timezone finder for Go. [![Go Reference](https://pkg.go.dev/badge/github.com/ringsaturn/tzf.svg)](https://pkg.go.dev/github.com/ringsaturn/tzf) [![codecov](https://codecov.io/gh/ringsaturn/tzf/branch/main/graph/badge.svg?token=9KIU85IERM)](https://codecov.io/gh/ringsaturn/tzf)
-
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fringsaturn%2Ftzf.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fringsaturn%2Ftzf?ref=badge_shield)
+# tzf: a fast timezone finder for Go. [![Go Reference](https://pkg.go.dev/badge/github.com/ringsaturn/tzf.svg)](https://pkg.go.dev/github.com/ringsaturn/tzf) [![codecov](https://codecov.io/gh/ringsaturn/tzf/branch/main/graph/badge.svg?token=9KIU85IERM)](https://codecov.io/gh/ringsaturn/tzf) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fringsaturn%2Ftzf.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fringsaturn%2Ftzf?ref=badge_shield)
 
 ![](https://github.com/ringsaturn/tzf/blob/gh-pages/docs/tzf-social-media.png?raw=true)
-
-> [!NOTE]
->
-> This package uses simplified shape data so it is not entirely accurate around
-> the border.
 
 - Released documentation: <https://pkg.go.dev/github.com/ringsaturn/tzf>
 - Try it online: [tzf-web](https://ringsaturn.github.io/tzf-web/)
 
----
-
-> [!NOTE]
->
-> Here are some language or server which built with tzf or it's other language
-> bindings:
-
-| Language or Sever         | Link                                                                    | Note                |
-| ------------------------- | ----------------------------------------------------------------------- | ------------------- |
-| Go                        | [`ringsaturn/tzf`](https://github.com/ringsaturn/tzf)                   |                     |
-| Ruby                      | [`HarlemSquirrel/tzf-rb`](https://github.com/HarlemSquirrel/tzf-rb)     | build with tzf-rs   |
-| Rust                      | [`ringsaturn/tzf-rs`](https://github.com/ringsaturn/tzf-rs)             |                     |
-| Swift                     | [`ringsaturn/tzf-swift`](https://github.com/ringsaturn/tzf-swift)       |                     |
-| Python                    | [`ringsaturn/tzfpy`](https://github.com/ringsaturn/tzfpy)               | build with tzf-rs   |
-| HTTP API                  | [`ringsaturn/tzf-server`](https://github.com/ringsaturn/tzf-server)     | build with tzf      |
-| HTTP API                  | [`racemap/rust-tz-service`](https://github.com/racemap/rust-tz-service) | build with tzf-rs   |
-| Redis Server              | [`ringsaturn/tzf-server`](https://github.com/ringsaturn/tzf-server)     | build with tzf      |
-| Redis Server              | [`ringsaturn/redizone`](https://github.com/ringsaturn/redizone)         | build with tzf-rs   |
-| JS via Wasm(browser only) | [`ringsaturn/tzf-wasm`](https://github.com/ringsaturn/tzf-wasm)         | build with tzf-rs   |
-| Online                    | [`ringsaturn/tzf-web`](https://github.com/ringsaturn/tzf-web)           | build with tzf-wasm |
-
 ## Quick Start
 
-To start using TZF in your Go project, you first need to install the package:
+Install via:
 
 ```bash
 go get github.com/ringsaturn/tzf
 ```
+
+> [!NOTE]
+>
+> This `NewDefaultFinder` uses simplified shape data so it is not entirely
+> accurate around the border.
 
 It's expensive to init tzf's Finder/FuzzyFinder/DefaultFinder, please consider
 reuse it or as a global var. Below is a global var example:
@@ -94,9 +71,14 @@ func main() {
 }
 ```
 
+Please note that `NewFullFinder()` is more expensive to init and has higher
+memory usage than `NewDefaultFinder()`, but it provides 100% accuracy.
+
+See the [Performance](#performance) section for more details.
+
 ## CLI Tool
 
-In addition to using TZF as a library in your Go projects, you can also use the
+In addition to using tzf as a library in your Go projects, you can also use the
 tzf command-line interface (CLI) tool to quickly get the timezone name for a set
 of coordinates. To use the CLI tool, you first need to install it using the
 following command:
@@ -128,9 +110,9 @@ You can download the original data from
 The preprocessed protobuf data can be obtained from
 <https://github.com/ringsaturn/tzf-dist>, which has Go's `embedded` support.
 These files are Protocol Buffers messages for more efficient binary
-distribution, similar to Python wheels. You can view the
-[`pb/tzinfo.proto file`](./pb/tzinfo.proto) or its
-[HTML format documentation][pb_html] for information about the internal format.
+distribution. You can view the [`pb/tzinfo.proto file`](./pb/tzinfo.proto) or
+its [HTML format documentation][pb_html] for information about the internal
+format.
 
 The data pipeline for tzf can be illustrated as follows:
 
@@ -166,23 +148,23 @@ graph TD
     Preindex --> |tzf.NewFullFinder|DefaultFinder
 ```
 
-The [complete dataset (~17MB)][full-link] preserves full geometric precision
-with shared-edge deduplication and polyline compression. Use `NewFullFinder()`
-to load it.
+The [combined-with-oceans.compress.topo.bin] (~17MB) preserves full geometric
+precision with shared-edge deduplication and polyline compression. Use
+`NewFullFinder()` to load it.
 
-The [simplified dataset (~5.4MB)][simplified-link] applies topology-aware
-Douglas-Peucker simplification (86% point reduction) before deduplication and
-compression. It is used by the default `NewDefaultFinder()` and may not be
-perfectly accurate at some border areas.
+The [combined-with-oceans.topology.compress.topo.bin] (~5.4MB) applies
+topology-aware Douglas-Peucker simplification (86% point reduction) before
+deduplication and compression. It is used by the default `NewDefaultFinder()`
+and may not be perfectly accurate at some border areas.
 
-The [pre-indexed dataset (~2MB)][preindex-link] consists of multiple map tiles
-and is used within both `DefaultFinder` and `FullFinder` as the fast-path
+The [combined-with-oceans.topology.preindex.bin] (~2MB) consists of multiple map
+tiles and is used within both `DefaultFinder` and `FullFinder` as the fast-path
 `FuzzyFinder`, handling most queries without polygon ray-casting.
 
 [pb_html]: https://ringsaturn.github.io/tzf/pb.html
-[full-link]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.compress.topo.bin
-[simplified-link]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.topology.compress.topo.bin
-[preindex-link]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.topology.preindex.bin
+[combined-with-oceans.compress.topo.bin]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.compress.topo.bin
+[combined-with-oceans.topology.compress.topo.bin]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.topology.compress.topo.bin
+[combined-with-oceans.topology.preindex.bin]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.topology.preindex.bin
 
 I have written an article about the history of tzf, its Rust port, and its Rust
 port's Python binding; you can view it
@@ -190,17 +172,18 @@ port's Python binding; you can view it
 
 ## Performance
 
-The tzf package is intended for high-performance geospatial query services, such
-as weather forecasting APIs. Most queries can be returned within a very short
-time, averaging around 2000 nanoseconds.
+The tzf package is intended for high-performance geospatial query backend
+services, such as weather forecasting APIs. Most queries can be returned within
+a very short time, averaging around 1000 nanoseconds.
 
 Here is what has been done to improve performance:
 
-1. Using pre-indexing to handle most queries takes approximately 500
+1. Using the simplified dataset by default.
+2. Using pre-indexing to handle most queries takes approximately 500
    nanoseconds.
-1. Using the internal `geom` package(fork of
-   [geojson](https://github.com/tidwall/geojson)) with a YStripes PIP index
-   (inspired by Josh Baker's [`tg`](https://github.com/tidwall/tg)) to verify
+3. Using the internal `geom` package(fork of
+   [geojson](https://github.com/tidwall/geojson)) with a YStripes index
+   (inspired by Josh Baker's [`tg`](https://github.com/tidwall/tg)'s ) to verify
    whether a polygon contains a point.
 
 That's all. There are no black magic tricks inside the tzf package.
@@ -228,11 +211,16 @@ Below is a benchmark run on my MacBook Pro with Apple M3 Max:
 
 ## Related Repos
 
-- <https://github.com/ringsaturn/tzf-dist> Binary data distribution for tzf
-- <https://github.com/ringsaturn/tz-benchmark> Continuous Benchmark Compared
-  with other packages
-- <https://github.com/ringsaturn/tzf-rs> Rust port of tzf
-- <https://github.com/ringsaturn/tzfpy> Rust port's Python binding
+| Language or Sever         | Link                                                                    | Note                |
+| ------------------------- | ----------------------------------------------------------------------- | ------------------- |
+| Go                        | [`ringsaturn/tzf`](https://github.com/ringsaturn/tzf)                   |                     |
+| Ruby                      | [`HarlemSquirrel/tzf-rb`](https://github.com/HarlemSquirrel/tzf-rb)     | build with tzf-rs   |
+| Rust                      | [`ringsaturn/tzf-rs`](https://github.com/ringsaturn/tzf-rs)             |                     |
+| Swift                     | [`ringsaturn/tzf-swift`](https://github.com/ringsaturn/tzf-swift)       |                     |
+| Python                    | [`ringsaturn/tzfpy`](https://github.com/ringsaturn/tzfpy)               | build with tzf-rs   |
+| HTTP API                  | [`racemap/rust-tz-service`](https://github.com/racemap/rust-tz-service) | build with tzf-rs   |
+| JS via Wasm(browser only) | [`ringsaturn/tzf-wasm`](https://github.com/ringsaturn/tzf-wasm)         | build with tzf-rs   |
+| Online                    | [`ringsaturn/tzf-web`](https://github.com/ringsaturn/tzf-web)           | build with tzf-wasm |
 
 ## Thanks
 
@@ -252,8 +240,7 @@ under the
 same as
 [`evansiroky/timezone-boundary-builder`](https://github.com/evansiroky/timezone-boundary-builder)
 
-[^anti_csdn]:
-    This license is to prevent the use of this project by CSDN, has no
+[^anti_csdn]: This license is to prevent the use of this project by CSDN, has no
     effect on other use cases.
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fringsaturn%2Ftzf.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fringsaturn%2Ftzf?ref=badge_large)
