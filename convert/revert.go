@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/geom"
 )
 
 func FromPbPolygonToGeoMultipolygon(pbpoly []*pb.Polygon) MultiPolygonCoordinates {
@@ -55,4 +56,50 @@ func Revert(input *pb.Timezones) *BoundaryFile {
 	}
 	output.Type = "FeatureCollection"
 	return output
+}
+
+func fromGeomRingToCoords(r geom.Ring) [][2]float64 {
+	coords := make([][2]float64, len(r)+1)
+	for i, p := range r {
+		coords[i] = [2]float64{p.X, p.Y}
+	}
+	coords[len(r)] = [2]float64{r[0].X, r[0].Y} // close the ring
+	return coords
+}
+
+// FromGeomPolygonsToGeoMultipolygon converts a slice of geom.Polygon to
+// MultiPolygonCoordinates suitable for GeoJSON serialisation.
+func FromGeomPolygonsToGeoMultipolygon(polys []*geom.Polygon) MultiPolygonCoordinates {
+	res := make(MultiPolygonCoordinates, 0, len(polys))
+	for _, poly := range polys {
+		ext := poly.Exterior()
+		if len(ext) == 0 {
+			continue
+		}
+		geoPoly := make(PolygonCoordinates, 0, 1+len(poly.Holes()))
+		geoPoly = append(geoPoly, fromGeomRingToCoords(ext))
+		for _, hole := range poly.Holes() {
+			geoPoly = append(geoPoly, fromGeomRingToCoords(hole))
+		}
+		res = append(res, geoPoly)
+	}
+	return res
+}
+
+// RevertItemFromGeomPolygons builds a GeoJSON Feature from a timezone name and
+// its already-decoded geom.Polygon slice. This avoids keeping the original
+// protobuf Timezone in memory.
+func RevertItemFromGeomPolygons(name string, polys []*geom.Polygon) *FeatureItem {
+	raw, err := json.Marshal(FromGeomPolygonsToGeoMultipolygon(polys))
+	if err != nil {
+		panic(err) // unreachable: float64 coords are always marshalable
+	}
+	return &FeatureItem{
+		Type:       FeatureType,
+		Properties: PropertiesDefine{Tzid: name},
+		Geometry: GeometryDefine{
+			Type:        MultiPolygonType,
+			Coordinates: raw,
+		},
+	}
 }

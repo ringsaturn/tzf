@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	tzfdist "github.com/ringsaturn/tzf-dist"
+	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -126,4 +127,14 @@ func (f *DefaultFinder) TimezoneNames() []string {
 
 func (f *DefaultFinder) DataVersion() string {
 	return f.finder.DataVersion()
+}
+
+// GetTZGeoJSON returns a GeoJSON FeatureCollection for the named timezone.
+func (f *DefaultFinder) GetTZGeoJSON(tzName string) (*convert.BoundaryFile, error) {
+	return f.finder.(*Finder).GetTZGeoJSON(tzName)
+}
+
+// GetGeoJSON returns a GeoJSON FeatureCollection covering all timezones.
+func (f *DefaultFinder) GetGeoJSON() *convert.BoundaryFile {
+	return f.finder.(*Finder).GetGeoJSON()
 }

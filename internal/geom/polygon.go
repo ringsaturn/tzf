@@ -80,3 +80,14 @@ func (poly *Polygon) ContainsPoly(other *Polygon) bool {
 	}
 	return true
 }
+
+// Exterior returns the exterior ring. The ring is in open form (the closing
+// point is not repeated). Use Ring as []Point directly.
+func (poly *Polygon) Exterior() Ring {
+	return poly.exterior
+}
+
+// Holes returns the interior hole rings. Each ring is in open form.
+func (poly *Polygon) Holes() []Ring {
+	return poly.holes
+}

@@ -268,3 +268,28 @@ func (f *Finder) TimezoneNames() []string {
 func (f *Finder) DataVersion() string {
 	return f.version
 }
+
+// GetTZGeoJSON returns a GeoJSON FeatureCollection for the named timezone.
+// The same timezone name may map to more than one item in the dataset, so the
+// result is a FeatureCollection that may contain multiple Features.
+func (f *Finder) GetTZGeoJSON(tzName string) (*convert.BoundaryFile, error) {
+	output := &convert.BoundaryFile{Type: "FeatureCollection"}
+	for _, item := range f.items {
+		if item.name == tzName {
+			output.Features = append(output.Features, convert.RevertItemFromGeomPolygons(item.name, item.polys))
+		}
+	}
+	if len(output.Features) == 0 {
+		return nil, ErrNoTimezoneFound
+	}
+	return output, nil
+}
+
+// GetGeoJSON returns a GeoJSON FeatureCollection covering all timezones.
+func (f *Finder) GetGeoJSON() *convert.BoundaryFile {
+	output := &convert.BoundaryFile{Type: "FeatureCollection"}
+	for _, item := range f.items {
+		output.Features = append(output.Features, convert.RevertItemFromGeomPolygons(item.name, item.polys))
+	}
+	return output
+}
