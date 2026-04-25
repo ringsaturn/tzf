@@ -11,18 +11,6 @@ go.mongodb.org/mongo-driver/v2
 License: Apache
       "Licensor" shall mean the copyright owner or entity authorized by
 
-github.com/mitchellh/mapstructure
-License: MIT
-Copyright (c) 2013 Mitchell Hashimoto
-
-github.com/twpayne/go-polyline
-License: MIT
-Copyright (c) 2013, Tom Payne
-
-github.com/tidwall/geojson/geometry
-License: MIT
-Copyright (c) 2018 Josh Baker
-
 github.com/tidwall/geoindex/child
 License: MIT
 Copyright (c) 2018 Josh Baker
@@ -31,6 +19,10 @@ github.com/tidwall/rtree
 License: MIT
 Copyright (c) 2021 Josh Baker
 
+github.com/ringsaturn/tzf-dist
+License: MIT
+Copyright (c) 2026 Han Xiao
+
 github.com/ringsaturn/tzf
 License: MIT
 Copyright (c) 2022 ringsaturn
@@ -38,3 +30,7 @@ Copyright (c) 2022 ringsaturn
 github.com/ringsaturn/tzf/internal/maps
 License: MIT
 Copyright 2009 The Go Authors.
+
+github.com/ringsaturn/tzf/internal/polyline
+License: MIT
+Copyright (c) 2013, Tom Payne
