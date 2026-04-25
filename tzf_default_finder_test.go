@@ -47,12 +47,12 @@ func ExampleDefaultFinder_TimezoneNames() {
 	fmt.Println(finder.TimezoneNames())
 }
 
-func BenchmarkDefaultFinder_GetTimezoneName_FixedCity(b *testing.B) {
+func BenchmarkDefaultFinder_GetTimezoneNameAtEdge(b *testing.B) {
 	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
-		_ = defaultFinder.GetTimezoneName(116.3883, 39.9289)
+		_ = defaultFinder.GetTimezoneName(110.8571, 43.1483)
 	}
 }
 

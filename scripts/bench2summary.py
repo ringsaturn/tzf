@@ -72,8 +72,9 @@ def bench_meta(bench_name):
         dataset = "preindex"
         mem_key = "FuzzyFinder"
     elif "FullFinderWithoutPreindex" in name:
-        # Same constructor as plain Finder; skip to avoid duplicate rows.
-        return None
+        target = "Finder"
+        dataset = "full-precision"
+        mem_key = "FullFinderWithoutPreindex"
     elif "FullFinder" in name:
         target = "FullFinder"
         dataset = "full-precision + preindex"
@@ -90,9 +91,7 @@ def bench_meta(bench_name):
     else:
         method = "GetTimezoneName"
 
-    if "FixedCity" in name or name == "GetTimezoneName":
-        location = "fixed city"
-    elif "AtEdge" in name:
+    if "AtEdge" in name:
         location = "edge case"
     else:
         location = "random world cities"
@@ -107,18 +106,14 @@ def bench_meta(bench_name):
 # ---------------------------------------------------------------------------
 
 def fmt_median(ns):
-    return f"{ns / 1000:.4f}"
+    return f"{ns:.1f}"
 
 
 def fmt_throughput(ns_op):
     if ns_op <= 0:
         return "N/A"
     ops = 1e9 / ns_op
-    if ops >= 1_000_000:
-        return f"{ops/1_000_000:.2f}M"
-    if ops >= 1_000:
-        return f"{ops/1_000:.1f}K"
-    return f"{ops:.0f}"
+    return f"{ops/1_000:.1f}K"
 
 
 def fmt_mib(mib):
@@ -171,8 +166,10 @@ def main():
         print("No benchmark data found.")
         return
 
+    rows.sort(key=lambda r: r["scenario"])
+
     lines = ["# Benchmark Summary\n"]
-    lines.append("| Target | Dataset | Scenario | Median (µs) | p99 (µs) | Approx throughput (ops/s) | Memory (MiB) |")
+    lines.append("| Target | Dataset | Scenario | Median (ns) | p99 (ns) | Approx throughput (ops/s) | Memory (MiB) |")
     lines.append("| --- | --- | --- | ---: | ---: | ---: | ---: |")
     for r in rows:
         lines.append(

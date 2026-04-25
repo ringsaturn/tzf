@@ -34,7 +34,7 @@ var fullFinder tzf.F = func() tzf.F {
 
 var fullFinderWithoutPreindex tzf.F = func() tzf.F {
 	input := &pb.CompressedTopoTimezones{}
-	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
+	if err := proto.Unmarshal(tzfdist.CompressTopoData, input); err != nil {
 		panic(err)
 	}
 	_finder, err := tzf.NewFinderFromCompressedTopo(input)
@@ -44,21 +44,30 @@ var fullFinderWithoutPreindex tzf.F = func() tzf.F {
 	return _finder
 }()
 
-func BenchmarkGetTimezoneName(b *testing.B) {
-	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = finder.GetTimezoneName(116.6386, 40.0786)
-	}
-}
-
 func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
 	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
 		_ = finder.GetTimezoneName(110.8571, 43.1483)
+	}
+}
+
+func BenchmarkGetTimezoneNameAtEdge_FullFinder(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		_ = fullFinder.GetTimezoneName(110.8571, 43.1483)
+	}
+}
+
+func BenchmarkGetTimezoneNameAtEdge_FullFinderWithoutPreindex(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		_ = fullFinderWithoutPreindex.GetTimezoneName(110.8571, 43.1483)
 	}
 }
 

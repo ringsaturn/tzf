@@ -73,6 +73,22 @@ func main() {
 		runtime.KeepAlive(f)
 	}
 
+	// FullFinderWithoutPreindex (Finder with full-precision data, no FuzzyFinder layer)
+	before = readHeap()
+	{
+		input := &pb.CompressedTopoTimezones{}
+		if err := proto.Unmarshal(tzfdist.CompressTopoData, input); err != nil {
+			panic(err)
+		}
+		f, err := tzf.NewFinderFromCompressedTopo(input)
+		if err != nil {
+			panic(err)
+		}
+		after = readHeap()
+		report("FullFinderWithoutPreindex", before, after)
+		runtime.KeepAlive(f)
+	}
+
 	// FullFinder (DefaultFinder with full-precision data)
 	before = readHeap()
 	{

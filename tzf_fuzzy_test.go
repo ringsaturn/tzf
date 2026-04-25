@@ -71,12 +71,12 @@ func ExampleFuzzyFinder_TimezoneNames() {
 	fmt.Println(finder.TimezoneNames())
 }
 
-func BenchmarkFuzzyFinder_GetTimezoneName_FixedCity(b *testing.B) {
+func BenchmarkFuzzyFinder_GetTimezoneNameAtEdge(b *testing.B) {
 	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
 	defer bench.Report()
 	for bench.Next() {
-		_ = fuzzyFinder.GetTimezoneName(116.3883, 39.9289)
+		_ = fuzzyFinder.GetTimezoneName(110.8571, 43.1483)
 	}
 }
 

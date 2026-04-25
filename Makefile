@@ -19,7 +19,7 @@ bench-memory:
 	go run ./internal/bench-memory/... | tee memory_result.txt
 
 bench-summary: bench bench-memory
-	python3 scripts/bench2summary.py benchmark_result.txt memory_result.txt
+	python3 scripts/bench2summary.py benchmark_result.txt memory_result.txt | tee bench_summary.txt
 
 dep-licenses:
 	rm -rf THIRD_PARTY_LICENSES
