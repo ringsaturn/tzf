@@ -6,85 +6,89 @@ on:
   workflow_dispatch:
     inputs:
       timezone-boundary-version:
-        description: "Timezone boundary version to use"
+        description: "Timezone boundary version to use (leave empty to fetch latest)"
         required: false
-        default: "2025b"
+        default: ""
 
 jobs:
   build-tzpb-pipeline:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
 
-      - name: Fetch latest tag
-        id: set-latest-version
+      - name: Fetch latest timezone-boundary-builder version
+        id: fetch-version
         run: |
-          go run ./cmd/checkboundaryrelease/main.go --force >> $GITHUB_OUTPUT
+          if [ -n "${{ inputs.timezone-boundary-version }}" ]; then
+            VERSION="${{ inputs.timezone-boundary-version }}"
+          else
+            VERSION=$(curl -sf "https://api.github.com/repos/evansiroky/timezone-boundary-builder/tags" \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['name'] if d else '')")
+            if [ -z "$VERSION" ]; then
+              echo "Failed to fetch latest TBB version"
+              exit 1
+            fi
+          fi
+          echo "TIMEZONE_BOUNDARY_VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TIMEZONE_BOUNDARY_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Set latest tag to env
-        if: ${{ github.event.inputs.timezone-boundary-version == '' }}
+      - name: Download timezone boundary data
         run: |
-          echo TIMEZONE_BOUNDARY_VERSION=${{ steps.set-latest-version.outputs.TIMEZONE_BOUNDARY_VERSION }} >> $GITHUB_ENV
-
-      - name: Set tag when provided
-        if: ${{ github.event.inputs.timezone-boundary-version != '' }}
-        run: |
-          echo TIMEZONE_BOUNDARY_VERSION=${{ github.event.inputs.timezone-boundary-version }} >> $GITHUB_ENV
-
-      - name: Download files
-        run: |
-          wget https://github.com/evansiroky/timezone-boundary-builder/releases/download/${TIMEZONE_BOUNDARY_VERSION}/timezones-with-oceans.geojson.zip
-          ls -alh
+          wget "https://github.com/evansiroky/timezone-boundary-builder/releases/download/$TIMEZONE_BOUNDARY_VERSION/timezones-with-oceans.geojson.zip"
           unzip timezones-with-oceans.geojson.zip
-          ls -alh
-          mkdir data
-          ls -alh
-          cp combined-with-oceans.json data/
 
-      - name: Install geojson2tzpb
-        run: cd cmd/geojson2tzpb;go install
-
-      - name: Install reducetzpb
-        run: cd cmd/reducetzpb;go install
-
-      - name: Install compresstzpb
-        run: cd cmd/compresstzpb;go install
-
-      - name: Install preindextzpb
-        run: cd cmd/preindextzpb;go install
-
-      - name: Convert GeoJSON to pb
+      - name: Install CLI tools from local source
         run: |
-          geojson2tzpb data/combined-with-oceans.json | xargs reducetzpb | xargs compresstzpb
-          preindextzpb data/combined-with-oceans.reduce.bin
-          ls -alh data/
+          go install ./cmd/geojson2tzpb
+          go install ./cmd/reducetzpb
+          go install ./cmd/deduplicatetzpb
+          go install ./cmd/compresstopotzpb
+          go install ./cmd/preindextzpb
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: combined-with-oceans.bin
-          path: |
-            data/combined-with-oceans.bin
+      - name: Generate binary files
+        run: |
+          geojson2tzpb combined-with-oceans.json
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: combined-with-oceans.reduce.bin
-          path: |
-            data/combined-with-oceans.reduce.bin
+          # combined-with-oceans.compress.topo.bin: dedup + compress on full precision data
+          deduplicatetzpb -o combined-with-oceans.topo.bin combined-with-oceans.bin \
+            2> >(tee /tmp/stats-dedup-full.txt >&2)
+          compresstopotzpb -o combined-with-oceans.compress.topo.bin combined-with-oceans.topo.bin \
+            2> >(tee /tmp/stats-compress-full.txt >&2)
 
-      - uses: actions/upload-artifact@v7
-        with:
-          name: combined-with-oceans.reduce.compress.bin
-          path: |
-            data/combined-with-oceans.reduce.compress.bin
+          # combined-with-oceans.topology.compress.topo.bin: topology-aware simplify + dedup + compress
+          # combined-with-oceans.topology.preindex.bin:      topology-aware simplify + tile pre-index
+          reducetzpb -o combined-with-oceans.topology.bin combined-with-oceans.bin \
+            2> >(tee /tmp/stats-reduce-topo.txt >&2)
+          deduplicatetzpb -o combined-with-oceans.topology.topo.bin combined-with-oceans.topology.bin \
+            2> >(tee /tmp/stats-dedup-topo.txt >&2)
+          compresstopotzpb -o combined-with-oceans.topology.compress.topo.bin combined-with-oceans.topology.topo.bin \
+            2> >(tee /tmp/stats-compress-topo.txt >&2)
+          preindextzpb combined-with-oceans.topology.bin \
+            2> >(tee /tmp/stats-preindex.txt >&2)
 
-      - uses: actions/upload-artifact@v7
+          ls -alh combined-with-oceans*.bin
+
+      - name: Collect checksums
+        run: |
+          md5sum \
+            combined-with-oceans.compress.topo.bin \
+            combined-with-oceans.topology.compress.topo.bin \
+            combined-with-oceans.topology.preindex.bin \
+            > checksums.md5
+          cat checksums.md5
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: combined-with-oceans.reduce.preindex.bin
+          name: tzpb-${{ steps.fetch-version.outputs.TIMEZONE_BOUNDARY_VERSION }}
           path: |
-            data/combined-with-oceans.reduce.preindex.bin
+            combined-with-oceans.compress.topo.bin
+            combined-with-oceans.topology.compress.topo.bin
+            combined-with-oceans.topology.preindex.bin
+            checksums.md5
