@@ -149,3 +149,13 @@ func ExampleFinder_TimezoneNames() {
 	finder, _ := tzf.NewFinderFromCompressedTopo(input)
 	fmt.Println(finder.TimezoneNames())
 }
+
+func ExampleNewFullFinder() {
+	finder, err := tzf.NewFullFinder()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(finder.GetTimezoneName(139.6917, 35.6895))
+	// Output: Asia/Tokyo
+}

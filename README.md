@@ -41,7 +41,6 @@ go get github.com/ringsaturn/tzf
 Then, you can use the following code to locate:
 
 ```go
-// Use about 150MB memory for init, and 60MB after GC.
 package main
 
 import (
@@ -59,37 +58,7 @@ func main() {
 }
 ```
 
-If you require a query result that is 100% accurate, use the following to
-locate:
-
-```go
-// Use about 900MB memory for init, and 660MB after GC.
-package main
-
-import (
-	"fmt"
-
-	"github.com/ringsaturn/tzf"
-	tzfrel "github.com/ringsaturn/tzf-rel"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"google.golang.org/protobuf/proto"
-)
-
-func main() {
-	input := &pb.Timezones{}
-
-	// Full data, about 83.5MB
-	dataFile := tzfrel.FullData
-
-	if err := proto.Unmarshal(dataFile, input); err != nil {
-		panic(err)
-	}
-	finder, _ := tzf.NewFinderFromPB(input)
-	fmt.Println(finder.GetTimezoneName(116.6386, 40.0786))  // In longitude-latitude order
-}
-```
-
-### Best Practice
+### Best Practice: Reuse
 
 It's expensive to init tzf's Finder/FuzzyFinder/DefaultFinder, please consider
 reuse it or as a global var. Below is a global var example:
@@ -117,6 +86,30 @@ func main() {
 	// In longitude-latitude order
 	fmt.Println(f.GetTimezoneName(116.3883, 39.9289))
 	fmt.Println(f.GetTimezoneName(-73.935242, 40.730610))
+}
+```
+
+### Best Practice: Setup 100% accuracy with `NewFullFinder`
+
+If you require a query result that is 100% accurate, use the following to
+locate:
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/ringsaturn/tzf"
+)
+
+func main() {
+	finder, err := tzf.NewFullFinder()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(finder.GetTimezoneName(139.6917, 35.6895))
 }
 ```
 
@@ -152,7 +145,7 @@ You can download the original data from
 <https://github.com/evansiroky/timezone-boundary-builder>.
 
 The preprocessed protobuf data can be obtained from
-<https://github.com/ringsaturn/tzf-rel>, which has Go's `embedded` support.
+<https://github.com/ringsaturn/tzf-dist>, which has Go's `embedded` support.
 These files are Protocol Buffers messages for more efficient binary
 distribution, similar to Python wheels. You can view the
 [`pb/tzinfo.proto file`](./pb/tzinfo.proto) or its
@@ -183,28 +176,22 @@ graph TD
     Preindex --> |tzf.NewFuzzyFinderFromPB|FuzzyFinder --> |tzf.NewDefaultFinder|DefaultFinder
 ```
 
-The [complete dataset (~80MB)][full-link] can be used anywhere, but requires
+The [complete dataset (~17MB)][full-link] can be used anywhere, but requires
 higher memory usage.
 
-The [lightweight dataset (~10MB)][lite-link] may not function optimally in some
+The [simplified dataset (~5MB)][lite-link] may not function optimally in some
 border areas.
 
 You can observe points with different outcomes on this [page][points_not_equal].
 
-If a slightly longer initialization time is tolerable, the
-[compressed dataset (~5MB)][compressed-link] derived from the lightweight
-dataset will be **more suitable for binary distribution.**
-
-The [pre-indexed dataset (~1.78MB)][preindex-link] consists of multiple tiles.
+The [pre-indexed dataset (~2MB)][preindex-link] consists of multiple tiles.
 It is used within the `DefaultFinder`, which is built on `FuzzyFinder`, to
 reduce execution times of the raycasting algorithm.
 
 [pb_html]: https://ringsaturn.github.io/tzf/pb.html
-[full-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.bin
-[lite-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.bin
-[preindex-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.preindex.bin
-[compressed-link]: https://github.com/ringsaturn/tzf-rel/blob/main/combined-with-oceans.reduce.compress.bin
-[points_not_equal]: https://geojson.io/#id=gist:ringsaturn/2d958e7f0a279a7411c04907f255955a
+[full-link]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.compress.topo.bin
+[lite-link]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.topology.compress.topo.bin
+[preindex-link]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.topology.preindex.bin
 
 I have written an article about the history of tzf, its Rust port, and its Rust
 port's Python binding; you can view it
@@ -236,14 +223,22 @@ goos: darwin
 goarch: arm64
 pkg: github.com/ringsaturn/tzf
 cpu: Apple M3 Max
-BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities-16    	  823786	      1261 ns/op	      1000 ns/p50	      5000 ns/p90	      8000 ns/p99	       8 B/op	       0 allocs/op
-BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities-16      	 2239102	       572.1 ns/op	      1000 ns/p50	      1000 ns/p90	      1000 ns/p99	       8 B/op	       0 allocs/op
-BenchmarkGetTimezoneName-16                                     	  423015	      2852 ns/op	      3000 ns/p50	      3000 ns/p90	      4000 ns/p99	       8 B/op	       0 allocs/op
-BenchmarkGetTimezoneNameAtEdge-16                               	  399050	      3036 ns/op	      3000 ns/p50	      3000 ns/p90	      4000 ns/p99	       8 B/op	       0 allocs/op
-BenchmarkGetTimezoneName_Random_WorldCities-16                  	  288864	      3867 ns/op	      4000 ns/p50	      6000 ns/p90	      8000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkDefaultFinder_GetTimezoneNameAtEdge-16                             	  454041	      2541 ns/op	      3000 ns/p50	      3000 ns/p90	      3000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities-16                	 1412419	       860.3 ns/op	      1000 ns/p50	      2000 ns/p90	      4000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkDefaultFinder_GetTimezoneNames_Random_WorldCities-16               	  242353	      4807 ns/op	      5000 ns/p50	      6000 ns/p90	      9000 ns/p99	      24 B/op	       1 allocs/op
+BenchmarkFuzzyFinder_GetTimezoneNameAtEdge-16                               	 2659854	       451.6 ns/op	         0 ns/p50	      1000 ns/p90	      1000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities-16                  	 2541424	       469.8 ns/op	         0 ns/p50	      1000 ns/p90	      1000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkFuzzyFinder_GetTimezoneNames_Random_WorldCities-16                 	 2483164	       462.7 ns/op	         0 ns/p50	      1000 ns/p90	      1000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkGetTimezoneNameAtEdge-16                                           	  532827	      2126 ns/op	      2000 ns/p50	      3000 ns/p90	      3000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkGetTimezoneNameAtEdge_FullFinder-16                                	  473869	      2528 ns/op	      3000 ns/p50	      3000 ns/p90	      3000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkGetTimezoneNameAtEdge_FullFinderWithoutPreindex-16                 	  571768	      2104 ns/op	      2000 ns/p50	      2000 ns/p90	      3000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkGetTimezoneName_Random_WorldCities-16                              	  561232	      1881 ns/op	      2000 ns/p50	      3000 ns/p90	      4000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkGetTimezoneNames_Random_WorldCities-16                             	  230961	      4729 ns/op	      5000 ns/p50	      6000 ns/p90	      8000 ns/p99	      24 B/op	       1 allocs/op
+BenchmarkGetTimezoneName_Random_WorldCities_FullFinder-16                   	 1330048	       874.8 ns/op	      1000 ns/p50	      3000 ns/p90	      4000 ns/p99	       8 B/op	       0 allocs/op
+BenchmarkGetTimezoneNames_Random_WorldCities_FullFinder-16                  	  221061	      5188 ns/op	      5000 ns/p50	      6000 ns/p90	      9000 ns/p99	      24 B/op	       1 allocs/op
+BenchmarkGetTimezoneName_Random_WorldCities_FullFinderWithoutPreindex-16    	  541102	      2134 ns/op	      2000 ns/p50	      3000 ns/p90	      5000 ns/p99	       8 B/op	       0 allocs/op
 PASS
-coverage: 65.5% of statements
-ok  	github.com/ringsaturn/tzf	7.995s
+ok  	github.com/ringsaturn/tzf	23.851s
 ```
 
 - <https://ringsaturn.github.io/tzf/> displays continuous benchmarking results.
@@ -252,7 +247,7 @@ ok  	github.com/ringsaturn/tzf	7.995s
 
 ## Related Repos
 
-- <https://github.com/ringsaturn/tzf-rel> Preprocessed probuf data release repo
+- <https://github.com/ringsaturn/tzf-dist> Binary data distribution for tzf
 - <https://github.com/ringsaturn/tz-benchmark> Continuous Benchmark Compared
   with other packages
 - <https://github.com/ringsaturn/tzf-rs> Rust port of tzf
@@ -273,7 +268,7 @@ ok  	github.com/ringsaturn/tzf	7.995s
 This project is licensed under the [MIT license](./LICENSE) and
 [Anti CSDN License](./LICENSE_ANTI_CSDN.md)[^anti_csdn]. The data is licensed
 under the
-[ODbL license](https://github.com/ringsaturn/tzf-rel/blob/main/LICENSE), same as
+[ODbL license](https://github.com/ringsaturn/tzf-dist/blob/main/LICENSE_DATA), same as
 [`evansiroky/timezone-boundary-builder`](https://github.com/evansiroky/timezone-boundary-builder)
 
 [^anti_csdn]: This license is to prevent the use of this project by CSDN, has no
