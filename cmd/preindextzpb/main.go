@@ -32,12 +32,6 @@ func main() {
 
 	output := preindex.PreIndexTimezones(input, maptile.Zoom(idxZoom), maptile.Zoom(aggZoom), maptile.Zoom(maxZoomLevelToKeep), layerDrop)
 
-	// file := preindex.PreIndexTimezonesToGeoJSON(output)
-	// err = os.WriteFile("preindex_tiles.geojson", file, 0644)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
 	outputPath := strings.Replace(originalProbufPath, ".bin", ".preindex.bin", 1)
 	outputBin, _ := proto.Marshal(output)
 	f, err := os.Create(outputPath)
@@ -46,4 +40,9 @@ func main() {
 	}
 	_, _ = f.Write(outputBin)
 	fmt.Println(outputPath)
+
+	fmt.Fprintf(os.Stderr, "input:  timezones=%d bytes=%d\n", len(input.Timezones), len(rawFile))
+	fmt.Fprintf(os.Stderr, "params: idxZoom=%d aggZoom=%d maxZoomLevelToKeep=%d layerDrop=%d\n",
+		idxZoom, aggZoom, maxZoomLevelToKeep, layerDrop)
+	fmt.Fprintf(os.Stderr, "output: total_keys=%d bytes=%d\n", len(output.Keys), len(outputBin))
 }

@@ -5,13 +5,16 @@ import (
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/simplify"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/topology"
 )
+
+const minSimplifyPoints = 100
 
 func ReducePoints(points []*pb.Point) []*pb.Point {
 	if len(points) == 0 {
 		return points
 	}
-	if len(points) <= 100 {
+	if len(points) <= minSimplifyPoints {
 		return points
 	}
 	original := orb.LineString{}
@@ -52,4 +55,15 @@ func Do(input *pb.Timezones, skip int, precise float64, minist float64) *pb.Time
 		output.Timezones = append(output.Timezones, reducedTimezone)
 	}
 	return output
+}
+
+func DoTopologyAware(input *pb.Timezones, epsilon float64) *pb.Timezones {
+	output, _ := DoTopologyAwareWithStats(input, epsilon)
+	return output
+}
+
+func DoTopologyAwareWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, topology.Stats) {
+	output, stats := topology.DoWithStats(input, epsilon)
+	topology.MustValidateForReduction(output)
+	return output, stats
 }

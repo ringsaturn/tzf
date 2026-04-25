@@ -36,6 +36,8 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - run: ls -al
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
@@ -50,4 +52,11 @@ jobs:
         uses: codecov/codecov-action@v6
 
       - name: Bench
-        run: make bench | tee benchmark_result.txt
+        run: make bench
+
+      - name: Memory footprint
+        run: make bench-memory
+
+
+      - name: Write benchmark summary
+        run: python3 scripts/bench2summary.py benchmark_result.txt memory_result.txt >> $GITHUB_STEP_SUMMARY

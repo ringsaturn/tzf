@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/twpayne/go-polyline"
+	"github.com/ringsaturn/tzf/internal/polyline"
 )
 
 func CompressedPointsToPolylineBytes(points []*pb.Point) []byte {

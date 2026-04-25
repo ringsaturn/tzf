@@ -179,7 +179,19 @@
             <ul>
               
                 <li>
+                  <a href="#tzf.v1.CompressedInlinePoints"><span class="badge">M</span>CompressedInlinePoints</a>
+                </li>
+              
+                <li>
                   <a href="#tzf.v1.CompressedPolygon"><span class="badge">M</span>CompressedPolygon</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.CompressedRingSegment"><span class="badge">M</span>CompressedRingSegment</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.CompressedSharedEdge"><span class="badge">M</span>CompressedSharedEdge</a>
                 </li>
               
                 <li>
@@ -188,6 +200,22 @@
               
                 <li>
                   <a href="#tzf.v1.CompressedTimezones"><span class="badge">M</span>CompressedTimezones</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.CompressedTopoPolygon"><span class="badge">M</span>CompressedTopoPolygon</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.CompressedTopoTimezone"><span class="badge">M</span>CompressedTopoTimezone</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.CompressedTopoTimezones"><span class="badge">M</span>CompressedTopoTimezones</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.InlinePoints"><span class="badge">M</span>InlinePoints</a>
                 </li>
               
                 <li>
@@ -207,11 +235,31 @@
                 </li>
               
                 <li>
+                  <a href="#tzf.v1.RingSegment"><span class="badge">M</span>RingSegment</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.SharedEdge"><span class="badge">M</span>SharedEdge</a>
+                </li>
+              
+                <li>
                   <a href="#tzf.v1.Timezone"><span class="badge">M</span>Timezone</a>
                 </li>
               
                 <li>
                   <a href="#tzf.v1.Timezones"><span class="badge">M</span>Timezones</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.TopoPolygon"><span class="badge">M</span>TopoPolygon</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.TopoTimezone"><span class="badge">M</span>TopoTimezone</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.TopoTimezones"><span class="badge">M</span>TopoTimezones</a>
                 </li>
               
               
@@ -236,6 +284,30 @@
       <p></p>
 
       
+        <h3 id="tzf.v1.CompressedInlinePoints">CompressedInlinePoints</h3>
+        <p>CompressedInlinePoints stores a short inline ring segment as polyline bytes.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>points</td>
+                  <td><a href="#bytes">bytes</a></td>
+                  <td></td>
+                  <td><p>polyline-encoded point sequence </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
         <h3 id="tzf.v1.CompressedPolygon">CompressedPolygon</h3>
         <p></p>
 
@@ -258,6 +330,75 @@
                   <td><a href="#tzf.v1.CompressedPolygon">CompressedPolygon</a></td>
                   <td>repeated</td>
                   <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.CompressedRingSegment">CompressedRingSegment</h3>
+        <p>CompressedRingSegment mirrors RingSegment with polyline-encoded inline points.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>inline</td>
+                  <td><a href="#tzf.v1.CompressedInlinePoints">CompressedInlinePoints</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>edge_forward</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>edge_reversed</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.CompressedSharedEdge">CompressedSharedEdge</h3>
+        <p>CompressedSharedEdge stores a shared boundary edge with its point sequence</p><p>polyline-encoded (delta + zigzag, same algorithm as CompressedPolygon).</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>points</td>
+                  <td><a href="#bytes">bytes</a></td>
+                  <td></td>
+                  <td><p>polyline-encoded point sequence </p></td>
                 </tr>
               
             </tbody>
@@ -326,6 +467,137 @@
                   <td>version</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.CompressedTopoPolygon">CompressedTopoPolygon</h3>
+        <p>CompressedTopoPolygon mirrors TopoPolygon with compressed ring segments.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>exterior</td>
+                  <td><a href="#tzf.v1.CompressedRingSegment">CompressedRingSegment</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>holes</td>
+                  <td><a href="#tzf.v1.CompressedTopoPolygon">CompressedTopoPolygon</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.CompressedTopoTimezone">CompressedTopoTimezone</h3>
+        <p>CompressedTopoTimezone mirrors TopoTimezone with compressed polygons.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>polygons</td>
+                  <td><a href="#tzf.v1.CompressedTopoPolygon">CompressedTopoPolygon</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.CompressedTopoTimezones">CompressedTopoTimezones</h3>
+        <p>CompressedTopoTimezones combines shared-edge deduplication with polyline</p><p>coordinate compression. Shared edge point sequences and inline segments are</p><p>stored as polyline bytes instead of repeated Point messages, significantly</p><p>reducing file size on top of the deduplication savings.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>method</td>
+                  <td><a href="#tzf.v1.CompressMethod">CompressMethod</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>shared_edges</td>
+                  <td><a href="#tzf.v1.CompressedSharedEdge">CompressedSharedEdge</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>timezones</td>
+                  <td><a href="#tzf.v1.CompressedTopoTimezone">CompressedTopoTimezone</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.InlinePoints">InlinePoints</h3>
+        <p>Wrapper for a sequence of inline points used inside a RingSegment oneof.</p><p>(proto3 does not allow repeated fields directly in a oneof.)</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>points</td>
+                  <td><a href="#tzf.v1.Point">Point</a></td>
+                  <td>repeated</td>
                   <td><p> </p></td>
                 </tr>
               
@@ -488,6 +760,75 @@
 
         
       
+        <h3 id="tzf.v1.RingSegment">RingSegment</h3>
+        <p>A ring segment: either inline points or a reference to a shared edge.</p><p>Shared edges are stored once in TopoTimezones.shared_edges and referenced</p><p>by their index; edge_reversed references the same edge but traversed in</p><p>the opposite direction.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>inline</td>
+                  <td><a href="#tzf.v1.InlinePoints">InlinePoints</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>edge_forward</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p>index into TopoTimezones.shared_edges (canonical direction) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>edge_reversed</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p>index into TopoTimezones.shared_edges (reversed direction) </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.SharedEdge">SharedEdge</h3>
+        <p>A shared boundary edge stored once in the global edge library.</p><p>Rings reference it by index (forward or reversed) instead of repeating</p><p>the point sequence.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>points</td>
+                  <td><a href="#tzf.v1.Point">Point</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
         <h3 id="tzf.v1.Timezone">Timezone</h3>
         <p>Timezone is a timezone's all data.</p>
 
@@ -541,6 +882,106 @@
                   <td><a href="#bool">bool</a></td>
                   <td></td>
                   <td><p>Reduced data will toggle neighbor search as plan b </p></td>
+                </tr>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.TopoPolygon">TopoPolygon</h3>
+        <p>A timezone polygon in topology format.</p><p>The exterior ring is represented as an ordered sequence of segments.</p><p>Holes are nested TopoPolygons.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>exterior</td>
+                  <td><a href="#tzf.v1.RingSegment">RingSegment</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>holes</td>
+                  <td><a href="#tzf.v1.TopoPolygon">TopoPolygon</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.TopoTimezone">TopoTimezone</h3>
+        <p>A timezone in topology format.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>polygons</td>
+                  <td><a href="#tzf.v1.TopoPolygon">TopoPolygon</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.TopoTimezones">TopoTimezones</h3>
+        <p>Timezones in topology format with shared-edge deduplication.</p><p>Shared timezone boundaries are stored exactly once in shared_edges;</p><p>rings reference them by ID rather than duplicating the point sequences.</p><p>This format targets full-precision data where ~52% of boundary edges are</p><p>shared, reducing the 96 MB full dataset by ~30–35 MB.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>shared_edges</td>
+                  <td><a href="#tzf.v1.SharedEdge">SharedEdge</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>timezones</td>
+                  <td><a href="#tzf.v1.TopoTimezone">TopoTimezone</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
                 </tr>
               
                 <tr>

@@ -5,25 +5,23 @@
 // source: tzf/v1/tzinfo.proto
 
 // # tzf's protobuf define
-//
-// The published data of [tzf-rel](https://github.com/ringsaturn/tzf-rel) and
-// [tzf-rel-lite](https://github.com/ringsaturn/tzf-rel-lite) are defined in this
-// directory.
+// The published data of [tzf-dist](https://github.com/ringsaturn/tzf-dist) are
+// defined in this directory.
 //
 // Available docs:
 //
-//  - [`tzf.v1` on buf.build](https://buf.build/ringsaturn/tzf/docs/main:tzf.v1)
-//  - [Plain HTML](https://ringsaturn.github.io/tzf/pb.html)
+// - [`tzf.v1` on buf.build](https://buf.build/ringsaturn/tzf/docs/main:tzf.v1)
+// - [Plain HTML](https://ringsaturn.github.io/tzf/pb.html)
 //
 // Related projects:
 //
 // - [tzf](https://github.com/ringsaturn/tzf)
-// - [tzf-rel](https://github.com/ringsaturn/tzf-rel)
-// - [tzf-rel-lite](https://github.com/ringsaturn/tzf-rel-lite)
+// - [tzf-dist](https://github.com/ringsaturn/tzf-dist)
 // - [tzf-rs](https://github.com/ringsaturn/tzf-rs)
 // - [tzfpy](https://github.com/ringsaturn/tzfpy)
 // - [tzf-wasm](https://github.com/ringsaturn/tzf-wasm)
 // - [tzf-web](https://github.com/ringsaturn/tzf-web)
+//
 
 package v1
 
@@ -644,6 +642,758 @@ func (x *PreindexTimezones) GetVersion() string {
 	return ""
 }
 
+// Wrapper for a sequence of inline points used inside a RingSegment oneof.
+// (proto3 does not allow repeated fields directly in a oneof.)
+type InlinePoints struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Points        []*Point               `protobuf:"bytes,1,rep,name=points,proto3" json:"points,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InlinePoints) Reset() {
+	*x = InlinePoints{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InlinePoints) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InlinePoints) ProtoMessage() {}
+
+func (x *InlinePoints) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InlinePoints.ProtoReflect.Descriptor instead.
+func (*InlinePoints) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *InlinePoints) GetPoints() []*Point {
+	if x != nil {
+		return x.Points
+	}
+	return nil
+}
+
+// A ring segment: either inline points or a reference to a shared edge.
+// Shared edges are stored once in TopoTimezones.shared_edges and referenced
+// by their index; edge_reversed references the same edge but traversed in
+// the opposite direction.
+type RingSegment struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Content:
+	//
+	//	*RingSegment_Inline
+	//	*RingSegment_EdgeForward
+	//	*RingSegment_EdgeReversed
+	Content       isRingSegment_Content `protobuf_oneof:"content"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RingSegment) Reset() {
+	*x = RingSegment{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RingSegment) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RingSegment) ProtoMessage() {}
+
+func (x *RingSegment) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RingSegment.ProtoReflect.Descriptor instead.
+func (*RingSegment) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RingSegment) GetContent() isRingSegment_Content {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+func (x *RingSegment) GetInline() *InlinePoints {
+	if x != nil {
+		if x, ok := x.Content.(*RingSegment_Inline); ok {
+			return x.Inline
+		}
+	}
+	return nil
+}
+
+func (x *RingSegment) GetEdgeForward() int32 {
+	if x != nil {
+		if x, ok := x.Content.(*RingSegment_EdgeForward); ok {
+			return x.EdgeForward
+		}
+	}
+	return 0
+}
+
+func (x *RingSegment) GetEdgeReversed() int32 {
+	if x != nil {
+		if x, ok := x.Content.(*RingSegment_EdgeReversed); ok {
+			return x.EdgeReversed
+		}
+	}
+	return 0
+}
+
+type isRingSegment_Content interface {
+	isRingSegment_Content()
+}
+
+type RingSegment_Inline struct {
+	Inline *InlinePoints `protobuf:"bytes,1,opt,name=inline,proto3,oneof"`
+}
+
+type RingSegment_EdgeForward struct {
+	EdgeForward int32 `protobuf:"varint,2,opt,name=edge_forward,json=edgeForward,proto3,oneof"` // index into TopoTimezones.shared_edges (canonical direction)
+}
+
+type RingSegment_EdgeReversed struct {
+	EdgeReversed int32 `protobuf:"varint,3,opt,name=edge_reversed,json=edgeReversed,proto3,oneof"` // index into TopoTimezones.shared_edges (reversed direction)
+}
+
+func (*RingSegment_Inline) isRingSegment_Content() {}
+
+func (*RingSegment_EdgeForward) isRingSegment_Content() {}
+
+func (*RingSegment_EdgeReversed) isRingSegment_Content() {}
+
+// A timezone polygon in topology format.
+// The exterior ring is represented as an ordered sequence of segments.
+// Holes are nested TopoPolygons.
+type TopoPolygon struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Exterior      []*RingSegment         `protobuf:"bytes,1,rep,name=exterior,proto3" json:"exterior,omitempty"`
+	Holes         []*TopoPolygon         `protobuf:"bytes,2,rep,name=holes,proto3" json:"holes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TopoPolygon) Reset() {
+	*x = TopoPolygon{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TopoPolygon) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TopoPolygon) ProtoMessage() {}
+
+func (x *TopoPolygon) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TopoPolygon.ProtoReflect.Descriptor instead.
+func (*TopoPolygon) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *TopoPolygon) GetExterior() []*RingSegment {
+	if x != nil {
+		return x.Exterior
+	}
+	return nil
+}
+
+func (x *TopoPolygon) GetHoles() []*TopoPolygon {
+	if x != nil {
+		return x.Holes
+	}
+	return nil
+}
+
+// A timezone in topology format.
+type TopoTimezone struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Polygons      []*TopoPolygon         `protobuf:"bytes,1,rep,name=polygons,proto3" json:"polygons,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TopoTimezone) Reset() {
+	*x = TopoTimezone{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TopoTimezone) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TopoTimezone) ProtoMessage() {}
+
+func (x *TopoTimezone) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TopoTimezone.ProtoReflect.Descriptor instead.
+func (*TopoTimezone) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *TopoTimezone) GetPolygons() []*TopoPolygon {
+	if x != nil {
+		return x.Polygons
+	}
+	return nil
+}
+
+func (x *TopoTimezone) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+// A shared boundary edge stored once in the global edge library.
+// Rings reference it by index (forward or reversed) instead of repeating
+// the point sequence.
+type SharedEdge struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Points        []*Point               `protobuf:"bytes,2,rep,name=points,proto3" json:"points,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SharedEdge) Reset() {
+	*x = SharedEdge{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SharedEdge) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SharedEdge) ProtoMessage() {}
+
+func (x *SharedEdge) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SharedEdge.ProtoReflect.Descriptor instead.
+func (*SharedEdge) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SharedEdge) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *SharedEdge) GetPoints() []*Point {
+	if x != nil {
+		return x.Points
+	}
+	return nil
+}
+
+// Timezones in topology format with shared-edge deduplication.
+// Shared timezone boundaries are stored exactly once in shared_edges;
+// rings reference them by ID rather than duplicating the point sequences.
+// This format targets full-precision data where ~52% of boundary edges are
+// shared, reducing the 96 MB full dataset by ~30–35 MB.
+type TopoTimezones struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SharedEdges   []*SharedEdge          `protobuf:"bytes,1,rep,name=shared_edges,json=sharedEdges,proto3" json:"shared_edges,omitempty"`
+	Timezones     []*TopoTimezone        `protobuf:"bytes,2,rep,name=timezones,proto3" json:"timezones,omitempty"`
+	Version       string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TopoTimezones) Reset() {
+	*x = TopoTimezones{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TopoTimezones) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TopoTimezones) ProtoMessage() {}
+
+func (x *TopoTimezones) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TopoTimezones.ProtoReflect.Descriptor instead.
+func (*TopoTimezones) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *TopoTimezones) GetSharedEdges() []*SharedEdge {
+	if x != nil {
+		return x.SharedEdges
+	}
+	return nil
+}
+
+func (x *TopoTimezones) GetTimezones() []*TopoTimezone {
+	if x != nil {
+		return x.Timezones
+	}
+	return nil
+}
+
+func (x *TopoTimezones) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+// CompressedSharedEdge stores a shared boundary edge with its point sequence
+// polyline-encoded (delta + zigzag, same algorithm as CompressedPolygon).
+type CompressedSharedEdge struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Points        []byte                 `protobuf:"bytes,2,opt,name=points,proto3" json:"points,omitempty"` // polyline-encoded point sequence
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompressedSharedEdge) Reset() {
+	*x = CompressedSharedEdge{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompressedSharedEdge) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedSharedEdge) ProtoMessage() {}
+
+func (x *CompressedSharedEdge) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedSharedEdge.ProtoReflect.Descriptor instead.
+func (*CompressedSharedEdge) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *CompressedSharedEdge) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *CompressedSharedEdge) GetPoints() []byte {
+	if x != nil {
+		return x.Points
+	}
+	return nil
+}
+
+// CompressedInlinePoints stores a short inline ring segment as polyline bytes.
+type CompressedInlinePoints struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Points        []byte                 `protobuf:"bytes,1,opt,name=points,proto3" json:"points,omitempty"` // polyline-encoded point sequence
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompressedInlinePoints) Reset() {
+	*x = CompressedInlinePoints{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompressedInlinePoints) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedInlinePoints) ProtoMessage() {}
+
+func (x *CompressedInlinePoints) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedInlinePoints.ProtoReflect.Descriptor instead.
+func (*CompressedInlinePoints) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CompressedInlinePoints) GetPoints() []byte {
+	if x != nil {
+		return x.Points
+	}
+	return nil
+}
+
+// CompressedRingSegment mirrors RingSegment with polyline-encoded inline points.
+type CompressedRingSegment struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Content:
+	//
+	//	*CompressedRingSegment_Inline
+	//	*CompressedRingSegment_EdgeForward
+	//	*CompressedRingSegment_EdgeReversed
+	Content       isCompressedRingSegment_Content `protobuf_oneof:"content"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompressedRingSegment) Reset() {
+	*x = CompressedRingSegment{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompressedRingSegment) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedRingSegment) ProtoMessage() {}
+
+func (x *CompressedRingSegment) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedRingSegment.ProtoReflect.Descriptor instead.
+func (*CompressedRingSegment) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *CompressedRingSegment) GetContent() isCompressedRingSegment_Content {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+func (x *CompressedRingSegment) GetInline() *CompressedInlinePoints {
+	if x != nil {
+		if x, ok := x.Content.(*CompressedRingSegment_Inline); ok {
+			return x.Inline
+		}
+	}
+	return nil
+}
+
+func (x *CompressedRingSegment) GetEdgeForward() int32 {
+	if x != nil {
+		if x, ok := x.Content.(*CompressedRingSegment_EdgeForward); ok {
+			return x.EdgeForward
+		}
+	}
+	return 0
+}
+
+func (x *CompressedRingSegment) GetEdgeReversed() int32 {
+	if x != nil {
+		if x, ok := x.Content.(*CompressedRingSegment_EdgeReversed); ok {
+			return x.EdgeReversed
+		}
+	}
+	return 0
+}
+
+type isCompressedRingSegment_Content interface {
+	isCompressedRingSegment_Content()
+}
+
+type CompressedRingSegment_Inline struct {
+	Inline *CompressedInlinePoints `protobuf:"bytes,1,opt,name=inline,proto3,oneof"`
+}
+
+type CompressedRingSegment_EdgeForward struct {
+	EdgeForward int32 `protobuf:"varint,2,opt,name=edge_forward,json=edgeForward,proto3,oneof"`
+}
+
+type CompressedRingSegment_EdgeReversed struct {
+	EdgeReversed int32 `protobuf:"varint,3,opt,name=edge_reversed,json=edgeReversed,proto3,oneof"`
+}
+
+func (*CompressedRingSegment_Inline) isCompressedRingSegment_Content() {}
+
+func (*CompressedRingSegment_EdgeForward) isCompressedRingSegment_Content() {}
+
+func (*CompressedRingSegment_EdgeReversed) isCompressedRingSegment_Content() {}
+
+// CompressedTopoPolygon mirrors TopoPolygon with compressed ring segments.
+type CompressedTopoPolygon struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Exterior      []*CompressedRingSegment `protobuf:"bytes,1,rep,name=exterior,proto3" json:"exterior,omitempty"`
+	Holes         []*CompressedTopoPolygon `protobuf:"bytes,2,rep,name=holes,proto3" json:"holes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompressedTopoPolygon) Reset() {
+	*x = CompressedTopoPolygon{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompressedTopoPolygon) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedTopoPolygon) ProtoMessage() {}
+
+func (x *CompressedTopoPolygon) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedTopoPolygon.ProtoReflect.Descriptor instead.
+func (*CompressedTopoPolygon) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *CompressedTopoPolygon) GetExterior() []*CompressedRingSegment {
+	if x != nil {
+		return x.Exterior
+	}
+	return nil
+}
+
+func (x *CompressedTopoPolygon) GetHoles() []*CompressedTopoPolygon {
+	if x != nil {
+		return x.Holes
+	}
+	return nil
+}
+
+// CompressedTopoTimezone mirrors TopoTimezone with compressed polygons.
+type CompressedTopoTimezone struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Polygons      []*CompressedTopoPolygon `protobuf:"bytes,1,rep,name=polygons,proto3" json:"polygons,omitempty"`
+	Name          string                   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompressedTopoTimezone) Reset() {
+	*x = CompressedTopoTimezone{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompressedTopoTimezone) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedTopoTimezone) ProtoMessage() {}
+
+func (x *CompressedTopoTimezone) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedTopoTimezone.ProtoReflect.Descriptor instead.
+func (*CompressedTopoTimezone) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *CompressedTopoTimezone) GetPolygons() []*CompressedTopoPolygon {
+	if x != nil {
+		return x.Polygons
+	}
+	return nil
+}
+
+func (x *CompressedTopoTimezone) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+// CompressedTopoTimezones combines shared-edge deduplication with polyline
+// coordinate compression. Shared edge point sequences and inline segments are
+// stored as polyline bytes instead of repeated Point messages, significantly
+// reducing file size on top of the deduplication savings.
+type CompressedTopoTimezones struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	Method        CompressMethod            `protobuf:"varint,1,opt,name=method,proto3,enum=tzf.v1.CompressMethod" json:"method,omitempty"`
+	SharedEdges   []*CompressedSharedEdge   `protobuf:"bytes,2,rep,name=shared_edges,json=sharedEdges,proto3" json:"shared_edges,omitempty"`
+	Timezones     []*CompressedTopoTimezone `protobuf:"bytes,3,rep,name=timezones,proto3" json:"timezones,omitempty"`
+	Version       string                    `protobuf:"bytes,4,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompressedTopoTimezones) Reset() {
+	*x = CompressedTopoTimezones{}
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompressedTopoTimezones) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompressedTopoTimezones) ProtoMessage() {}
+
+func (x *CompressedTopoTimezones) ProtoReflect() protoreflect.Message {
+	mi := &file_tzf_v1_tzinfo_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompressedTopoTimezones.ProtoReflect.Descriptor instead.
+func (*CompressedTopoTimezones) Descriptor() ([]byte, []int) {
+	return file_tzf_v1_tzinfo_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *CompressedTopoTimezones) GetMethod() CompressMethod {
+	if x != nil {
+		return x.Method
+	}
+	return CompressMethod_COMPRESS_METHOD_UNSPECIFIED
+}
+
+func (x *CompressedTopoTimezones) GetSharedEdges() []*CompressedSharedEdge {
+	if x != nil {
+		return x.SharedEdges
+	}
+	return nil
+}
+
+func (x *CompressedTopoTimezones) GetTimezones() []*CompressedTopoTimezone {
+	if x != nil {
+		return x.Timezones
+	}
+	return nil
+}
+
+func (x *CompressedTopoTimezones) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
 var File_tzf_v1_tzinfo_proto protoreflect.FileDescriptor
 
 var file_tzf_v1_tzinfo_proto_rawDesc = string([]byte{
@@ -704,16 +1454,101 @@ var file_tzf_v1_tzinfo_proto_rawDesc = string([]byte{
 	0x32, 0x18, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x72, 0x65, 0x69, 0x6e, 0x64,
 	0x65, 0x78, 0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x52, 0x04, 0x6b, 0x65, 0x79, 0x73,
 	0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x2a, 0x4f, 0x0a, 0x0e, 0x43, 0x6f,
-	0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x1f, 0x0a, 0x1b,
+	0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x35, 0x0a, 0x0c, 0x49, 0x6e,
+	0x6c, 0x69, 0x6e, 0x65, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x12, 0x25, 0x0a, 0x06, 0x70, 0x6f,
+	0x69, 0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x74, 0x7a, 0x66,
+	0x2e, 0x76, 0x31, 0x2e, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x06, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x73, 0x22, 0x94, 0x01, 0x0a, 0x0b, 0x52, 0x69, 0x6e, 0x67, 0x53, 0x65, 0x67, 0x6d, 0x65, 0x6e,
+	0x74, 0x12, 0x2e, 0x0a, 0x06, 0x69, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x14, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x49, 0x6e, 0x6c, 0x69, 0x6e,
+	0x65, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x48, 0x00, 0x52, 0x06, 0x69, 0x6e, 0x6c, 0x69, 0x6e,
+	0x65, 0x12, 0x23, 0x0a, 0x0c, 0x65, 0x64, 0x67, 0x65, 0x5f, 0x66, 0x6f, 0x72, 0x77, 0x61, 0x72,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x48, 0x00, 0x52, 0x0b, 0x65, 0x64, 0x67, 0x65, 0x46,
+	0x6f, 0x72, 0x77, 0x61, 0x72, 0x64, 0x12, 0x25, 0x0a, 0x0d, 0x65, 0x64, 0x67, 0x65, 0x5f, 0x72,
+	0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x48, 0x00, 0x52,
+	0x0c, 0x65, 0x64, 0x67, 0x65, 0x52, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x64, 0x42, 0x09, 0x0a,
+	0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22, 0x69, 0x0a, 0x0b, 0x54, 0x6f, 0x70, 0x6f,
+	0x50, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x12, 0x2f, 0x0a, 0x08, 0x65, 0x78, 0x74, 0x65, 0x72,
+	0x69, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x74, 0x7a, 0x66, 0x2e,
+	0x76, 0x31, 0x2e, 0x52, 0x69, 0x6e, 0x67, 0x53, 0x65, 0x67, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x08,
+	0x65, 0x78, 0x74, 0x65, 0x72, 0x69, 0x6f, 0x72, 0x12, 0x29, 0x0a, 0x05, 0x68, 0x6f, 0x6c, 0x65,
+	0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31,
+	0x2e, 0x54, 0x6f, 0x70, 0x6f, 0x50, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x52, 0x05, 0x68, 0x6f,
+	0x6c, 0x65, 0x73, 0x22, 0x53, 0x0a, 0x0c, 0x54, 0x6f, 0x70, 0x6f, 0x54, 0x69, 0x6d, 0x65, 0x7a,
+	0x6f, 0x6e, 0x65, 0x12, 0x2f, 0x0a, 0x08, 0x70, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x54,
+	0x6f, 0x70, 0x6f, 0x50, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x52, 0x08, 0x70, 0x6f, 0x6c, 0x79,
+	0x67, 0x6f, 0x6e, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x43, 0x0a, 0x0a, 0x53, 0x68, 0x61, 0x72,
+	0x65, 0x64, 0x45, 0x64, 0x67, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x05, 0x52, 0x02, 0x69, 0x64, 0x12, 0x25, 0x0a, 0x06, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x73,
+	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e,
+	0x50, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x06, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x22, 0x94, 0x01,
+	0x0a, 0x0d, 0x54, 0x6f, 0x70, 0x6f, 0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x12,
+	0x35, 0x0a, 0x0c, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64, 0x5f, 0x65, 0x64, 0x67, 0x65, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x53,
+	0x68, 0x61, 0x72, 0x65, 0x64, 0x45, 0x64, 0x67, 0x65, 0x52, 0x0b, 0x73, 0x68, 0x61, 0x72, 0x65,
+	0x64, 0x45, 0x64, 0x67, 0x65, 0x73, 0x12, 0x32, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x7a, 0x6f,
+	0x6e, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x7a, 0x66, 0x2e,
+	0x76, 0x31, 0x2e, 0x54, 0x6f, 0x70, 0x6f, 0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x52,
+	0x09, 0x74, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65,
+	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72,
+	0x73, 0x69, 0x6f, 0x6e, 0x22, 0x3e, 0x0a, 0x14, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73,
+	0x65, 0x64, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x45, 0x64, 0x67, 0x65, 0x12, 0x0e, 0x0a, 0x02,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x02, 0x69, 0x64, 0x12, 0x16, 0x0a, 0x06,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x70, 0x6f,
+	0x69, 0x6e, 0x74, 0x73, 0x22, 0x30, 0x0a, 0x16, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73,
+	0x65, 0x64, 0x49, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x12, 0x16,
+	0x0a, 0x06, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x73, 0x22, 0xa8, 0x01, 0x0a, 0x15, 0x43, 0x6f, 0x6d, 0x70, 0x72,
+	0x65, 0x73, 0x73, 0x65, 0x64, 0x52, 0x69, 0x6e, 0x67, 0x53, 0x65, 0x67, 0x6d, 0x65, 0x6e, 0x74,
+	0x12, 0x38, 0x0a, 0x06, 0x69, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1e, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65,
+	0x73, 0x73, 0x65, 0x64, 0x49, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x73,
+	0x48, 0x00, 0x52, 0x06, 0x69, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x12, 0x23, 0x0a, 0x0c, 0x65, 0x64,
+	0x67, 0x65, 0x5f, 0x66, 0x6f, 0x72, 0x77, 0x61, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05,
+	0x48, 0x00, 0x52, 0x0b, 0x65, 0x64, 0x67, 0x65, 0x46, 0x6f, 0x72, 0x77, 0x61, 0x72, 0x64, 0x12,
+	0x25, 0x0a, 0x0d, 0x65, 0x64, 0x67, 0x65, 0x5f, 0x72, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x64,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x48, 0x00, 0x52, 0x0c, 0x65, 0x64, 0x67, 0x65, 0x52, 0x65,
+	0x76, 0x65, 0x72, 0x73, 0x65, 0x64, 0x42, 0x09, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e,
+	0x74, 0x22, 0x87, 0x01, 0x0a, 0x15, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64,
+	0x54, 0x6f, 0x70, 0x6f, 0x50, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x12, 0x39, 0x0a, 0x08, 0x65,
+	0x78, 0x74, 0x65, 0x72, 0x69, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e,
+	0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65,
+	0x64, 0x52, 0x69, 0x6e, 0x67, 0x53, 0x65, 0x67, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x08, 0x65, 0x78,
+	0x74, 0x65, 0x72, 0x69, 0x6f, 0x72, 0x12, 0x33, 0x0a, 0x05, 0x68, 0x6f, 0x6c, 0x65, 0x73, 0x18,
+	0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x43,
+	0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x54, 0x6f, 0x70, 0x6f, 0x50, 0x6f, 0x6c,
+	0x79, 0x67, 0x6f, 0x6e, 0x52, 0x05, 0x68, 0x6f, 0x6c, 0x65, 0x73, 0x22, 0x67, 0x0a, 0x16, 0x43,
+	0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x54, 0x6f, 0x70, 0x6f, 0x54, 0x69, 0x6d,
+	0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x12, 0x39, 0x0a, 0x08, 0x70, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31,
+	0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x54, 0x6f, 0x70, 0x6f, 0x50,
+	0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x52, 0x08, 0x70, 0x6f, 0x6c, 0x79, 0x67, 0x6f, 0x6e, 0x73,
+	0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
+	0x6e, 0x61, 0x6d, 0x65, 0x22, 0xe2, 0x01, 0x0a, 0x17, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73,
+	0x73, 0x65, 0x64, 0x54, 0x6f, 0x70, 0x6f, 0x54, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x73,
+	0x12, 0x2e, 0x0a, 0x06, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e,
+	0x32, 0x16, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65,
+	0x73, 0x73, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x52, 0x06, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64,
+	0x12, 0x3f, 0x0a, 0x0c, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64, 0x5f, 0x65, 0x64, 0x67, 0x65, 0x73,
+	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e,
+	0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64,
+	0x45, 0x64, 0x67, 0x65, 0x52, 0x0b, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64, 0x45, 0x64, 0x67, 0x65,
+	0x73, 0x12, 0x3c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x18, 0x03,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x74, 0x7a, 0x66, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f,
+	0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x54, 0x6f, 0x70, 0x6f, 0x54, 0x69, 0x6d, 0x65,
+	0x7a, 0x6f, 0x6e, 0x65, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x7a, 0x6f, 0x6e, 0x65, 0x73, 0x12,
+	0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x2a, 0x4f, 0x0a, 0x0e, 0x43, 0x6f, 0x6d,
+	0x70, 0x72, 0x65, 0x73, 0x73, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x1f, 0x0a, 0x1b, 0x43,
+	0x4f, 0x4d, 0x50, 0x52, 0x45, 0x53, 0x53, 0x5f, 0x4d, 0x45, 0x54, 0x48, 0x4f, 0x44, 0x5f, 0x55,
+	0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x1c, 0x0a, 0x18,
 	0x43, 0x4f, 0x4d, 0x50, 0x52, 0x45, 0x53, 0x53, 0x5f, 0x4d, 0x45, 0x54, 0x48, 0x4f, 0x44, 0x5f,
-	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x1c, 0x0a,
-	0x18, 0x43, 0x4f, 0x4d, 0x50, 0x52, 0x45, 0x53, 0x53, 0x5f, 0x4d, 0x45, 0x54, 0x48, 0x4f, 0x44,
-	0x5f, 0x50, 0x4f, 0x4c, 0x59, 0x4c, 0x49, 0x4e, 0x45, 0x10, 0x01, 0x42, 0x2c, 0x5a, 0x2a, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x72, 0x69, 0x6e, 0x67, 0x73, 0x61,
-	0x74, 0x75, 0x72, 0x6e, 0x2f, 0x74, 0x7a, 0x66, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x67, 0x6f, 0x2f,
-	0x74, 0x7a, 0x66, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x50, 0x4f, 0x4c, 0x59, 0x4c, 0x49, 0x4e, 0x45, 0x10, 0x01, 0x42, 0x2c, 0x5a, 0x2a, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x72, 0x69, 0x6e, 0x67, 0x73, 0x61, 0x74,
+	0x75, 0x72, 0x6e, 0x2f, 0x74, 0x7a, 0x66, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x67, 0x6f, 0x2f, 0x74,
+	0x7a, 0x66, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -729,34 +1564,61 @@ func file_tzf_v1_tzinfo_proto_rawDescGZIP() []byte {
 }
 
 var file_tzf_v1_tzinfo_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_tzf_v1_tzinfo_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_tzf_v1_tzinfo_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_tzf_v1_tzinfo_proto_goTypes = []any{
-	(CompressMethod)(0),         // 0: tzf.v1.CompressMethod
-	(*Point)(nil),               // 1: tzf.v1.Point
-	(*Polygon)(nil),             // 2: tzf.v1.Polygon
-	(*Timezone)(nil),            // 3: tzf.v1.Timezone
-	(*Timezones)(nil),           // 4: tzf.v1.Timezones
-	(*CompressedPolygon)(nil),   // 5: tzf.v1.CompressedPolygon
-	(*CompressedTimezone)(nil),  // 6: tzf.v1.CompressedTimezone
-	(*CompressedTimezones)(nil), // 7: tzf.v1.CompressedTimezones
-	(*PreindexTimezone)(nil),    // 8: tzf.v1.PreindexTimezone
-	(*PreindexTimezones)(nil),   // 9: tzf.v1.PreindexTimezones
+	(CompressMethod)(0),             // 0: tzf.v1.CompressMethod
+	(*Point)(nil),                   // 1: tzf.v1.Point
+	(*Polygon)(nil),                 // 2: tzf.v1.Polygon
+	(*Timezone)(nil),                // 3: tzf.v1.Timezone
+	(*Timezones)(nil),               // 4: tzf.v1.Timezones
+	(*CompressedPolygon)(nil),       // 5: tzf.v1.CompressedPolygon
+	(*CompressedTimezone)(nil),      // 6: tzf.v1.CompressedTimezone
+	(*CompressedTimezones)(nil),     // 7: tzf.v1.CompressedTimezones
+	(*PreindexTimezone)(nil),        // 8: tzf.v1.PreindexTimezone
+	(*PreindexTimezones)(nil),       // 9: tzf.v1.PreindexTimezones
+	(*InlinePoints)(nil),            // 10: tzf.v1.InlinePoints
+	(*RingSegment)(nil),             // 11: tzf.v1.RingSegment
+	(*TopoPolygon)(nil),             // 12: tzf.v1.TopoPolygon
+	(*TopoTimezone)(nil),            // 13: tzf.v1.TopoTimezone
+	(*SharedEdge)(nil),              // 14: tzf.v1.SharedEdge
+	(*TopoTimezones)(nil),           // 15: tzf.v1.TopoTimezones
+	(*CompressedSharedEdge)(nil),    // 16: tzf.v1.CompressedSharedEdge
+	(*CompressedInlinePoints)(nil),  // 17: tzf.v1.CompressedInlinePoints
+	(*CompressedRingSegment)(nil),   // 18: tzf.v1.CompressedRingSegment
+	(*CompressedTopoPolygon)(nil),   // 19: tzf.v1.CompressedTopoPolygon
+	(*CompressedTopoTimezone)(nil),  // 20: tzf.v1.CompressedTopoTimezone
+	(*CompressedTopoTimezones)(nil), // 21: tzf.v1.CompressedTopoTimezones
 }
 var file_tzf_v1_tzinfo_proto_depIdxs = []int32{
-	1, // 0: tzf.v1.Polygon.points:type_name -> tzf.v1.Point
-	2, // 1: tzf.v1.Polygon.holes:type_name -> tzf.v1.Polygon
-	2, // 2: tzf.v1.Timezone.polygons:type_name -> tzf.v1.Polygon
-	3, // 3: tzf.v1.Timezones.timezones:type_name -> tzf.v1.Timezone
-	5, // 4: tzf.v1.CompressedPolygon.holes:type_name -> tzf.v1.CompressedPolygon
-	5, // 5: tzf.v1.CompressedTimezone.data:type_name -> tzf.v1.CompressedPolygon
-	0, // 6: tzf.v1.CompressedTimezones.method:type_name -> tzf.v1.CompressMethod
-	6, // 7: tzf.v1.CompressedTimezones.timezones:type_name -> tzf.v1.CompressedTimezone
-	8, // 8: tzf.v1.PreindexTimezones.keys:type_name -> tzf.v1.PreindexTimezone
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	1,  // 0: tzf.v1.Polygon.points:type_name -> tzf.v1.Point
+	2,  // 1: tzf.v1.Polygon.holes:type_name -> tzf.v1.Polygon
+	2,  // 2: tzf.v1.Timezone.polygons:type_name -> tzf.v1.Polygon
+	3,  // 3: tzf.v1.Timezones.timezones:type_name -> tzf.v1.Timezone
+	5,  // 4: tzf.v1.CompressedPolygon.holes:type_name -> tzf.v1.CompressedPolygon
+	5,  // 5: tzf.v1.CompressedTimezone.data:type_name -> tzf.v1.CompressedPolygon
+	0,  // 6: tzf.v1.CompressedTimezones.method:type_name -> tzf.v1.CompressMethod
+	6,  // 7: tzf.v1.CompressedTimezones.timezones:type_name -> tzf.v1.CompressedTimezone
+	8,  // 8: tzf.v1.PreindexTimezones.keys:type_name -> tzf.v1.PreindexTimezone
+	1,  // 9: tzf.v1.InlinePoints.points:type_name -> tzf.v1.Point
+	10, // 10: tzf.v1.RingSegment.inline:type_name -> tzf.v1.InlinePoints
+	11, // 11: tzf.v1.TopoPolygon.exterior:type_name -> tzf.v1.RingSegment
+	12, // 12: tzf.v1.TopoPolygon.holes:type_name -> tzf.v1.TopoPolygon
+	12, // 13: tzf.v1.TopoTimezone.polygons:type_name -> tzf.v1.TopoPolygon
+	1,  // 14: tzf.v1.SharedEdge.points:type_name -> tzf.v1.Point
+	14, // 15: tzf.v1.TopoTimezones.shared_edges:type_name -> tzf.v1.SharedEdge
+	13, // 16: tzf.v1.TopoTimezones.timezones:type_name -> tzf.v1.TopoTimezone
+	17, // 17: tzf.v1.CompressedRingSegment.inline:type_name -> tzf.v1.CompressedInlinePoints
+	18, // 18: tzf.v1.CompressedTopoPolygon.exterior:type_name -> tzf.v1.CompressedRingSegment
+	19, // 19: tzf.v1.CompressedTopoPolygon.holes:type_name -> tzf.v1.CompressedTopoPolygon
+	19, // 20: tzf.v1.CompressedTopoTimezone.polygons:type_name -> tzf.v1.CompressedTopoPolygon
+	0,  // 21: tzf.v1.CompressedTopoTimezones.method:type_name -> tzf.v1.CompressMethod
+	16, // 22: tzf.v1.CompressedTopoTimezones.shared_edges:type_name -> tzf.v1.CompressedSharedEdge
+	20, // 23: tzf.v1.CompressedTopoTimezones.timezones:type_name -> tzf.v1.CompressedTopoTimezone
+	24, // [24:24] is the sub-list for method output_type
+	24, // [24:24] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_tzf_v1_tzinfo_proto_init() }
@@ -764,13 +1626,23 @@ func file_tzf_v1_tzinfo_proto_init() {
 	if File_tzf_v1_tzinfo_proto != nil {
 		return
 	}
+	file_tzf_v1_tzinfo_proto_msgTypes[10].OneofWrappers = []any{
+		(*RingSegment_Inline)(nil),
+		(*RingSegment_EdgeForward)(nil),
+		(*RingSegment_EdgeReversed)(nil),
+	}
+	file_tzf_v1_tzinfo_proto_msgTypes[17].OneofWrappers = []any{
+		(*CompressedRingSegment_Inline)(nil),
+		(*CompressedRingSegment_EdgeForward)(nil),
+		(*CompressedRingSegment_EdgeReversed)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tzf_v1_tzinfo_proto_rawDesc), len(file_tzf_v1_tzinfo_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   9,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
