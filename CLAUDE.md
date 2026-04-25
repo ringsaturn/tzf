@@ -39,15 +39,25 @@ Three finder implementations share the interface in `f.go`:
 
 ```
 Raw GeoJSON (timezone-boundary-builder)
-  └─ cmd/geojson2tzpb       → Timezones .bin         (~92MB, full precision)
-       └─ cmd/reducetzpb    → .topology.bin           (~13MB, topology-aware D-P simplified)
-            └─ cmd/deduplicatetzpb → .topo.bin        (TopoTimezones, shared-edge dedup)
-                 └─ cmd/compresstopotzpb → .compress.topo.bin  (polyline-encoded coords)
-       └─ cmd/compresstzpb  → .compress.bin           (~4.5MB, polyline coords)
-       └─ cmd/preindextzpb  → .preindex.bin           (~2MB, tile pre-index)
+  └─ cmd/geojson2tzpb
+       └─ combined-with-oceans.bin                (~92MB, Timezones, full precision)
+            │
+            ├─ cmd/reducetzpb -topology=true
+            │    └─ combined-with-oceans.topology.bin   (~13MB, Timezones, topology-aware D-P simplified)
+            │         ├─ cmd/deduplicatetzpb
+            │         │    └─ combined-with-oceans.topology.topo.bin   (~10MB, TopoTimezones)
+            │         │         └─ cmd/compresstopotzpb
+            │         │              └─ combined-with-oceans.topology.compress.topo.bin  (~5.4MB) ← lite embedded
+            │         └─ cmd/preindextzpb
+            │              └─ combined-with-oceans.topology.preindex.bin (~2MB) ← preindex embedded
+            │
+            └─ cmd/deduplicatetzpb
+                 └─ combined-with-oceans.topo.bin        (~52MB, TopoTimezones)
+                      └─ cmd/compresstopotzpb
+                           └─ combined-with-oceans.compress.topo.bin   (~17MB) ← full embedded
 ```
 
-Data files live in `github.com/ringsaturn/tzf-rel` (full) and `tzf-rel-lite` (lite, embedded via Go modules). Versions must match between Finder and FuzzyFinder.
+All three embedded files live in `github.com/ringsaturn/tzf-dist` (Go module, `data` branch). The `DefaultFinder` uses `topology.compress.topo.bin` + `topology.preindex.bin`; `NewFullFinder` uses `compress.topo.bin` + `topology.preindex.bin`. Versions must match between Finder and FuzzyFinder.
 
 ### Protobuf Schema (`pb/tzf/v1/tzinfo.proto`)
 
@@ -78,18 +88,49 @@ The topology-aware simplification engine. Key files:
 
 - `reduce.go`: `DoTopologyAwareWithStats` wraps `topology.DoWithStats` + `MustValidateForReduction`.
 - `compress.go`: polyline encode/decode for `Timezones` → `CompressedTimezones`.
-- `compress_topo.go`: polyline encode/decode for `TopoTimezones` → `CompressedTopoTimezones`; edge ID references pass through unchanged.
+- `compress_topo.go`: `CompressTopoTimezones` / `DecompressTopoTimezones` for `TopoTimezones` ↔ `CompressedTopoTimezones`; edge ID references pass through unchanged. `DecompressedPolylineBytesToPoints` decodes shared-edge bytes directly into `pb.Point` slices.
+
+### `internal/geom` Package
+
+Zero-external-dependency polygon geometry engine, replacing `tidwall/geojson`.
+
+| File | Content |
+|------|---------|
+| `geom.go` | `Point`, `Rect` basic types |
+| `ring.go` | `Ring`: open-ring representation, `ringAreaAndPerimeter` (Shoelace + perimeter) |
+| `ystripes.go` | `yStripesIndex`: horizontal stripe PIP index; stripe count = max(32, ⌊n × circularity⌋); 44× speedup over linear scan on 500-pt polygons |
+| `pip.go` | `raycastSeg` ray-casting (with `math.Nextafter` vertex deduplication); `ringContainsPoint` |
+| `polygon.go` | `Polygon` (exterior + holes); `NewPolygon`; `ContainsPoint`; `ContainsPoly` |
+
+`Finder` builds `geom.Polygon` objects at load time; queries are allocation-free.
+
+### `internal/polyf` Package
+
+Generic point-in-polygon finder, replacing `github.com/ringsaturn/polyf` + `mitchellh/mapstructure`.
+
+- `polyf.go`: `F[T]` (linear scan) and `RF[T]` (R-Tree–accelerated via `tidwall/rtree`) finders; `Item[T]` holds `*geom.Polygon` + value.
+- `featurecollection.go`: `BoundaryFile[T]` GeoJSON FeatureCollection parser using `json.RawMessage`; no reflection.
+
+Used by `preindex/exclude.go` and `convert/convert.go`.
+
+### `internal/polyline` Package
+
+Google Maps Encoded Polyline codec, replacing `github.com/twpayne/go-polyline`.
+
+- `polyline.go`: `EncodeCoords` / `DecodeCoords` (delta + zig-zag, scale=1e5, 2D).
+
+Used by `reduce/compress.go` and `reduce/compress_topo.go`.
 
 ### CLI Tools (`cmd/`)
 
 | Tool | Input | Output | Purpose |
 |------|-------|--------|---------|
+| `geojson2tzpb` | GeoJSON | `.bin` (Timezones) | GeoJSON → protobuf |
 | `reducetzpb` | `.bin` (Timezones) | `.topology.bin` | Topology-aware D-P simplification |
-| `deduplicatetzpb` | `.bin` (Timezones) | `.topo.bin` | Shared-edge deduplication |
-| `compresstopotzpb` | `.topo.bin` | `.compress.topo.bin` | Polyline compress topo format |
-| `compresstzpb` | `.bin` | `.compress.bin` | Polyline compress flat format |
-| `preindextzpb` | `.bin` | `.preindex.bin` | Tile pre-indexing |
-| `geojson2tzpb` | GeoJSON | `.bin` | GeoJSON → protobuf |
+| `deduplicatetzpb` | `.bin` (Timezones) | `.topo.bin` (TopoTimezones) | Shared-edge deduplication |
+| `compresstopotzpb` | `.topo.bin` | `.compress.topo.bin` (CompressedTopoTimezones) | Polyline compress topo format |
+| `compresstzpb` | `.bin` | `.compress.bin` (CompressedTimezones) | Polyline compress flat format |
+| `preindextzpb` | `.topology.bin` | `.preindex.bin` | Tile pre-indexing |
 
 ## Known Data Quirks
 
