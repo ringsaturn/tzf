@@ -1,3 +1,5 @@
+// Package topology provides topology-aware polygon simplification and
+// deduplication for timezone boundary data.
 package topology
 
 import (
