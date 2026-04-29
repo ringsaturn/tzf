@@ -156,7 +156,7 @@ func EnsureInside(geopolys []*geom.Polygon, tiles []maptile.Tile) []maptile.Tile
 // PreIndexTimezone will gen tiles at idxZoom level and merge up to aggZoom.
 //
 // The `idxZoom` level tiles will be removed before final return.
-func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep maptile.Zoom, dropEdgeLayger int) ([]*pb.PreindexTimezone, error) {
+func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep maptile.Zoom, dropEdgeLayer int) ([]*pb.PreindexTimezone, error) {
 	// Generate all tiles event not included in timezone shape
 	tiles := []maptile.Tile{}
 	for _, poly := range input.Polygons {
@@ -204,7 +204,7 @@ func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep m
 	insideTZTiles := EnsureInside(geopolys, tiles)
 
 	// Drop edge tiles
-	for range dropEdgeLayger {
+	for range dropEdgeLayer {
 		insideTZTiles = DropEdgeTiles(insideTZTiles)
 	}
 
@@ -240,7 +240,7 @@ func PreIndexTimezone(input *pb.Timezone, idxZoom, aggZoom, maxZoomLevelToKeep m
 	return ret, nil
 }
 
-func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep maptile.Zoom, dropEdgeLayger int) *pb.PreindexTimezones {
+func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep maptile.Zoom, dropEdgeLayer int) *pb.PreindexTimezones {
 	ret := &pb.PreindexTimezones{
 		IdxZoom: int32(idxZoom),
 		AggZoom: int32(aggZoom),
@@ -264,7 +264,7 @@ func PreIndexTimezones(input *pb.Timezones, idxZoom, aggZoom, maxZoomLevelToKeep
 	for _, tz := range input.Timezones {
 		tz := tz
 		errGroup.Go(func() error {
-			preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayger)
+			preindexes, err := PreIndexTimezone(tz, idxZoom, aggZoom, maxZoomLevelToKeep, dropEdgeLayer)
 			if err != nil {
 				return nil
 			}
