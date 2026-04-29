@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: tzf
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: XIAO
+    family-names: Han
+    email: ringsaturn.me@gmail.com
+repository-code: 'https://github.com/ringsaturn/tzf'
+url: 'https://project-tzf.ringsaturn.me'
+abstract: >-
+  Get timezone via longitude and latitude in Go in a fast
+  way
+keywords:
+  - timezone
+  - point-in-polygon
+license: MIT
+commit: fd520217cd7bec2f030f4e4c2f144f8c9f0a4624
+version: v1.1.0
+date-released: '2026-04-26'
