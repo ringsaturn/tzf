@@ -11,7 +11,7 @@ import (
 // global edge library. Rings are decomposed into segments that reference
 // shared edges by ID instead of repeating the point sequences.
 //
-// This is intended for full-precision source data (≈96 MB) where ≈52% of
+// This is intended for full-precision source data (≈96 MB) where ≈43% of
 // boundary edges are shared between adjacent timezone polygons. Deduplication
 // reduces the file size by approximately 30–35 MB while preserving full
 // geometric accuracy.

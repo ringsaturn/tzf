@@ -956,7 +956,7 @@ func (x *SharedEdge) GetPoints() []*Point {
 // Timezones in topology format with shared-edge deduplication.
 // Shared timezone boundaries are stored exactly once in shared_edges;
 // rings reference them by ID rather than duplicating the point sequences.
-// This format targets full-precision data where ~52% of boundary edges are
+// This format targets full-precision data where ~43% of boundary edges are
 // shared, reducing the 96 MB full dataset by ~30–35 MB.
 type TopoTimezones struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
