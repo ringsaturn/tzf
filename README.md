@@ -222,6 +222,9 @@ Below is a benchmark run on my MacBook Pro with Apple M3 Max:
 | JS via Wasm(browser only) | [`ringsaturn/tzf-wasm`](https://github.com/ringsaturn/tzf-wasm)         | build with tzf-rs   |
 | Online                    | [`ringsaturn/tzf-web`](https://github.com/ringsaturn/tzf-web)           | build with tzf-wasm |
 
+See [Project tzf](https://project-tzf.ringsaturn.me/docs/getting-started/) for
+more information.
+
 ## Thanks
 
 - <https://github.com/paulmach/orb>
