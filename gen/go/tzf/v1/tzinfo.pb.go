@@ -337,7 +337,6 @@ func (x *Timezones) GetVersion() string {
 	return ""
 }
 
-// Deprecated: use CompressedTopoPolygon instead.
 type CompressedPolygon struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Points        []byte                 `protobuf:"bytes,1,opt,name=points,proto3" json:"points,omitempty"`
@@ -391,8 +390,6 @@ func (x *CompressedPolygon) GetHoles() []*CompressedPolygon {
 }
 
 // CompressedTimezonesItem designed for binary file as small as possible.
-//
-// Deprecated: use CompressedTopoTimezone instead.
 type CompressedTimezone struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Data          []*CompressedPolygon   `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
@@ -445,7 +442,6 @@ func (x *CompressedTimezone) GetName() string {
 	return ""
 }
 
-// Deprecated: use CompressedTopoTimezones instead.
 type CompressedTimezones struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Method        CompressMethod         `protobuf:"varint,1,opt,name=method,proto3,enum=tzf.v1.CompressMethod" json:"method,omitempty"`

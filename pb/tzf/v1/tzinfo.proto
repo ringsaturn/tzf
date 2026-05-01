@@ -80,21 +80,18 @@ enum CompressMethod {
   COMPRESS_METHOD_POLYLINE = 1; // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 }
 
-// Deprecated: use CompressedTopoPolygon instead.
+
 message CompressedPolygon {
   bytes points = 1;
   repeated CompressedPolygon holes = 2;
 }
 
 // CompressedTimezonesItem designed for binary file as small as possible.
-//
-// Deprecated: use CompressedTopoTimezone instead.
 message CompressedTimezone {
   repeated CompressedPolygon data = 1;
   string name = 2;
 }
 
-// Deprecated: use CompressedTopoTimezones instead.
 message CompressedTimezones {
   CompressMethod method = 1;
   repeated CompressedTimezone timezones = 2;

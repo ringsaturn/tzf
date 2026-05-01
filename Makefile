@@ -1,5 +1,6 @@
 fmt:
 	go fmt ./...
+	buf format -w .
 
 .PHONY:pb
 pb:
