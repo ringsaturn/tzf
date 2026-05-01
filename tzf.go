@@ -249,21 +249,28 @@ func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geom.Point
 	return pts
 }
 
+// gridCandidates returns the candidate timezone indices for a given coordinate.
+// The second return value reports whether the grid is loaded; when false the
+// caller should fall back to a linear scan. When true but the slice is empty,
+// no timezone covers the point and the caller should return early.
+func (f *Finder) gridCandidates(lng float64, lat float64) ([]int32, bool) {
+	if f.grid == nil {
+		return nil, false
+	}
+	key := [2]int16{int16(math.Floor(lng)), int16(math.Floor(lat))}
+	return f.grid[key], true
+}
+
 // GetTimezoneName will use alphabet order and return first matched result.
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
-	if f.grid != nil {
-		key := [2]int16{int16(math.Floor(lng)), int16(math.Floor(lat))}
-		indices, ok := f.grid[key]
-		if !ok {
-			return ""
-		}
+	if candidates, ok := f.gridCandidates(lng, lat); ok {
 		// Single-candidate short-circuit: skip PIP when there is only one
 		// candidate and we are away from the antimeridian / pole edges.
-		if len(indices) == 1 && lng > -179 && lng < 179 && lat > -89 && lat < 89 {
-			return f.items[indices[0]].name
+		if len(candidates) == 1 && lng > -179 && lng < 179 && lat > -89 && lat < 89 {
+			return f.items[candidates[0]].name
 		}
 		p := geom.Point{X: lng, Y: lat}
-		for _, idx := range indices {
+		for _, idx := range candidates {
 			if f.items[idx].ContainsPoint(p) {
 				return f.items[idx].name
 			}
@@ -281,12 +288,22 @@ func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
 
 func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
 	p := geom.Point{X: lng, Y: lat}
-	res := []string{}
-	for i := range f.items {
-		if f.items[i].ContainsPoint(p) {
-			res = append(res, f.items[i].name)
+	var res []string
+
+	if candidates, ok := f.gridCandidates(lng, lat); ok {
+		for _, idx := range candidates {
+			if f.items[idx].ContainsPoint(p) {
+				res = append(res, f.items[idx].name)
+			}
+		}
+	} else {
+		for _, item := range f.items {
+			if item.ContainsPoint(p) {
+				res = append(res, item.name)
+			}
 		}
 	}
+
 	slices.Sort(res)
 	return res, nil
 }

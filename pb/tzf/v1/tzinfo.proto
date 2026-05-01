@@ -80,7 +80,6 @@ enum CompressMethod {
   COMPRESS_METHOD_POLYLINE = 1; // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 }
 
-
 message CompressedPolygon {
   bytes points = 1;
   repeated CompressedPolygon holes = 2;
