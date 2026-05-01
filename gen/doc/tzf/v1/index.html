@@ -215,6 +215,14 @@
                 </li>
               
                 <li>
+                  <a href="#tzf.v1.GridIndex"><span class="badge">M</span>GridIndex</a>
+                </li>
+              
+                <li>
+                  <a href="#tzf.v1.GridIndexCell"><span class="badge">M</span>GridIndexCell</a>
+                </li>
+              
+                <li>
                   <a href="#tzf.v1.InlinePoints"><span class="badge">M</span>InlinePoints</a>
                 </li>
               
@@ -309,7 +317,7 @@
         
       
         <h3 id="tzf.v1.CompressedPolygon">CompressedPolygon</h3>
-        <p></p>
+        <p>Deprecated: use CompressedTopoPolygon instead.</p>
 
         
           <table class="field-table">
@@ -409,7 +417,7 @@
         
       
         <h3 id="tzf.v1.CompressedTimezone">CompressedTimezone</h3>
-        <p>CompressedTimezonesItem designed for binary file as small as possible.</p>
+        <p>CompressedTimezonesItem designed for binary file as small as possible.</p><p>Deprecated: use CompressedTopoTimezone instead.</p>
 
         
           <table class="field-table">
@@ -440,7 +448,7 @@
         
       
         <h3 id="tzf.v1.CompressedTimezones">CompressedTimezones</h3>
-        <p></p>
+        <p>Deprecated: use CompressedTopoTimezones instead.</p>
 
         
           <table class="field-table">
@@ -540,7 +548,7 @@
         
       
         <h3 id="tzf.v1.CompressedTopoTimezones">CompressedTopoTimezones</h3>
-        <p>CompressedTopoTimezones combines shared-edge deduplication with polyline</p><p>coordinate compression. Shared edge point sequences and inline segments are</p><p>stored as polyline bytes instead of repeated Point messages, significantly</p><p>reducing file size on top of the deduplication savings.</p>
+        <p>CompressedTopoTimezones combines shared-edge deduplication with polyline</p><p>coordinate compression. Shared edge point sequences and inline segments are</p><p>stored as polyline bytes instead of repeated Point messages, significantly</p><p>reducing file size on top of the deduplication savings.</p><p>grid_index is an optional embedded 1°×1° candidate-reduction index built</p><p>at compress time. When present, Finder uses it to skip full linear scans.</p>
 
         
           <table class="field-table">
@@ -574,6 +582,82 @@
                   <td>version</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>grid_index</td>
+                  <td><a href="#tzf.v1.GridIndex">GridIndex</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.GridIndex">GridIndex</h3>
+        <p>GridIndex is the complete 1°×1° candidate-reduction index.</p><p>Only cells with at least one intersecting timezone are stored.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>cells</td>
+                  <td><a href="#tzf.v1.GridIndexCell">GridIndexCell</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+        <h3 id="tzf.v1.GridIndexCell">GridIndexCell</h3>
+        <p>GridIndexCell records the timezone indices that intersect a single 1°×1° cell.</p><p>tz_indices are 0-based positions into the timezones array of the companion</p><p>CompressedTopoTimezones (or Timezones) file, matching the order used by Finder.items.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>lng</td>
+                  <td><a href="#sint32">sint32</a></td>
+                  <td></td>
+                  <td><p>floor(longitude), -180..179 </p></td>
+                </tr>
+              
+                <tr>
+                  <td>lat</td>
+                  <td><a href="#sint32">sint32</a></td>
+                  <td></td>
+                  <td><p>floor(latitude), -90..89 </p></td>
+                </tr>
+              
+                <tr>
+                  <td>tz_indices</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td>repeated</td>
                   <td><p> </p></td>
                 </tr>
               

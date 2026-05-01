@@ -6,12 +6,14 @@ package tzf
 
 import (
 	"errors"
+	"math"
 	"slices"
 
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/internal/gridindex"
 	"github.com/ringsaturn/tzf/reduce"
 	"google.golang.org/protobuf/proto"
 )
@@ -79,6 +81,10 @@ type Finder struct {
 	reduced bool
 	opt     *Option
 	version string
+	// grid maps (floor(lng), floor(lat)) → candidate item indices.
+	// Populated automatically when loading CompressedTopoTimezones that
+	// contains an embedded GridIndex.
+	grid map[[2]int16][]int32
 }
 
 func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (F, error) {
@@ -140,6 +146,7 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
 	return finder, nil
 }
 
+// Deprecated: use NewFinderFromCompressedTopo instead and update data source.
 func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) (F, error) {
 	tzs, err := reduce.Decompress(input)
 	if err != nil {
@@ -208,12 +215,16 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 		items = append(items, newItem)
 	}
 
-	return &Finder{
+	f := &Finder{
 		items:   items,
 		names:   names,
 		opt:     opt,
 		version: input.Version,
-	}, nil
+	}
+	if input.GridIndex != nil {
+		f.grid = gridindex.DecodeToMap(input.GridIndex)
+	}
+	return f, nil
 }
 
 // expandCompressedRing expands a compressed ring's segments into a flat geom.Point
@@ -240,6 +251,25 @@ func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geom.Point
 
 // GetTimezoneName will use alphabet order and return first matched result.
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
+	if f.grid != nil {
+		key := [2]int16{int16(math.Floor(lng)), int16(math.Floor(lat))}
+		indices, ok := f.grid[key]
+		if !ok {
+			return ""
+		}
+		// Single-candidate short-circuit: skip PIP when there is only one
+		// candidate and we are away from the antimeridian / pole edges.
+		if len(indices) == 1 && lng > -179 && lng < 179 && lat > -89 && lat < 89 {
+			return f.items[indices[0]].name
+		}
+		p := geom.Point{X: lng, Y: lat}
+		for _, idx := range indices {
+			if f.items[idx].ContainsPoint(p) {
+				return f.items[idx].name
+			}
+		}
+		return ""
+	}
 	p := geom.Point{X: lng, Y: lat}
 	for _, item := range f.items {
 		if item.ContainsPoint(p) {

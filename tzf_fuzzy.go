@@ -11,31 +11,39 @@ import (
 	"github.com/ringsaturn/tzf/internal/maps"
 )
 
+// tileID packs (x, y, z) into a single uint64 key.
+// Layout: bits 56-63 = zoom (0-255), bits 28-55 = x (up to 2^28), bits 0-27 = y (up to 2^28).
+// This covers all OSM zoom levels (0-28) without collision.
+func tileID(x, y uint32, z maptile.Zoom) uint64 {
+	return uint64(z)<<56 | uint64(x)<<28 | uint64(y)
+}
+
+func tileFromID(id uint64) maptile.Tile {
+	return maptile.New(uint32(id>>28)&0x0FFFFFFF, uint32(id)&0x0FFFFFFF, maptile.Zoom(id>>56))
+}
+
 // FuzzyFinder use a tile map to store timezone name. Data are made by
 // [github.com/ringsaturn/tzf/cmd/preindextzpb] which powerd by
 // [github.com/ringsaturn/tzf/preindex.PreIndexTimezones].
 type FuzzyFinder struct {
 	idxZoom int
 	aggZoom int
-	m       map[maptile.Tile][]string // timezones may have common area
+	m       map[uint64][]string // key = tileID(x,y,z); timezones may have common area
 	version string
 	names   []string
 }
 
 func NewFuzzyFinderFromPB(input *pb.PreindexTimezones) (F, error) {
 	f := &FuzzyFinder{
-		m:       make(map[maptile.Tile][]string),
+		m:       make(map[uint64][]string),
 		idxZoom: int(input.IdxZoom),
 		aggZoom: int(input.AggZoom),
 		version: input.Version,
 	}
 	namesMap := map[string]bool{}
 	for _, item := range input.Keys {
-		tile := maptile.New(uint32(item.X), uint32(item.Y), maptile.Zoom(item.Z))
-		if _, ok := f.m[tile]; !ok {
-			f.m[tile] = make([]string, 0)
-		}
-		f.m[tile] = append(f.m[tile], item.Name)
+		k := tileID(uint32(item.X), uint32(item.Y), maptile.Zoom(item.Z))
+		f.m[k] = append(f.m[k], item.Name)
 		namesMap[item.Name] = true
 	}
 	f.names = maps.Keys(namesMap)
@@ -54,8 +62,8 @@ func (f *FuzzyFinder) GetTimezoneName(lng float64, lat float64) string {
 func (f *FuzzyFinder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
 	p := orb.Point{lng, lat}
 	for z := f.aggZoom; z <= f.idxZoom; z++ {
-		key := maptile.At(p, maptile.Zoom(z))
-		v, ok := f.m[key]
+		t := maptile.At(p, maptile.Zoom(z))
+		v, ok := f.m[tileID(t.X, t.Y, t.Z)]
 		if ok {
 			return v, nil
 		}
@@ -108,9 +116,9 @@ func fuzzyFeatureItem(name string, tiles []maptile.Tile) *convert.FeatureItem {
 // polygon is the bounding box of one preindex tile.
 func (f *FuzzyFinder) GetTZGeoJSON(tzName string) (*convert.FeatureItem, error) {
 	var tiles []maptile.Tile
-	for tile, names := range f.m {
+	for id, names := range f.m {
 		if slices.Contains(names, tzName) {
-			tiles = append(tiles, tile)
+			tiles = append(tiles, tileFromID(id))
 		}
 	}
 	if len(tiles) == 0 {
@@ -123,7 +131,8 @@ func (f *FuzzyFinder) GetTZGeoJSON(tzName string) (*convert.FeatureItem, error) 
 // each polygon is the bounding box of one preindex tile.
 func (f *FuzzyFinder) GetGeoJSON() *convert.BoundaryFile {
 	nameToTiles := make(map[string][]maptile.Tile, len(f.names))
-	for tile, names := range f.m {
+	for id, names := range f.m {
+		tile := tileFromID(id)
 		for _, n := range names {
 			nameToTiles[n] = append(nameToTiles[n], tile)
 		}

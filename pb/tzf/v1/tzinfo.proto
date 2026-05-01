@@ -80,17 +80,21 @@ enum CompressMethod {
   COMPRESS_METHOD_POLYLINE = 1; // https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 }
 
+// Deprecated: use CompressedTopoPolygon instead.
 message CompressedPolygon {
   bytes points = 1;
   repeated CompressedPolygon holes = 2;
 }
 
 // CompressedTimezonesItem designed for binary file as small as possible.
+// 
+// Deprecated: use CompressedTopoTimezone instead.
 message CompressedTimezone {
   repeated CompressedPolygon data = 1;
   string name = 2;
 }
 
+// Deprecated: use CompressedTopoTimezones instead.
 message CompressedTimezones {
   CompressMethod method = 1;
   repeated CompressedTimezone timezones = 2;
@@ -203,9 +207,28 @@ message CompressedTopoTimezone {
 // coordinate compression. Shared edge point sequences and inline segments are
 // stored as polyline bytes instead of repeated Point messages, significantly
 // reducing file size on top of the deduplication savings.
+// grid_index is an optional embedded 1°×1° candidate-reduction index built
+// at compress time. When present, Finder uses it to skip full linear scans.
 message CompressedTopoTimezones {
   CompressMethod method = 1;
   repeated CompressedSharedEdge shared_edges = 2;
   repeated CompressedTopoTimezone timezones = 3;
   string version = 4;
+  GridIndex grid_index = 5;
+}
+
+// GridIndexCell records the timezone indices that intersect a single 1°×1° cell.
+// tz_indices are 0-based positions into the timezones array of the companion
+// CompressedTopoTimezones (or Timezones) file, matching the order used by Finder.items.
+message GridIndexCell {
+  sint32 lng = 1; // floor(longitude), -180..179
+  sint32 lat = 2; // floor(latitude), -90..89
+  repeated uint32 tz_indices = 3;
+}
+
+// GridIndex is the complete 1°×1° candidate-reduction index.
+// Only cells with at least one intersecting timezone are stored.
+message GridIndex {
+  repeated GridIndexCell cells = 1;
+  string version = 2;
 }
