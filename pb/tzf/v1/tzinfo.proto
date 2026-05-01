@@ -87,7 +87,7 @@ message CompressedPolygon {
 }
 
 // CompressedTimezonesItem designed for binary file as small as possible.
-// 
+//
 // Deprecated: use CompressedTopoTimezone instead.
 message CompressedTimezone {
   repeated CompressedPolygon data = 1;

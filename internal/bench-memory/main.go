@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	tzfdist "github.com/ringsaturn/tzf-dist"
 	"github.com/ringsaturn/tzf"
+	tzfdist "github.com/ringsaturn/tzf-dist"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"google.golang.org/protobuf/proto"
 )
