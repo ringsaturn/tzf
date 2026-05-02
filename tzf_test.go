@@ -44,6 +44,11 @@ var fullFinderWithoutPreindex tzf.F = func() tzf.F {
 	return _finder
 }()
 
+// finderWithGrid is the topology finder; the GridIndex is now embedded in the
+// data file and auto-loaded by NewFinderFromCompressedTopo, so this is
+// equivalent to finder.
+var finderWithGrid tzf.F = finder
+
 func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
 	b.ReportAllocs()
 	bench := hrtesting.NewBenchmark(b)
@@ -68,6 +73,15 @@ func BenchmarkGetTimezoneNameAtEdge_FullFinderWithoutPreindex(b *testing.B) {
 	defer bench.Report()
 	for bench.Next() {
 		_ = fullFinderWithoutPreindex.GetTimezoneName(110.8571, 43.1483)
+	}
+}
+
+func BenchmarkGetTimezoneNameAtEdge_WithGrid(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		_ = finderWithGrid.GetTimezoneName(110.8571, 43.1483)
 	}
 }
 
@@ -118,6 +132,16 @@ func BenchmarkGetTimezoneName_Random_WorldCities_FullFinderWithoutPreindex(b *te
 	for bench.Next() {
 		p := gocitiesjson.Random()
 		_ = fullFinderWithoutPreindex.GetTimezoneName(p.Lng, p.Lat)
+	}
+}
+
+func BenchmarkGetTimezoneName_Random_WorldCities_WithGrid(b *testing.B) {
+	b.ReportAllocs()
+	bench := hrtesting.NewBenchmark(b)
+	defer bench.Report()
+	for bench.Next() {
+		p := gocitiesjson.Random()
+		_ = finderWithGrid.GetTimezoneName(p.Lng, p.Lat)
 	}
 }
 

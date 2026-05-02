@@ -59,10 +59,9 @@ func NewDefaultFinder() (F, error) {
 	return f, nil
 }
 
-// newDefaultFinderFromCompressedTopo builds a [DefaultFinder] from the tzf-dist data files:
-//   - preindex:       combined-with-oceans.topology.preindex.bin  → [pb.PreindexTimezones]
-//   - compressedTopo: combined-with-oceans.topology.compress.topo.bin or
-//     combined-with-oceans.compress.topo.bin → [pb.CompressedTopoTimezones]
+// newDefaultFinderFromCompressedTopo builds a [DefaultFinder] from the tzf-dist data files.
+// The GridIndex embedded in compressedTopo (if present) is loaded automatically by
+// [NewFinderFromCompressedTopo].
 func newDefaultFinderFromCompressedTopo(preindex *pb.PreindexTimezones, compressedTopo *pb.CompressedTopoTimezones) (F, error) {
 	fuzzyFinder, err := NewFuzzyFinderFromPB(preindex)
 	if err != nil {

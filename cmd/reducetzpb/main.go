@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/reduce"
 	"github.com/ringsaturn/tzf/internal/topology"
+	"github.com/ringsaturn/tzf/reduce"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -41,8 +41,8 @@ func main() {
 	}
 
 	var (
-		output      *pb.Timezones
-		topoStats   topology.Stats
+		output       *pb.Timezones
+		topoStats    topology.Stats
 		hasTopoStats bool
 	)
 	if *topologyAware {

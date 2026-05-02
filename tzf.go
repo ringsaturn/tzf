@@ -6,12 +6,14 @@ package tzf
 
 import (
 	"errors"
+	"math"
 	"slices"
 
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/internal/gridindex"
 	"github.com/ringsaturn/tzf/reduce"
 	"google.golang.org/protobuf/proto"
 )
@@ -79,6 +81,10 @@ type Finder struct {
 	reduced bool
 	opt     *Option
 	version string
+	// grid maps (floor(lng), floor(lat)) → candidate item indices.
+	// Populated automatically when loading CompressedTopoTimezones that
+	// contains an embedded GridIndex.
+	grid map[[2]int16][]int32
 }
 
 func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (F, error) {
@@ -140,6 +146,7 @@ func NewFinderFromPB(input *pb.Timezones, opts ...OptionFunc) (F, error) {
 	return finder, nil
 }
 
+// Deprecated: use NewFinderFromCompressedTopo instead and update data source.
 func NewFinderFromCompressed(input *pb.CompressedTimezones, opts ...OptionFunc) (F, error) {
 	tzs, err := reduce.Decompress(input)
 	if err != nil {
@@ -208,12 +215,16 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 		items = append(items, newItem)
 	}
 
-	return &Finder{
+	f := &Finder{
 		items:   items,
 		names:   names,
 		opt:     opt,
 		version: input.Version,
-	}, nil
+	}
+	if input.GridIndex != nil {
+		f.grid = gridindex.DecodeToMap(input.GridIndex)
+	}
+	return f, nil
 }
 
 // expandCompressedRing expands a compressed ring's segments into a flat geom.Point
@@ -238,8 +249,34 @@ func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geom.Point
 	return pts
 }
 
+// gridCandidates returns the candidate timezone indices for a given coordinate.
+// The second return value reports whether the grid is loaded; when false the
+// caller should fall back to a linear scan. When true but the slice is empty,
+// no timezone covers the point and the caller should return early.
+func (f *Finder) gridCandidates(lng float64, lat float64) ([]int32, bool) {
+	if f.grid == nil {
+		return nil, false
+	}
+	key := [2]int16{int16(math.Floor(lng)), int16(math.Floor(lat))}
+	return f.grid[key], true
+}
+
 // GetTimezoneName will use alphabet order and return first matched result.
 func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
+	if candidates, ok := f.gridCandidates(lng, lat); ok {
+		// Single-candidate short-circuit: skip PIP when there is only one
+		// candidate and we are away from the antimeridian / pole edges.
+		if len(candidates) == 1 && lng > -179 && lng < 179 && lat > -89 && lat < 89 {
+			return f.items[candidates[0]].name
+		}
+		p := geom.Point{X: lng, Y: lat}
+		for _, idx := range candidates {
+			if f.items[idx].ContainsPoint(p) {
+				return f.items[idx].name
+			}
+		}
+		return ""
+	}
 	p := geom.Point{X: lng, Y: lat}
 	for _, item := range f.items {
 		if item.ContainsPoint(p) {
@@ -251,12 +288,22 @@ func (f *Finder) GetTimezoneName(lng float64, lat float64) string {
 
 func (f *Finder) GetTimezoneNames(lng float64, lat float64) ([]string, error) {
 	p := geom.Point{X: lng, Y: lat}
-	res := []string{}
-	for i := range f.items {
-		if f.items[i].ContainsPoint(p) {
-			res = append(res, f.items[i].name)
+	var res []string
+
+	if candidates, ok := f.gridCandidates(lng, lat); ok {
+		for _, idx := range candidates {
+			if f.items[idx].ContainsPoint(p) {
+				res = append(res, f.items[idx].name)
+			}
+		}
+	} else {
+		for _, item := range f.items {
+			if item.ContainsPoint(p) {
+				res = append(res, item.name)
+			}
 		}
 	}
+
 	slices.Sort(res)
 	return res, nil
 }

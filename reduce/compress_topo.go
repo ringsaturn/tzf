@@ -2,6 +2,7 @@ package reduce
 
 import (
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/gridindex"
 )
 
 // CompressTopoTimezones converts a TopoTimezones into CompressedTopoTimezones
@@ -27,6 +28,8 @@ func CompressTopoTimezones(input *pb.TopoTimezones) *pb.CompressedTopoTimezones 
 		}
 		output.Timezones = append(output.Timezones, outTz)
 	}
+
+	output.GridIndex = gridindex.BuildFromCompressedTopoTimezones(output)
 
 	return output
 }
