@@ -185,7 +185,7 @@ Here is what has been done to improve performance:
    [geojson](https://github.com/tidwall/geojson)) with a YStripes index
    (inspired by Josh Baker's [`tg`](https://github.com/tidwall/tg)'s ) to verify
    whether a polygon contains a point. Also a grid-index to quickly find
-   candidate polygons, inspired Aaron Roney's
+   candidate polygons, inspired by Aaron Roney's
    [rtz](https://github.com/twitchax/rtz).
 
 That's all. There are no black magic tricks inside the tzf package.
