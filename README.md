@@ -194,22 +194,22 @@ Below is a benchmark run on my MacBook Pro with Apple M3 Max:
 
 | Target        | Dataset                            | Scenario                               | Median (ns) | p99 (ns) | Approx throughput (ops/s) | Memory (MiB) |
 | ------------- | ---------------------------------- | -------------------------------------- | ----------: | -------: | ------------------------: | -----------: |
-| DefaultFinder | topology-simplified + preindex     | edge case · GetTimezoneName            |       459.0 |   1667.0 |                   1722.4K |        80.40 |
-| FuzzyFinder   | preindex                           | edge case · GetTimezoneName            |       167.0 |    250.0 |                   4651.2K |         7.90 |
-| Finder        | topology-simplified                | edge case · GetTimezoneName            |       250.0 |   1042.0 |                   3000.3K |        72.70 |
-| FullFinder    | full-precision + preindex          | edge case · GetTimezoneName            |       458.0 |   1250.0 |                   1880.4K |       428.50 |
-| Finder        | full-precision                     | edge case · GetTimezoneName            |       250.0 |   1042.0 |                   2905.3K |       420.70 |
-| DefaultFinder | topology-simplified + preindex     | random world cities · GetTimezoneName  |       166.0 |    750.0 |                   4332.8K |        80.40 |
-| FuzzyFinder   | preindex                           | random world cities · GetTimezoneName  |       166.0 |    250.0 |                   5449.6K |         7.90 |
-| Finder        | topology-simplified                | random world cities · GetTimezoneName  |       208.0 |   1125.0 |                   3430.5K |        72.70 |
-| FullFinder    | full-precision + preindex          | random world cities · GetTimezoneName  |       167.0 |    708.0 |                   4310.3K |       428.50 |
-| Finder        | full-precision                     | random world cities · GetTimezoneName  |       209.0 |   1083.0 |                   3263.7K |       420.70 |
-| Finder        | topology-simplified + GridIndex    | random world cities · GetTimezoneName  |       208.0 |   1125.0 |                   3454.2K |        72.70 |
-| Finder        | topology-simplified (no GridIndex) | random world cities · GetTimezoneName  |      1833.0 |   2750.0 |                    624.6K |        67.00 |
-| DefaultFinder | topology-simplified + preindex     | random world cities · GetTimezoneNames |       416.0 |   1333.0 |                   1994.4K |        80.40 |
-| FuzzyFinder   | preindex                           | random world cities · GetTimezoneNames |       166.0 |    250.0 |                   5431.8K |         7.90 |
-| Finder        | topology-simplified                | random world cities · GetTimezoneNames |       416.0 |   1292.0 |                   2015.7K |        72.70 |
-| FullFinder    | full-precision + preindex          | random world cities · GetTimezoneNames |       458.0 |   1459.0 |                   1742.8K |       428.50 |
+| DefaultFinder | topology-simplified + preindex     | edge case · GetTimezoneName            |       500.0 |   1250.0 |                   1694.9K |        74.90 |
+| FuzzyFinder   | preindex                           | edge case · GetTimezoneName            |       250.0 |    375.0 |                   3521.1K |         2.40 |
+| Finder        | topology-simplified                | edge case · GetTimezoneName            |       250.0 |    875.0 |                   3022.1K |        72.70 |
+| FullFinder    | full-precision + preindex          | edge case · GetTimezoneName            |       542.0 |   1375.0 |                   1586.3K |       422.90 |
+| Finder        | full-precision                     | edge case · GetTimezoneName            |       292.0 |   1167.0 |                   2678.1K |       420.70 |
+| DefaultFinder | topology-simplified + preindex     | random world cities · GetTimezoneName  |       167.0 |    791.0 |                   3855.1K |        74.90 |
+| FuzzyFinder   | preindex                           | random world cities · GetTimezoneName  |       167.0 |    333.0 |                   4608.3K |         2.40 |
+| Finder        | topology-simplified                | random world cities · GetTimezoneName  |       209.0 |   1250.0 |                   3076.0K |        72.70 |
+| FullFinder    | full-precision + preindex          | random world cities · GetTimezoneName  |       208.0 |    917.0 |                   3527.3K |       422.90 |
+| Finder        | full-precision                     | random world cities · GetTimezoneName  |       250.0 |   1167.0 |                   2953.3K |       420.70 |
+| Finder        | topology-simplified + GridIndex    | random world cities · GetTimezoneName  |       209.0 |   1167.0 |                   3202.0K |        72.70 |
+| Finder        | topology-simplified (no GridIndex) | random world cities · GetTimezoneName  |      1833.0 |   2875.0 |                    612.4K |        67.00 |
+| DefaultFinder | topology-simplified + preindex     | random world cities · GetTimezoneNames |       416.0 |   1375.0 |                   1956.9K |        74.90 |
+| FuzzyFinder   | preindex                           | random world cities · GetTimezoneNames |       208.0 |    334.0 |                   4347.8K |         2.40 |
+| Finder        | topology-simplified                | random world cities · GetTimezoneNames |       417.0 |   1375.0 |                   1931.2K |        72.70 |
+| FullFinder    | full-precision + preindex          | random world cities · GetTimezoneNames |       459.0 |   1750.0 |                   1623.1K |       422.90 |
 
 - <https://ringsaturn.github.io/tz-benchmark/> displays a continuous benchmark
   comparison with other packages.
@@ -248,7 +248,8 @@ under the
 same as
 [`evansiroky/timezone-boundary-builder`](https://github.com/evansiroky/timezone-boundary-builder)
 
-[^anti_csdn]: This license is to prevent the use of this project by CSDN, has no
+[^anti_csdn]:
+    This license is to prevent the use of this project by CSDN, has no
     effect on other use cases.
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fringsaturn%2Ftzf.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fringsaturn%2Ftzf?ref=badge_large)
