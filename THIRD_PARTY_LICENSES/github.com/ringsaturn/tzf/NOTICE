@@ -7,10 +7,6 @@ google.golang.org/protobuf
 License: MIT
 Copyright (c) 2018 The Go Authors. All rights reserved.
 
-go.mongodb.org/mongo-driver/v2
-License: Apache
-      "Licensor" shall mean the copyright owner or entity authorized by
-
 github.com/tidwall/geoindex/child
 License: MIT
 Copyright (c) 2018 Josh Baker
