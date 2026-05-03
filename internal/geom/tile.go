@@ -2,16 +2,9 @@ package geom
 
 import "math"
 
-// TileXY returns the slippy-map tile column (x) and row (y) for (lng, lat)
+// tileXY returns the slippy-map tile column (x) and row (y) for (lng, lat)
 // at the given zoom level, using the Web Mercator projection (OSM convention).
-//
-// To derive the tile at any coarser zoom z without repeating the transcendental
-// math, right-shift the high-zoom result:
-//
-//	px, py := TileXY(lng, lat, maxZoom)
-//	x = px >> (maxZoom - z)
-//	y = py >> (maxZoom - z)
-func TileXY(lng, lat float64, zoom uint) (x, y uint32) {
+func tileXY(lng, lat float64, zoom uint) (x, y uint32) {
 	n := float64(uint32(1) << zoom)
 
 	x = uint32((lng/360.0 + 0.5) * n)
@@ -28,15 +21,53 @@ func TileXY(lng, lat float64, zoom uint) (x, y uint32) {
 	return
 }
 
-// TileBound returns the (lngMin, latMin, lngMax, latMax) geographic bounding
-// box of the slippy-map tile at (x, y, zoom), using the Web Mercator inverse.
-func TileBound(x, y uint32, zoom uint) (lngMin, latMin, lngMax, latMax float64) {
-	n := float64(uint32(1) << zoom)
+// TileID packs (x, y, z) into a single TileID.
+// Layout: bits 56-63 = zoom (0-255), bits 28-55 = x (up to 2^28), bits 0-27 = y (up to 2^28).
+// This covers all OSM zoom levels (0-28) without collision.
+type TileID uint64
 
-	lngMin = float64(x)/n*360.0 - 180.0
-	lngMax = float64(x+1)/n*360.0 - 180.0
+func NewTileID(lng float64, lat float64, zoom uint) TileID {
+	x, y := tileXY(lng, lat, zoom)
+	return NewTileIDFromXYZ(x, y, uint8(zoom))
+}
 
-	latMax = math.Atan(math.Sinh(math.Pi*(1-2*float64(y)/n))) * 180.0 / math.Pi
-	latMin = math.Atan(math.Sinh(math.Pi*(1-2*float64(y+1)/n))) * 180.0 / math.Pi
-	return
+func NewTileIDFromXYZ(x, y uint32, z uint8) TileID {
+	return TileID(uint64(z)<<56 | uint64(x)<<28 | uint64(y))
+}
+func (t TileID) XYZ() (x, y uint32, z uint8) {
+	return uint32(t>>28) & 0x0FFFFFFF, uint32(t) & 0x0FFFFFFF, uint8(t >> 56)
+}
+
+func (t TileID) Polygon() [][2]float64 {
+	x, y, z := t.XYZ()
+
+	n := float64(uint32(1) << z)
+
+	lngMin := float64(x)/n*360.0 - 180.0
+	lngMax := float64(x+1)/n*360.0 - 180.0
+
+	latMax := math.Atan(math.Sinh(math.Pi*(1-2*float64(y)/n))) * 180.0 / math.Pi
+	latMin := math.Atan(math.Sinh(math.Pi*(1-2*float64(y+1)/n))) * 180.0 / math.Pi
+
+	return [][2]float64{
+		{lngMin, latMin},
+		{lngMax, latMin},
+		{lngMax, latMax},
+		{lngMin, latMax},
+		{lngMin, latMin},
+	}
+}
+
+func (t TileID) Shift(shift uint8) TileID {
+	x, y, z := t.XYZ()
+	if shift > z {
+		return 0
+	}
+	// To derive the tile at any coarser zoom z without repeating the transcendental
+	// math, right-shift the high-zoom result:
+	//
+	//	px, py := tileXY(lng, lat, maxZoom)
+	//	x = px >> (maxZoom - z)
+	//	y = py >> (maxZoom - z)
+	return NewTileIDFromXYZ(x>>shift, y>>shift, z-shift)
 }
