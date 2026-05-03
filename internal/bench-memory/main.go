@@ -45,7 +45,7 @@ func main() {
 		runtime.KeepAlive(f)
 	}
 
-	// Finder (lite, topology compress topo)
+	// Finder (lite, topology compress topo, with GridIndex)
 	before = readHeap()
 	{
 		input := &pb.CompressedTopoTimezones{}
@@ -58,6 +58,23 @@ func main() {
 		}
 		after = readHeap()
 		report("Finder", before, after)
+		runtime.KeepAlive(f)
+	}
+
+	// FinderNoGrid (lite, topology compress topo, GridIndex stripped)
+	before = readHeap()
+	{
+		input := &pb.CompressedTopoTimezones{}
+		if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
+			panic(err)
+		}
+		input.GridIndex = nil
+		f, err := tzf.NewFinderFromCompressedTopo(input)
+		if err != nil {
+			panic(err)
+		}
+		after = readHeap()
+		report("FinderNoGrid", before, after)
 		runtime.KeepAlive(f)
 	}
 

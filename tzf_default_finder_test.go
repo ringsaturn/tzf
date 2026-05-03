@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/loov/hrtime/hrtesting"
-	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
 )
 
@@ -49,29 +47,15 @@ func ExampleDefaultFinder_TimezoneNames() {
 
 func BenchmarkDefaultFinder_GetTimezoneNameAtEdge(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = defaultFinder.GetTimezoneName(110.8571, 43.1483)
-	}
+	benchEdge(b, defaultFinder)
 }
 
 func BenchmarkDefaultFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_ = defaultFinder.GetTimezoneName(p.Lng, p.Lat)
-	}
+	benchRandom(b, defaultFinder)
 }
 
 func BenchmarkDefaultFinder_GetTimezoneNames_Random_WorldCities(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_, _ = defaultFinder.GetTimezoneNames(p.Lng, p.Lat)
-	}
+	benchRandomNames(b, defaultFinder)
 }

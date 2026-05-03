@@ -2,9 +2,10 @@ package tzf_test
 
 import (
 	"fmt"
+	"slices"
 	"testing"
+	"time"
 
-	"github.com/loov/hrtime/hrtesting"
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
 	tzfdist "github.com/ringsaturn/tzf-dist"
@@ -44,105 +45,154 @@ var fullFinderWithoutPreindex tzf.F = func() tzf.F {
 	return _finder
 }()
 
-// finderWithGrid is the topology finder; the GridIndex is now embedded in the
-// data file and auto-loaded by NewFinderFromCompressedTopo, so this is
-// equivalent to finder.
-var finderWithGrid tzf.F = finder
+// finderNoGrid is a Finder loaded without a GridIndex, used to measure the
+// tail-latency impact of GridIndex in benchmark comparisons.
+var finderNoGrid tzf.F = func() tzf.F {
+	input := &pb.CompressedTopoTimezones{}
+	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
+		panic(err)
+	}
+	input.GridIndex = nil
+	f, err := tzf.NewFinderFromCompressedTopo(input)
+	if err != nil {
+		panic(err)
+	}
+	return f
+}()
+
+// Benchmark helpers use time.Now() per-call timing (nanosecond precision) and
+// report p50/p90/p99 via b.ReportMetric. Output format is parsed by
+// scripts/bench2summary.py.
+
+const benchPoolSize = 10_000
+
+const edgeCasePoolSize = 4_000
+
+func benchEdge(b *testing.B, f tzf.F) {
+	b.Helper()
+	pool := makeEdgePool(edgeCasePoolSize)
+	ns := make([]int64, b.N)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		p := pool[i%edgeCasePoolSize]
+		start := time.Now()
+		_ = f.GetTimezoneName(p.Lng, p.Lat)
+		ns[i] = time.Since(start).Nanoseconds()
+	}
+	b.StopTimer()
+	reportPercentiles(b, ns)
+}
+
+func benchRandom(b *testing.B, f tzf.F) {
+	b.Helper()
+	pool := makePool(benchPoolSize)
+	ns := make([]int64, b.N)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		p := pool[i%benchPoolSize]
+		start := time.Now()
+		_ = f.GetTimezoneName(p.Lng, p.Lat)
+		ns[i] = time.Since(start).Nanoseconds()
+	}
+	b.StopTimer()
+	reportPercentiles(b, ns)
+}
+
+func benchRandomNames(b *testing.B, f tzf.F) {
+	b.Helper()
+	pool := makePool(benchPoolSize)
+	ns := make([]int64, b.N)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		p := pool[i%benchPoolSize]
+		start := time.Now()
+		_, _ = f.GetTimezoneNames(p.Lng, p.Lat)
+		ns[i] = time.Since(start).Nanoseconds()
+	}
+	b.StopTimer()
+	reportPercentiles(b, ns)
+}
+
+func makePool(n int) []*gocitiesjson.City {
+	pool := make([]*gocitiesjson.City, n)
+	for i := range pool {
+		pool[i] = gocitiesjson.Random()
+	}
+	return pool
+}
+
+func makeEdgePool(n int) []*gocitiesjson.City {
+	pool := make([]*gocitiesjson.City, 0, n)
+	for city := range gocitiesjson.All(true) {
+		fuzzyRes := fuzzyFinder.GetTimezoneName(city.Lng, city.Lat)
+		if fuzzyRes == "" {
+			pool = append(pool, city)
+		}
+
+		if len(pool) >= n {
+			break
+		}
+	}
+	return pool
+}
+
+func reportPercentiles(b *testing.B, ns []int64) {
+	b.Helper()
+	slices.Sort(ns)
+	n := len(ns)
+	b.ReportMetric(float64(ns[n/2]), "ns/p50")
+	b.ReportMetric(float64(ns[n*9/10]), "ns/p90")
+	b.ReportMetric(float64(ns[min(n*99/100, n-1)]), "ns/p99")
+}
 
 func BenchmarkGetTimezoneNameAtEdge(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = finder.GetTimezoneName(110.8571, 43.1483)
-	}
+	benchEdge(b, finder)
 }
 
 func BenchmarkGetTimezoneNameAtEdge_FullFinder(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = fullFinder.GetTimezoneName(110.8571, 43.1483)
-	}
+	benchEdge(b, fullFinder)
 }
 
 func BenchmarkGetTimezoneNameAtEdge_FullFinderWithoutPreindex(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = fullFinderWithoutPreindex.GetTimezoneName(110.8571, 43.1483)
-	}
-}
-
-func BenchmarkGetTimezoneNameAtEdge_WithGrid(b *testing.B) {
-	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = finderWithGrid.GetTimezoneName(110.8571, 43.1483)
-	}
+	benchEdge(b, fullFinderWithoutPreindex)
 }
 
 func BenchmarkGetTimezoneName_Random_WorldCities(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_ = finder.GetTimezoneName(p.Lng, p.Lat)
-	}
+	benchRandom(b, finder)
 }
 
 func BenchmarkGetTimezoneNames_Random_WorldCities(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_, _ = finder.GetTimezoneNames(p.Lng, p.Lat)
-	}
+	benchRandomNames(b, finder)
 }
 
 func BenchmarkGetTimezoneName_Random_WorldCities_FullFinder(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_ = fullFinder.GetTimezoneName(p.Lng, p.Lat)
-	}
+	benchRandom(b, fullFinder)
 }
 
 func BenchmarkGetTimezoneNames_Random_WorldCities_FullFinder(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_, _ = fullFinder.GetTimezoneNames(p.Lng, p.Lat)
-	}
+	benchRandomNames(b, fullFinder)
 }
 
 func BenchmarkGetTimezoneName_Random_WorldCities_FullFinderWithoutPreindex(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_ = fullFinderWithoutPreindex.GetTimezoneName(p.Lng, p.Lat)
-	}
+	benchRandom(b, fullFinderWithoutPreindex)
 }
 
-func BenchmarkGetTimezoneName_Random_WorldCities_WithGrid(b *testing.B) {
+func BenchmarkGetTimezoneName_Random_WorldCities_GridIndex_WithGrid(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_ = finderWithGrid.GetTimezoneName(p.Lng, p.Lat)
-	}
+	benchRandom(b, finder)
+}
+
+func BenchmarkGetTimezoneName_Random_WorldCities_GridIndex_NoGrid(b *testing.B) {
+	b.ReportAllocs()
+	benchRandom(b, finderNoGrid)
 }
 
 func ExampleFinder_GetTimezoneName() {

@@ -184,27 +184,32 @@ Here is what has been done to improve performance:
 3. Using the internal `geom` package(fork of
    [geojson](https://github.com/tidwall/geojson)) with a YStripes index
    (inspired by Josh Baker's [`tg`](https://github.com/tidwall/tg)'s ) to verify
-   whether a polygon contains a point.
+   whether a polygon contains a point. Also a grid-index to quickly find
+   candidate polygons, inspired Aaron Roney's
+   [rtz](https://github.com/twitchax/rtz).
 
 That's all. There are no black magic tricks inside the tzf package.
 
 Below is a benchmark run on my MacBook Pro with Apple M3 Max:
 
-| Target        | Dataset                        | Scenario                               | Median (ns) | p99 (ns) | Approx throughput (ops/s) | Memory (MiB) |
-| ------------- | ------------------------------ | -------------------------------------- | ----------: | -------: | ------------------------: | -----------: |
-| DefaultFinder | topology-simplified + preindex | edge case · GetTimezoneName            |      3000.0 |   3000.0 |                    393.5K |        74.70 |
-| Finder        | topology-simplified            | edge case · GetTimezoneName            |      2000.0 |   3000.0 |                    470.4K |        66.00 |
-| FullFinder    | full-precision + preindex      | edge case · GetTimezoneName            |      3000.0 |   3000.0 |                    395.6K |       421.50 |
-| Finder        | full-precision                 | edge case · GetTimezoneName            |      2000.0 |   3000.0 |                    475.3K |       412.70 |
-| DefaultFinder | topology-simplified + preindex | random world cities · GetTimezoneName  |      1000.0 |   4000.0 |                   1162.4K |        74.70 |
-| FuzzyFinder   | preindex                       | random world cities · GetTimezoneName  |       469.8 |   1000.0 |                   2128.6K |         8.90 |
-| Finder        | topology-simplified            | random world cities · GetTimezoneName  |      2000.0 |   4000.0 |                    531.6K |        66.00 |
-| FullFinder    | full-precision + preindex      | random world cities · GetTimezoneName  |      1000.0 |   4000.0 |                   1143.1K |       421.50 |
-| Finder        | full-precision                 | random world cities · GetTimezoneName  |      2000.0 |   5000.0 |                    468.6K |       412.70 |
-| DefaultFinder | topology-simplified + preindex | random world cities · GetTimezoneNames |      5000.0 |   9000.0 |                    208.0K |        74.70 |
-| FuzzyFinder   | preindex                       | random world cities · GetTimezoneNames |       462.7 |   1000.0 |                   2161.2K |         8.90 |
-| Finder        | topology-simplified            | random world cities · GetTimezoneNames |      5000.0 |   8000.0 |                    211.5K |        66.00 |
-| FullFinder    | full-precision + preindex      | random world cities · GetTimezoneNames |      5000.0 |   9000.0 |                    192.8K |       421.50 |
+| Target        | Dataset                            | Scenario                               | Median (ns) | p99 (ns) | Approx throughput (ops/s) | Memory (MiB) |
+| ------------- | ---------------------------------- | -------------------------------------- | ----------: | -------: | ------------------------: | -----------: |
+| DefaultFinder | topology-simplified + preindex     | edge case · GetTimezoneName            |       459.0 |   1667.0 |                   1722.4K |        80.40 |
+| FuzzyFinder   | preindex                           | edge case · GetTimezoneName            |       167.0 |    250.0 |                   4651.2K |         7.90 |
+| Finder        | topology-simplified                | edge case · GetTimezoneName            |       250.0 |   1042.0 |                   3000.3K |        72.70 |
+| FullFinder    | full-precision + preindex          | edge case · GetTimezoneName            |       458.0 |   1250.0 |                   1880.4K |       428.50 |
+| Finder        | full-precision                     | edge case · GetTimezoneName            |       250.0 |   1042.0 |                   2905.3K |       420.70 |
+| DefaultFinder | topology-simplified + preindex     | random world cities · GetTimezoneName  |       166.0 |    750.0 |                   4332.8K |        80.40 |
+| FuzzyFinder   | preindex                           | random world cities · GetTimezoneName  |       166.0 |    250.0 |                   5449.6K |         7.90 |
+| Finder        | topology-simplified                | random world cities · GetTimezoneName  |       208.0 |   1125.0 |                   3430.5K |        72.70 |
+| FullFinder    | full-precision + preindex          | random world cities · GetTimezoneName  |       167.0 |    708.0 |                   4310.3K |       428.50 |
+| Finder        | full-precision                     | random world cities · GetTimezoneName  |       209.0 |   1083.0 |                   3263.7K |       420.70 |
+| Finder        | topology-simplified + GridIndex    | random world cities · GetTimezoneName  |       208.0 |   1125.0 |                   3454.2K |        72.70 |
+| Finder        | topology-simplified (no GridIndex) | random world cities · GetTimezoneName  |      1833.0 |   2750.0 |                    624.6K |        67.00 |
+| DefaultFinder | topology-simplified + preindex     | random world cities · GetTimezoneNames |       416.0 |   1333.0 |                   1994.4K |        80.40 |
+| FuzzyFinder   | preindex                           | random world cities · GetTimezoneNames |       166.0 |    250.0 |                   5431.8K |         7.90 |
+| Finder        | topology-simplified                | random world cities · GetTimezoneNames |       416.0 |   1292.0 |                   2015.7K |        72.70 |
+| FullFinder    | full-precision + preindex          | random world cities · GetTimezoneNames |       458.0 |   1459.0 |                   1742.8K |       428.50 |
 
 - <https://ringsaturn.github.io/tz-benchmark/> displays a continuous benchmark
   comparison with other packages.

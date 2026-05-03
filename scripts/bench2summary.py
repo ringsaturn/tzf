@@ -79,6 +79,14 @@ def bench_meta(bench_name):
         target = "FullFinder"
         dataset = "full-precision + preindex"
         mem_key = "FullFinder"
+    elif "GridIndex_WithGrid" in name:
+        target = "Finder"
+        dataset = "topology-simplified + GridIndex"
+        mem_key = "Finder"
+    elif "GridIndex_NoGrid" in name:
+        target = "Finder"
+        dataset = "topology-simplified (no GridIndex)"
+        mem_key = "FinderNoGrid"
     else:
         # Plain GetTimezoneName* — basic Finder
         target = "Finder"

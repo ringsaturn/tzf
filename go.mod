@@ -3,7 +3,6 @@ module github.com/ringsaturn/tzf
 go 1.25.0
 
 require (
-	github.com/loov/hrtime v1.0.4
 	github.com/paulmach/orb v0.13.0
 	github.com/ringsaturn/go-cities.json v0.6.13
 	github.com/ringsaturn/tzf-dist v0.0.2026-b-fix1

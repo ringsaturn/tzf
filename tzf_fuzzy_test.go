@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/loov/hrtime/hrtesting"
 	gocitiesjson "github.com/ringsaturn/go-cities.json"
 	"github.com/ringsaturn/tzf"
 	tzfdist "github.com/ringsaturn/tzf-dist"
@@ -73,31 +72,17 @@ func ExampleFuzzyFinder_TimezoneNames() {
 
 func BenchmarkFuzzyFinder_GetTimezoneNameAtEdge(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		_ = fuzzyFinder.GetTimezoneName(110.8571, 43.1483)
-	}
+	benchEdge(b, fuzzyFinder)
 }
 
 func BenchmarkFuzzyFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_ = fuzzyFinder.GetTimezoneName(p.Lng, p.Lat)
-	}
+	benchRandom(b, fuzzyFinder)
 }
 
 func BenchmarkFuzzyFinder_GetTimezoneNames_Random_WorldCities(b *testing.B) {
 	b.ReportAllocs()
-	bench := hrtesting.NewBenchmark(b)
-	defer bench.Report()
-	for bench.Next() {
-		p := gocitiesjson.Random()
-		_, _ = fuzzyFinder.GetTimezoneNames(p.Lng, p.Lat)
-	}
+	benchRandomNames(b, fuzzyFinder)
 }
 
 func FuzzFuzzyFinder_GetTimezoneName(f *testing.F) {
