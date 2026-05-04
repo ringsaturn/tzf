@@ -124,9 +124,9 @@ func fuzzyFeatureItem(name string, ids []geom.TileID) *convert.FeatureItem {
 	}
 }
 
-// GetTZGeoJSON returns a GeoJSON Feature for the named timezone, where each
-// polygon is the bounding box of one preindex tile.
-func (f *FuzzyFinder) GetTZGeoJSON(tzName string) (*convert.FeatureItem, error) {
+// GetTZGeoJSON returns a GeoJSON FeatureCollection for the named timezone,
+// where each polygon is the bounding box of one preindex tile.
+func (f *FuzzyFinder) GetTZGeoJSON(tzName string) (*convert.BoundaryFile, error) {
 	nameIdx := slices.Index(f.names, tzName)
 	if nameIdx < 0 {
 		return nil, ErrNoTimezoneFound
@@ -146,7 +146,10 @@ func (f *FuzzyFinder) GetTZGeoJSON(tzName string) (*convert.FeatureItem, error) 
 	if len(ids) == 0 {
 		return nil, ErrNoTimezoneFound
 	}
-	return fuzzyFeatureItem(tzName, ids), nil
+	return &convert.BoundaryFile{
+		Type:     "FeatureCollection",
+		Features: []*convert.FeatureItem{fuzzyFeatureItem(tzName, ids)},
+	}, nil
 }
 
 // GetGeoJSON returns a GeoJSON FeatureCollection covering all timezones, where
