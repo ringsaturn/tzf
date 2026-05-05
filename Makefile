@@ -24,5 +24,7 @@ bench-summary: bench bench-memory
 
 dep-licenses:
 	rm -rf THIRD_PARTY_LICENSES
-	go run github.com/google/go-licenses/v2@latest save ./ --save_path=THIRD_PARTY_LICENSES 
+	go run github.com/google/go-licenses/v2@latest save ./... --save_path=THIRD_PARTY_LICENSES
+	cp $$(go env GOPATH)/pkg/mod/github.com/ringsaturn/tzf-dist@$$(go list -m github.com/ringsaturn/tzf-dist | awk '{print $$2}')/LICENSE_DATA \
+		THIRD_PARTY_LICENSES/github.com/ringsaturn/tzf-dist/LICENSE_DATA
 	bash build_notice.sh
