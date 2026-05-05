@@ -1,3 +1,5 @@
+// Derived from github.com/tidwall/geojson; see LICENSE_GEOJSON.
+
 package geom
 
 import "math"

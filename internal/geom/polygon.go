@@ -1,3 +1,5 @@
+// Derived from github.com/tidwall/geojson; see LICENSE_GEOJSON.
+
 package geom
 
 // minIndexSegments is the minimum ring length (in unique points) required to
