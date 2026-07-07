@@ -40,6 +40,7 @@ import (
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/internal/maps"
+	"github.com/ringsaturn/tzf/internal/preindexexclude"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -127,7 +128,7 @@ func EnsureInside(geopolys []*geom.Polygon, tiles []maptile.Tile) []maptile.Tile
 		}
 		insideExcludeRegions := func() bool {
 			for _, pt := range corners {
-				if excludePreIndex(pt.X, pt.Y) {
+				if preindexexclude.Match(pt.X, pt.Y) {
 					return true
 				}
 			}

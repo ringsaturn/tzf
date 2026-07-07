@@ -1,6 +1,10 @@
-package preindex
+package preindexexclude_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/ringsaturn/tzf/internal/preindexexclude"
+)
 
 func TestExcludePreIndexIncludesAbkhazia(t *testing.T) {
 	points := []struct {
@@ -18,7 +22,7 @@ func TestExcludePreIndexIncludesAbkhazia(t *testing.T) {
 
 	for _, point := range points {
 		t.Run(point.name, func(t *testing.T) {
-			if !excludePreIndex(point.lng, point.lat) {
+			if !preindexexclude.Match(point.lng, point.lat) {
 				t.Fatalf("expected %.4f,%.4f to be excluded from preindex", point.lng, point.lat)
 			}
 		})
