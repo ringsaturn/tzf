@@ -48,6 +48,22 @@
         ],
         "type": "Polygon"
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "coordinates": [
+          [
+            [39.8, 42.3],
+            [42.2, 42.3],
+            [42.2, 43.7],
+            [39.8, 43.7],
+            [39.8, 42.3]
+          ]
+        ],
+        "type": "Polygon"
+      }
     }
   ]
 }

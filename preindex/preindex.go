@@ -18,12 +18,12 @@
 // A sample image of output tiles show on maps:
 // https://user-images.githubusercontent.com/13536789/200174943-7d40661e-bda5-4b79-a867-ec637e245a49.png
 //
-// Some areas are excluded from prefindex, since default most small tile `level==11`
+// Some areas are excluded from preindex, since default most small tile `level==11`
 // couldn't cover polygon shape details, see [tzf#76] for more backgrounds.
-// Latest excluded areas can be views here [exclude.geojson]
+// Latest excluded areas can be viewed here [exclude.geojson]
 //
 // [tzf#76]: https://github.com/ringsaturn/tzf/issues/76
-// [exclude.geojson]: http://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fringsaturn%2Ftzf%2Fmain%2Fpreindex%2Fexclude.geojson
+// [exclude.geojson]: http://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fringsaturn%2Ftzf%2Fmain%2Finternal%2Fpreindexexclude%2Fexclude.geojson
 package preindex
 
 import (
