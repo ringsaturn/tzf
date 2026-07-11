@@ -124,6 +124,35 @@ func EncodeCoords(coords [][]float64) []byte {
 	return buf
 }
 
+// DecodeCoordsInt32 decodes a default-codec 2-D coordinate array from buf
+// into raw 1e5-scaled integer coordinates ([lng, lat] pairs), without the
+// float64 division that DecodeCoords performs.
+func DecodeCoordsInt32(buf []byte) ([][2]int32, error) {
+	if len(buf) == 0 {
+		return nil, nil
+	}
+
+	var coords [][2]int32
+	last := [defaultDim]int{}
+	for len(buf) > 0 {
+		var coord [2]int32
+		for i := range defaultDim {
+			v, rest, err := DecodeInt(buf)
+			if err != nil {
+				return nil, err
+			}
+			buf = rest
+			last[i] += v
+			if last[i] < math.MinInt32 || last[i] > math.MaxInt32 {
+				return nil, ErrOverflow
+			}
+			coord[i] = int32(last[i])
+		}
+		coords = append(coords, coord)
+	}
+	return coords, nil
+}
+
 // DecodeCoords decodes a default-codec 2-D coordinate array from buf.
 // Returns the coordinates, remaining unconsumed bytes, and any error.
 func DecodeCoords(buf []byte) ([][]float64, []byte, error) {

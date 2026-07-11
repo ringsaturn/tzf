@@ -14,6 +14,7 @@ import (
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/internal/gridindex"
+	"github.com/ringsaturn/tzf/internal/polyline"
 	"github.com/ringsaturn/tzf/reduce"
 	"google.golang.org/protobuf/proto"
 )
@@ -34,7 +35,7 @@ func SetDropPBTZ(opt *Option) {
 type tzitem struct {
 	pbtz  *pb.Timezone
 	name  string
-	polys []*geom.Polygon
+	polys []geom.Poly
 	min   [2]float64
 	max   [2]float64
 }
@@ -181,14 +182,14 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 		optFunc(opt)
 	}
 
-	// Decompress shared edges once into geom.Point slices indexed by edge ID.
-	// This replaces the two intermediate proto objects (TopoTimezones + pb.Timezones).
-	edges := make([][]geom.Point, len(input.SharedEdges))
+	// Decompress shared edges once into scaled-integer point slices indexed by
+	// edge ID. Coordinates stay on the 1e5 polyline grid (geom.I32Point), which
+	// halves ring storage compared to float64 points.
+	edges := make([][]geom.I32Point, len(input.SharedEdges))
 	for _, e := range input.SharedEdges {
-		raw := reduce.DecompressedPolylineBytesToPoints(e.Points)
-		pts := make([]geom.Point, len(raw))
-		for j, p := range raw {
-			pts[j] = geom.Point{X: float64(p.Lng), Y: float64(p.Lat)}
+		pts, err := decodePolylineToI32Points(e.Points)
+		if err != nil {
+			return nil, err
 		}
 		edges[e.Id] = pts
 	}
@@ -201,12 +202,19 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 		newItem := &tzitem{name: tz.Name}
 
 		for _, poly := range tz.Polygons {
-			exterior := expandCompressedRing(poly.Exterior, edges)
-			holes := make([][]geom.Point, 0, len(poly.Holes))
-			for _, hole := range poly.Holes {
-				holes = append(holes, expandCompressedRing(hole.Exterior, edges))
+			exterior, err := expandCompressedRing(poly.Exterior, edges)
+			if err != nil {
+				return nil, err
 			}
-			newItem.polys = append(newItem.polys, geom.NewPolygon(exterior, holes))
+			holes := make([][]geom.I32Point, 0, len(poly.Holes))
+			for _, hole := range poly.Holes {
+				h, err := expandCompressedRing(hole.Exterior, edges)
+				if err != nil {
+					return nil, err
+				}
+				holes = append(holes, h)
+			}
+			newItem.polys = append(newItem.polys, geom.NewI32Polygon(exterior, holes))
 		}
 
 		minp, maxp := newItem.getMinMax()
@@ -227,16 +235,33 @@ func NewFinderFromCompressedTopo(input *pb.CompressedTopoTimezones, opts ...Opti
 	return f, nil
 }
 
-// expandCompressedRing expands a compressed ring's segments into a flat geom.Point
-// slice, resolving edge-forward/reversed references against the pre-decoded edge table.
-func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geom.Point) []geom.Point {
-	var pts []geom.Point
+// decodePolylineToI32Points decodes polyline bytes into 1e5-scaled integer
+// points, skipping the float32 protobuf representation entirely.
+func decodePolylineToI32Points(b []byte) ([]geom.I32Point, error) {
+	coords, err := polyline.DecodeCoordsInt32(b)
+	if err != nil {
+		return nil, err
+	}
+	pts := make([]geom.I32Point, len(coords))
+	for i, c := range coords {
+		pts[i] = geom.I32Point{X: c[0], Y: c[1]}
+	}
+	return pts, nil
+}
+
+// expandCompressedRing expands a compressed ring's segments into a flat
+// scaled-integer point slice, resolving edge-forward/reversed references
+// against the pre-decoded edge table.
+func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geom.I32Point) ([]geom.I32Point, error) {
+	var pts []geom.I32Point
 	for _, seg := range segs {
 		switch s := seg.Content.(type) {
 		case *pb.CompressedRingSegment_Inline:
-			for _, p := range reduce.DecompressedPolylineBytesToPoints(s.Inline.Points) {
-				pts = append(pts, geom.Point{X: float64(p.Lng), Y: float64(p.Lat)})
+			inline, err := decodePolylineToI32Points(s.Inline.Points)
+			if err != nil {
+				return nil, err
 			}
+			pts = append(pts, inline...)
 		case *pb.CompressedRingSegment_EdgeForward:
 			pts = append(pts, edges[s.EdgeForward]...)
 		case *pb.CompressedRingSegment_EdgeReversed:
@@ -246,7 +271,7 @@ func expandCompressedRing(segs []*pb.CompressedRingSegment, edges [][]geom.Point
 			}
 		}
 	}
-	return pts
+	return pts, nil
 }
 
 // gridCandidates returns the candidate timezone indices for a given coordinate.

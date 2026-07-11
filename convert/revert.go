@@ -69,7 +69,7 @@ func fromGeomRingToCoords(r geom.Ring) [][2]float64 {
 
 // fromGeomPolygonsToGeoMultipolygon converts a slice of geom.Polygon to
 // MultiPolygonCoordinates suitable for GeoJSON serialisation.
-func fromGeomPolygonsToGeoMultipolygon(polys []*geom.Polygon) MultiPolygonCoordinates {
+func fromGeomPolygonsToGeoMultipolygon(polys []geom.Poly) MultiPolygonCoordinates {
 	res := make(MultiPolygonCoordinates, 0, len(polys))
 	for _, poly := range polys {
 		ext := poly.Exterior()
@@ -89,7 +89,7 @@ func fromGeomPolygonsToGeoMultipolygon(polys []*geom.Polygon) MultiPolygonCoordi
 // RevertItemFromGeomPolygons builds a GeoJSON Feature from a timezone name and
 // its already-decoded geom.Polygon slice. This avoids keeping the original
 // protobuf Timezone in memory.
-func RevertItemFromGeomPolygons(name string, polys []*geom.Polygon) *FeatureItem {
+func RevertItemFromGeomPolygons(name string, polys []geom.Poly) *FeatureItem {
 	raw, err := json.Marshal(fromGeomPolygonsToGeoMultipolygon(polys))
 	if err != nil {
 		panic(err) // unreachable: float64 coords are always marshalable
