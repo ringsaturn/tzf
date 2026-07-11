@@ -125,7 +125,7 @@ func ringContainsPoint(r Ring, idx *yStripesIndex, p Point) bool {
 
 	if idx != nil {
 		// Indexed path: iterate only the stripe containing p.Y.
-		idx.forEachCandidate(p.Y, func(i int) bool {
+		idx.forEachCandidate(r, p.Y, func(i int) bool {
 			j := (i + 1) % n
 			res := raycastSeg(r[i], r[j], p)
 			if res.on {
