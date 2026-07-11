@@ -31,9 +31,20 @@ Three finder implementations share the interface in `f.go`:
 
 | Finder | Mechanism | Memory | Speed |
 |--------|-----------|--------|-------|
-| `Finder` | Polygon point-in-polygon + RTree | ~100MB lite / ~1GB full | moderate |
-| `FuzzyFinder` | Pre-indexed map tiles | ~1.78MB | fastest |
-| `DefaultFinder` | FuzzyFinder first, Finder fallback (±0.02°) | ~60MB after GC | fast |
+| `Finder` | Polygon point-in-polygon + grid index | ~30MB lite / ~150MB full | moderate |
+| `FuzzyFinder` | Pre-indexed map tiles | ~2.4MB | fastest |
+| `DefaultFinder` | FuzzyFinder first, Finder fallback (±0.02°) | ~32MB | fast |
+
+Memory figures from `go run ./internal/bench-memory` (retained heap after GC).
+
+`Finder` is a plain exported struct whose storage-generic internals hide behind
+the unexported `finderCore` interface → `finderImpl[T geom.Coord]`. Data loaded
+via `NewFinderFromPB` stores float64 degree coordinates; data loaded via
+`NewFinderFromCompressedTopo` keeps the 1e5-scaled int32 polyline grid
+(`geom.I32Polygon`, half the per-point memory, slightly more precise than the
+old float32 protobuf round-trip). One interface dispatch per query; everything
+below it is monomorphised. `internal/cmd/i32compare` cross-checks the two
+storage paths on the bundled dataset.
 
 ### Data Pipeline
 
@@ -94,15 +105,24 @@ The topology-aware simplification engine. Key files:
 
 Zero-external-dependency polygon geometry engine, replacing `tidwall/geojson`.
 
+Core types are generic over the coordinate storage type `Coord`
+(`~int32 | ~float64`): `PointOf[T]` / `RingOf[T]` / `PolygonOf[T]`, with
+aliases `Point`/`Ring`/`Polygon` (float64, degree space) and
+`I32Point`/`I32Ring`/`I32Polygon` (1e5-scaled int32, `I32Scale`). The type
+parameter only governs storage; all arithmetic runs in float64 — queries scale
+the point once (`scale` field: 1 or 1e5) and convert segment endpoints in
+registers, so results are identical across storage types. int32/float64 have
+different GC shapes, so both instantiations are fully monomorphised.
+
 | File | Content |
 |------|---------|
-| `geom.go` | `Point`, `Rect` basic types |
-| `ring.go` | `Ring`: open-ring representation, `ringAreaAndPerimeter` (Shoelace + perimeter) |
-| `ystripes.go` | `yStripesIndex`: horizontal stripe PIP index; stripe count = max(32, ⌊n × circularity⌋); 44× speedup over linear scan on 500-pt polygons |
-| `pip.go` | `raycastSeg` ray-casting (with `math.Nextafter` vertex deduplication); `ringContainsPoint` |
-| `polygon.go` | `Polygon` (exterior + holes); `NewPolygon`; `ContainsPoint`; `ContainsPoly` |
+| `type.go` | `Coord` constraint; `PointOf[T]`, `Rect`; `I32Scale` |
+| `ring.go` | `RingOf[T]`: open-ring representation, `ringBounds`, `ringAreaAndPerimeter` (Shoelace + perimeter, storage space) |
+| `ystripes.go` | `yStripesIndex`: horizontal stripe PIP index in storage space; stripe count = max(32, ⌊n × circularity⌋); per-segment Y ranges recomputed from ring endpoints at query time (not stored); uint32 indices |
+| `pip.go` | `raycastSeg` ray-casting (with `math.Nextafter` vertex deduplication); `ringContainsPoint[T]` |
+| `polygon.go` | `PolygonOf[T]` (exterior + holes); `Poly` interface; `NewPolygon`/`NewI32Polygon`; `ContainsPoint`; `ContainsPoly` |
 
-`Finder` builds `geom.Polygon` objects at load time; queries are allocation-free.
+`Finder` builds `geom.PolygonOf` objects at load time; queries are allocation-free.
 
 ### `internal/polyf` Package
 

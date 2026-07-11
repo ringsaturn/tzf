@@ -14,8 +14,10 @@ type yStripe struct {
 // A PIP lookup for latitude y only needs to examine the segments stored in
 // the single stripe that contains y.
 //
-// Per-segment Y ranges are not stored; candidate filtering recomputes them
-// from the ring endpoints, which the raycast fetches anyway.
+// The index lives in the same storage space as the ring it was built from
+// (degrees for float64 rings, 1e5-scaled for int32 rings). Per-segment Y
+// ranges are not stored; candidate filtering recomputes them from the ring
+// endpoints, which the raycast fetches anyway.
 //
 // Build cost: O(n + n*avgStripesPerSeg).
 // Query cost: O(n/stripeCount) on average for convex rings; worst-case O(n).
@@ -28,10 +30,11 @@ type yStripesIndex struct {
 
 // calcStripeCount returns the number of stripes to use for ring r.
 // More circular rings get more stripes; elongated rings get fewer.
-// Based on the isoperimetric quotient (circularity score):
+// Based on the isoperimetric quotient (circularity score), which is
+// invariant under the uniform 1e5 scaling of integer rings:
 //
 //	score = (4π·area) / perimeter²
-func calcStripeCount(r Ring) int {
+func calcStripeCount[T Coord](r RingOf[T]) int {
 	area, perim := ringAreaAndPerimeter(r)
 	score := 0.0
 	if perim > 0 {
@@ -74,7 +77,7 @@ func pointStripe(y, minY, height float64, count int) int {
 // buildYStripes constructs a yStripesIndex for ring r.
 // Returns nil when r has fewer than 2 points, zero Y span, or the index would
 // overflow the uint32 storage.
-func buildYStripes(r Ring) *yStripesIndex {
+func buildYStripes[T Coord](r RingOf[T]) *yStripesIndex {
 	n := len(r)
 	if n < 2 || uint64(n) > math.MaxUint32 {
 		return nil
@@ -83,11 +86,11 @@ func buildYStripes(r Ring) *yStripesIndex {
 	// Pre-compute per-segment Y bounding boxes (build-time only) and overall
 	// Y range.
 	yRanges := make([][2]float64, n)
-	minY := r[0].Y
-	maxY := r[0].Y
+	minY := float64(r[0].Y)
+	maxY := minY
 	for i := range n {
 		j := (i + 1) % n
-		ay, by := r[i].Y, r[j].Y
+		ay, by := float64(r[i].Y), float64(r[j].Y)
 		if ay <= by {
 			yRanges[i] = [2]float64{ay, by}
 		} else {
@@ -150,10 +153,11 @@ func buildYStripes(r Ring) *yStripesIndex {
 }
 
 // forEachCandidate calls fn for each segment index of ring r whose Y range
-// includes y. The segment Y range is recomputed from the ring endpoints
-// instead of being stored. The iteration stops early when fn returns false.
+// includes y; y must be in the ring's storage space. The segment Y range is
+// recomputed from the ring endpoints instead of being stored. The iteration
+// stops early when fn returns false.
 // No allocation; the caller drives the loop.
-func (idx *yStripesIndex) forEachCandidate(r Ring, y float64, fn func(int) bool) {
+func forEachCandidate[T Coord](idx *yStripesIndex, r RingOf[T], y float64, fn func(int) bool) {
 	if y < idx.minY || y > idx.minY+idx.height {
 		return
 	}
@@ -163,7 +167,7 @@ func (idx *yStripesIndex) forEachCandidate(r Ring, y float64, fn func(int) bool)
 	start := int(stripe.start)
 	for k := start; k < start+int(stripe.count); k++ {
 		seg := int(idx.indexes[k])
-		ay, by := r[seg].Y, r[(seg+1)%n].Y
+		ay, by := float64(r[seg].Y), float64(r[(seg+1)%n].Y)
 		if by < ay {
 			ay, by = by, ay
 		}
