@@ -139,15 +139,15 @@ func EnsureInside(geopolys []*geom.Polygon, tiles []maptile.Tile) []maptile.Tile
 		}
 		tilePoly := geom.NewPolygon(corners, nil)
 
+		inside := false
 		for _, geopoly := range geopolys {
-			if !geopoly.ContainsPoly(tilePoly) {
-				continue
+			if geopoly.ContainsPoly(tilePoly) {
+				inside = true
+				break
 			}
-			for _, pt := range corners {
-				if !geopoly.ContainsPoint(pt) {
-					continue
-				}
-			}
+		}
+		if !inside {
+			continue
 		}
 		insideTZTiles = append(insideTZTiles, tile)
 	}
