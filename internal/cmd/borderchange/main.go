@@ -136,7 +136,7 @@ func loadGeoJSONZip(path string) (*pb.Timezones, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	var selected *zip.File
 	for _, file := range reader.File {
@@ -156,7 +156,7 @@ func loadGeoJSONZip(path string) (*pb.Timezones, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	raw, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
