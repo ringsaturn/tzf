@@ -149,9 +149,18 @@ func Do(input *pb.Timezones, epsilon float64) *pb.Timezones {
 }
 
 func DoWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, Stats) {
+	output, _, stats := DoWithStatsAndBaseline(input, epsilon)
+	return output, stats
+}
+
+// DoWithStatsAndBaseline returns the simplified data and the normalized,
+// topology-snapped geometry that was actually passed to the simplifier. The
+// baseline is useful for measuring simplification error because every retained
+// output vertex has an exact counterpart in it.
+func DoWithStatsAndBaseline(input *pb.Timezones, epsilon float64) (*pb.Timezones, *pb.Timezones, Stats) {
 	stats := Stats{}
 	if input == nil {
-		return nil, stats
+		return nil, nil, stats
 	}
 
 	output := normalizeTimezones(input)
@@ -168,6 +177,7 @@ func DoWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, Stats) {
 	// same-direction and skips them, preventing isEntirelyShared from recognising
 	// complete enclave pairs and causing independent simplification of partner rings.
 	removeZeroLengthEdges(output)
+	baseline := normalizeTimezones(output)
 	rings, edgeIndex, vertexIndex := collectRings(output)
 	stats.InputRings = len(rings)
 	for _, ring := range rings {
@@ -209,7 +219,7 @@ func DoWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, Stats) {
 	}
 	normalizeWindings(output)
 
-	return output, stats
+	return output, baseline, stats
 }
 
 func removeZeroLengthEdges(input *pb.Timezones) {
@@ -643,7 +653,7 @@ func isEntirelyShared(edges []edgeMeta) bool {
 
 // findCanonicalStart returns the index of the lexicographically smallest point
 // (by Lng then Lat). Using this as the rotation origin ensures that two partner
-// rings sharing all their edges — traversing in opposite directions — both
+// rings sharing all their edges, traversing in opposite directions, both
 // independently rotate to the same start vertex, making their open-path
 // signatures consistent for the shared segment cache.
 func findCanonicalStart(points []*pb.Point) int {
