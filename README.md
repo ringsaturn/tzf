@@ -193,6 +193,37 @@ ever differ from the full-precision result, and most of that band is far
 narrower. If your use case is sensitive inside that band, use
 `NewFullFinder()`.
 
+Verify the accuracy yourself by running the following commands:
+
+```bash
+gh release download v0.0.2026-c-fix1 --repo ringsaturn/tzf-dist \
+  --pattern "combined-with-oceans.compress.topo.bin"
+
+go run ./internal/cmd/topodecode \
+  combined-with-oceans.compress.topo.bin combined-with-oceans.dist.bin
+
+go run ./internal/cmd/borderchange \
+  -epsilon 0.001 \
+  -certification-tolerance-m 0.5 \
+  -top-pairs 20 \
+  combined-with-oceans.dist.bin > BORDER_CHANGE.md
+```
+
+Output like:
+
+```
+➜  tzf git:(main) ✗ go run ./internal/cmd/borderchange \
+  -epsilon 0.001 \
+  -certification-tolerance-m 0.5 \
+  -top-pairs 20 \
+  combined-with-oceans.dist.bin > BORDER_CHANGE.md
+2026/07/13 10:46:00 borderchange: dataset loaded in 441ms
+2026/07/13 10:46:15 borderchange: simplification finished in 14.276s
+2026/07/13 10:46:16 borderchange: 532881 arcs collected, analyzing with 16 workers
+```
+
+More details: [BORDER_CHANGE.md](./BORDER_CHANGE.md).
+
 ## Performance
 
 The tzf package is intended for high-performance geospatial query backend
