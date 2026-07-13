@@ -16,7 +16,9 @@ go get github.com/ringsaturn/tzf
 > [!NOTE]
 >
 > This `NewDefaultFinder` uses simplified shape data so it is not entirely
-> accurate around the border.
+> accurate around the border, but the error is small and bounded: every
+> simplified boundary stays within ~111 m of the full-precision border. See
+> [Accuracy](#accuracy) for measured numbers.
 
 It's expensive to init tzf's Finder/FuzzyFinder/DefaultFinder, please consider
 reuse it or as a global var. Below is a global var example:
@@ -153,9 +155,10 @@ precision with shared-edge deduplication and polyline compression. Use
 `NewFullFinder()` to load it.
 
 The [combined-with-oceans.topology.compress.topo.bin] (~5.4MB) applies
-topology-aware Douglas-Peucker simplification (86% point reduction) before
+topology-aware Douglas-Peucker simplification (~85% point reduction) before
 deduplication and compression. It is used by the default `NewDefaultFinder()`
-and may not be perfectly accurate at some border areas.
+and may not be perfectly accurate at some border areas; the deviation is
+bounded to ~111 m (see [Accuracy](#accuracy)).
 
 The [combined-with-oceans.topology.preindex.bin] (~2MB) consists of multiple map
 tiles and is used within both `DefaultFinder` and `FullFinder` as the fast-path
@@ -169,6 +172,26 @@ tiles and is used within both `DefaultFinder` and `FullFinder` as the fast-path
 I have written an article about the history of tzf, its Rust port, and its Rust
 port's Python binding; you can view it
 [here](https://blog.ringsaturn.me/en/posts/2023-01-31-history-of-tzf/).
+
+## Accuracy
+
+The Douglas-Peucker simplification uses an epsilon of 0.001 degrees, which
+caps boundary displacement at roughly 111 m by construction. Measured against
+the full-precision 2026c dataset with `internal/cmd/borderchange` (spherical
+model, certified via Lipschitz interval subdivision):
+
+| Metric                                             |                          Result |
+| -------------------------------------------------- | ------------------------------: |
+| Certified maximum boundary displacement            | 111.2 m (+1.0 m tolerance)      |
+| Boundary length displaced more than 100 m          | 0.41%                           |
+| Boundary length displaced more than 500 m          | 0%                              |
+| Total mis-assigned area                            | 16,828 km² (~0.003% of Earth)   |
+| Mis-assigned area within 100 m of the true border  | 92.8%                           |
+
+In other words, only queries that land within ~111 m of a timezone border can
+ever differ from the full-precision result, and most of that band is far
+narrower. If your use case is sensitive inside that band, use
+`NewFullFinder()`.
 
 ## Performance
 
