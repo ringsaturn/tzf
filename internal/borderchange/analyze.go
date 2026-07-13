@@ -85,8 +85,9 @@ type point struct {
 }
 
 type arc struct {
-	original []point
-	zones    []string
+	original  []point
+	candidate []point
+	zones     []string
 }
 
 type pendingArc struct {
@@ -158,7 +159,7 @@ func Analyze(original, simplified *pb.Timezones, opts Options) (*Report, error) 
 	pending := make([]pendingArc, 0, len(arcs))
 	for _, item := range arcs {
 		zoneA, zoneB := zonePair(item.zones)
-		pending = append(pending, pendingArc{arc: item, zoneA: zoneA, zoneB: zoneB, estimate: arcDeviationEstimate(item.original)})
+		pending = append(pending, pendingArc{arc: item, zoneA: zoneA, zoneB: zoneB, estimate: arcDeviationEstimate(item.original, item.candidate)})
 	}
 	// Processing large-deviation arcs first drives the shared pruning threshold
 	// close to the final maximum almost immediately, so the Lipschitz pass can
@@ -223,7 +224,7 @@ func Analyze(original, simplified *pb.Timezones, opts Options) (*Report, error) 
 					return
 				}
 				item := pending[idx]
-				analyzeArc(shared, local, item.arc.original, item.zoneA, item.zoneB, opts.CertificationToleranceM)
+				analyzeArc(shared, local, item.arc.original, item.arc.candidate, item.zoneA, item.zoneB, opts.CertificationToleranceM)
 			}
 		}(w)
 	}
@@ -257,15 +258,21 @@ func collectRingArcs(arcs map[[sha256.Size]byte]*arc, timezone string, originalP
 	}
 
 	positions := make(map[point][]int, len(original))
+	compressedPositions := make(map[point][]int, len(original))
 	for idx, p := range original {
 		positions[p] = append(positions[p], idx)
+		compressed := polylineCompressedPoint(p)
+		compressedPositions[compressed] = append(compressedPositions[compressed], idx)
 	}
 	indices := make([]int, len(simplified))
 	previous := -1
 	for idx, p := range simplified {
 		candidates := positions[p]
 		if len(candidates) == 0 {
-			return fmt.Errorf("simplified vertex %.7f,%.7f is absent from baseline", p.lng, p.lat)
+			candidates = compressedPositions[p]
+		}
+		if len(candidates) == 0 {
+			return fmt.Errorf("candidate vertex %.7f,%.7f is absent from baseline before and after polyline quantization", p.lng, p.lat)
 		}
 		if idx == 0 {
 			indices[idx] = candidates[0]
@@ -302,7 +309,10 @@ func collectRingArcs(arcs map[[sha256.Size]byte]*arc, timezone string, originalP
 		key := canonicalChainKey(chain)
 		item, exists := arcs[key]
 		if !exists {
-			item = &arc{original: chain}
+			item = &arc{
+				original:  chain,
+				candidate: []point{simplified[idx], simplified[(idx+1)%len(simplified)]},
+			}
 			arcs[key] = item
 		}
 		if !slices.Contains(item.zones, timezone) {
@@ -312,25 +322,44 @@ func collectRingArcs(arcs map[[sha256.Size]byte]*arc, timezone string, originalP
 	return nil
 }
 
+func polylineCompressedPoint(p point) point {
+	return point{
+		lng: float64(float32(float64(polylineRound(1e5*p.lng)) / 1e5)),
+		lat: float64(float32(float64(polylineRound(1e5*p.lat)) / 1e5)),
+	}
+}
+
+func polylineRound(value float64) int {
+	if value < 0 {
+		return int(-math.Floor(-value + 0.5))
+	}
+	return int(math.Floor(value + 0.5))
+}
+
 // arcDeviationEstimate is a cheap upper-ballpark of how far the chain strays
 // from its end-to-end great-circle chord. It is only used to order work; the
 // certification never trusts it.
-func arcDeviationEstimate(chain []point) float64 {
-	if len(chain) <= 2 {
+func arcDeviationEstimate(original, candidate []point) float64 {
+	if len(original) < 2 || len(candidate) < 2 {
 		return 0
 	}
-	va := vectorOf(chain[0])
-	vb := vectorOf(chain[len(chain)-1])
+	va := vectorOf(candidate[0])
+	vb := vectorOf(candidate[len(candidate)-1])
 	var estimate float64
-	for _, p := range chain[1 : len(chain)-1] {
+	for _, p := range original {
 		estimate = math.Max(estimate, angleToSegment(vectorOf(p), va, vb))
+	}
+	originalStart := vectorOf(original[0])
+	originalEnd := vectorOf(original[len(original)-1])
+	for _, p := range candidate {
+		estimate = math.Max(estimate, angleToSegment(vectorOf(p), originalStart, originalEnd))
 	}
 	return estimate * authalicRadiusM
 }
 
-func analyzeArc(shared *sharedMax, report *Report, original []point, zoneA, zoneB string, tolerance float64) {
+func analyzeArc(shared *sharedMax, report *Report, original, candidate []point, zoneA, zoneB string, tolerance float64) {
 	report.UniqueArcs++
-	if len(original) == 2 {
+	if len(original) == 2 && slices.Equal(original, candidate) {
 		// The simplified edge shares both endpoints with the original chain, so a
 		// two-point chain is geometrically identical to its replacement: distance
 		// zero everywhere and no error strip. Both measurement directions
@@ -341,13 +370,17 @@ func analyzeArc(shared *sharedMax, report *Report, original []point, zoneA, zone
 		return
 	}
 
-	simplified := []point{original[0], original[len(original)-1]}
 	denseOriginal := newDensePolyline(densifyGeographicPolyline(original))
-	denseSimplified := newDensePolyline(densifyGeographicPolyline(simplified))
+	denseCandidate := newDensePolyline(densifyGeographicPolyline(candidate))
 	length := polylineLength(denseOriginal.pts)
 	report.OriginalLengthKM += length / 1000
 
-	area := math.Abs(sphericalPolygonArea(append(slices.Clone(original), original[0])))
+	strip := slices.Clone(original)
+	for idx := len(candidate) - 1; idx >= 0; idx-- {
+		strip = append(strip, candidate[idx])
+	}
+	strip = append(strip, original[0])
+	area := math.Abs(sphericalPolygonArea(strip))
 	if area > 1e-6 {
 		report.ChangedArcs++
 		report.ChangedLengthKM += length / 1000
@@ -357,8 +390,8 @@ func analyzeArc(shared *sharedMax, report *Report, original []point, zoneA, zone
 		addAreaWidthSamples(report, denseOriginal, area)
 	}
 
-	certifyPolyline(shared, report, denseOriginal, denseSimplified, zoneA, zoneB, tolerance)
-	certifyPolyline(shared, report, denseSimplified, denseOriginal, zoneA, zoneB, tolerance)
+	certifyPolyline(shared, report, denseOriginal, denseCandidate, zoneA, zoneB, tolerance)
+	certifyPolyline(shared, report, denseCandidate, denseOriginal, zoneA, zoneB, tolerance)
 }
 
 // certifyPolyline measures every densified segment midpoint of source against

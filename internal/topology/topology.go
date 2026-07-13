@@ -153,6 +153,16 @@ func DoWithStats(input *pb.Timezones, epsilon float64) (*pb.Timezones, Stats) {
 	return output, stats
 }
 
+// PrepareBaseline returns the normalized, topology-snapped geometry used as
+// the source for topology-aware simplification. It is useful when comparing a
+// previously generated simplified dataset with its original source data.
+func PrepareBaseline(input *pb.Timezones) *pb.Timezones {
+	if input == nil {
+		return nil
+	}
+	return prepareBaseline(input, nil)
+}
+
 // DoWithStatsAndBaseline returns the simplified data and the normalized,
 // topology-snapped geometry that was actually passed to the simplifier. The
 // baseline is useful for measuring simplification error because every retained
@@ -163,20 +173,7 @@ func DoWithStatsAndBaseline(input *pb.Timezones, epsilon float64) (*pb.Timezones
 		return nil, nil, stats
 	}
 
-	output := normalizeTimezones(input)
-	// Normalize winding order before topology analysis so that adjacent rings
-	// always traverse their shared boundary in opposite directions. Without this,
-	// hole rings stored with incorrect CCW winding (instead of CW) appear to share
-	// edges in the same direction as the adjacent exterior ring, causing them to be
-	// misclassified as disputed-territory overlaps and skipped.
-	normalizeWindings(output)
-	snapVertices(output, &stats)
-	// Remove zero-length edges (adjacent identical points, including wrap-around)
-	// before topology analysis. Such edges exist in some source rings (e.g. the
-	// Macau border-crossing building outline). markSharedEdges treats them as
-	// same-direction and skips them, preventing isEntirelyShared from recognising
-	// complete enclave pairs and causing independent simplification of partner rings.
-	removeZeroLengthEdges(output)
+	output := prepareBaseline(input, &stats)
 	baseline := normalizeTimezones(output)
 	rings, edgeIndex, vertexIndex := collectRings(output)
 	stats.InputRings = len(rings)
@@ -220,6 +217,24 @@ func DoWithStatsAndBaseline(input *pb.Timezones, epsilon float64) (*pb.Timezones
 	normalizeWindings(output)
 
 	return output, baseline, stats
+}
+
+func prepareBaseline(input *pb.Timezones, stats *Stats) *pb.Timezones {
+	output := normalizeTimezones(input)
+	// Normalize winding order before topology analysis so that adjacent rings
+	// always traverse their shared boundary in opposite directions. Without this,
+	// hole rings stored with incorrect CCW winding (instead of CW) appear to share
+	// edges in the same direction as the adjacent exterior ring, causing them to be
+	// misclassified as disputed-territory overlaps and skipped.
+	normalizeWindings(output)
+	snapVertices(output, stats)
+	// Remove zero-length edges (adjacent identical points, including wrap-around)
+	// before topology analysis. Such edges exist in some source rings (e.g. the
+	// Macau border-crossing building outline). markSharedEdges treats them as
+	// same-direction and skips them, preventing isEntirelyShared from recognising
+	// complete enclave pairs and causing independent simplification of partner rings.
+	removeZeroLengthEdges(output)
+	return output
 }
 
 func removeZeroLengthEdges(input *pb.Timezones) {

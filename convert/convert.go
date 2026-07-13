@@ -43,6 +43,13 @@ func Do(input *BoundaryFile) (*pb.Timezones, error) {
 	if version == "" {
 		return nil, errors.New("tzf/convert: please specific version")
 	}
+	return DoWithVersion(input, version)
+}
+
+// DoWithVersion converts a boundary file and sets the supplied dataset
+// version. An empty version is allowed for source formats, such as GeoJSON,
+// that do not encode release metadata.
+func DoWithVersion(input *BoundaryFile, version string) (*pb.Timezones, error) {
 	output := make([]*pb.Timezone, 0)
 
 	for _, item := range input.Features {
