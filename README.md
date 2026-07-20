@@ -127,6 +127,8 @@ graph TD
     FullTopo[TopoTimezones .topo.bin ~52MB]
     SimplifiedCompressTopo[CompressedTopoTimezones<br/>.topology.compress.topo.bin ~5.4MB]
     FullCompressTopo[CompressedTopoTimezones<br/>.compress.topo.bin ~17MB]
+    LiteTZB[Embedded binary<br/>.lite.tzb ~3.1MB]
+    FullTZB[Embedded binary<br/>.tzb ~12.9MB]
     Preindex[PreindexTimezones<br/>.topology.preindex.bin ~2MB]
 
     Finder[Finder: Polygon Based Finder]
@@ -139,6 +141,8 @@ graph TD
     FullTopo --> |cmd/compresstopotzpb|FullCompressTopo
     Simplified --> |cmd/deduplicatetzpb|SimplifiedTopo
     SimplifiedTopo --> |cmd/compresstopotzpb|SimplifiedCompressTopo
+    FullCompressTopo --> |cmd/topo2embed|FullTZB
+    SimplifiedCompressTopo --> |cmd/topo2embed|LiteTZB
     Simplified --> |cmd/preindextzpb|Preindex
 
     FullCompressTopo --> |tzf.NewFinderFromCompressedTopo|Finder
@@ -163,6 +167,28 @@ bounded to ~111 m (see [Accuracy](#accuracy)).
 The [combined-with-oceans.topology.preindex.bin] (~2MB) consists of multiple map
 tiles and is used within both `DefaultFinder` and `FullFinder` as the fast-path
 `FuzzyFinder`, handling most queries without polygon ray-casting.
+
+Embedded targets can convert either compressed topology file to the
+protobuf-free `.tzb` format with `cmd/topo2embed`. The reference reader in
+`internal/embedbin` supports direct byte ranges and `io.ReaderAt` sources with
+allocation-free lookup.
+
+Applications can use a `.tzb` file through the standard `tzf.F` interface:
+
+```go
+data, err := os.ReadFile("combined-with-oceans.lite.tzb")
+if err != nil {
+    panic(err)
+}
+finder, err := tzf.NewFinderFromTZB(data)
+if err != nil {
+    panic(err)
+}
+fmt.Println(finder.GetTimezoneName(139.6917, 35.6895)) // Asia/Tokyo
+```
+
+`NewFinderFromTZBReaderAt` provides direct access through files, memory-mapped
+storage, or embedded flash adapters that implement `io.ReaderAt`.
 
 [pb_html]: https://ringsaturn.github.io/tzf/pb.html
 [combined-with-oceans.compress.topo.bin]: https://github.com/ringsaturn/tzf-dist/blob/data/combined-with-oceans.compress.topo.bin
