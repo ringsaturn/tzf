@@ -51,6 +51,8 @@ jobs:
           go install ./cmd/deduplicatetzpb
           go install ./cmd/compresstopotzpb
           go install ./cmd/preindextzpb
+          go install ./cmd/topo2embed
+          go install ./internal/cmd/embedcompare
 
       - name: Generate binary files
         run: |
@@ -73,7 +75,15 @@ jobs:
           preindextzpb combined-with-oceans.topology.bin \
             2> >(tee /tmp/stats-preindex.txt >&2)
 
-          ls -alh combined-with-oceans*.bin
+          topo2embed -allow-shortcut -o combined-with-oceans.tzb \
+            combined-with-oceans.compress.topo.bin
+          topo2embed -allow-shortcut -o combined-with-oceans.lite.tzb \
+            combined-with-oceans.topology.compress.topo.bin
+
+          embedcompare combined-with-oceans.compress.topo.bin combined-with-oceans.tzb
+          embedcompare combined-with-oceans.topology.compress.topo.bin combined-with-oceans.lite.tzb
+
+          ls -alh combined-with-oceans*.bin combined-with-oceans*.tzb
 
       - name: Collect checksums
         run: |
@@ -81,6 +91,8 @@ jobs:
             combined-with-oceans.compress.topo.bin \
             combined-with-oceans.topology.compress.topo.bin \
             combined-with-oceans.topology.preindex.bin \
+            combined-with-oceans.tzb \
+            combined-with-oceans.lite.tzb \
             > checksums.md5
           cat checksums.md5
 
@@ -91,4 +103,6 @@ jobs:
             combined-with-oceans.compress.topo.bin
             combined-with-oceans.topology.compress.topo.bin
             combined-with-oceans.topology.preindex.bin
+            combined-with-oceans.tzb
+            combined-with-oceans.lite.tzb
             checksums.md5
