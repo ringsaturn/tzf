@@ -48,6 +48,15 @@ jobs:
       - name: Run coverage
         run: go test -coverprofile=coverage.txt -covermode=atomic
 
+      - name: Verify embedded binary format
+        run: |
+          DIST_DIR="$(go list -m -f '{{.Dir}}' github.com/ringsaturn/tzf-dist)"
+          go run ./cmd/topo2embed -allow-shortcut -o /tmp/combined-with-oceans.lite.tzb \
+            "$DIST_DIR/combined-with-oceans.topology.compress.topo.bin"
+          go run ./internal/cmd/embedcompare -dense-step 1 -boundary-samples 10000 \
+            "$DIST_DIR/combined-with-oceans.topology.compress.topo.bin" \
+            /tmp/combined-with-oceans.lite.tzb
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
 
