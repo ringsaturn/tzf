@@ -110,6 +110,15 @@ func raycastSeg(a, b, p Point) raycastResult {
 	return raycastResult{}
 }
 
+// RaycastSeg tests a segment against the horizontal ray used by polygon
+// containment. inside reports a crossing and on reports that p lies on the
+// segment. Embedded-format readers use this wrapper so all Go lookup paths
+// share the same boundary behavior.
+func RaycastSeg(a, b, p Point) (inside, on bool) {
+	res := raycastSeg(a, b, p)
+	return res.inside, res.on
+}
+
 // ringContainsPoint reports whether p is strictly inside ring r using the
 // even-odd ray-casting rule.  Points on the ring boundary return false.
 // p must be in the ring's storage space (degrees for float64 rings,

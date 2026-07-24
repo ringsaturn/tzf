@@ -9,6 +9,7 @@ pb:
 test:
 	golangci-lint run ./...
 	go test -v -coverprofile=coverage.out ./...
+	python3 -m unittest scripts/bench2summary_test.py
 
 cover: test
 	go tool cover -html=coverage.out -o=coverage.html

@@ -63,7 +63,23 @@ def bench_meta(bench_name):
     name = re.sub(r"^Benchmark", "", bench_name)
 
     # --- Target ---
-    if name.startswith("DefaultFinder"):
+    if name.startswith("NewFinderFromTZBReaderAt"):
+        target = "TZBFinder ReaderAt"
+        dataset = "topology-simplified .tzb"
+        mem_key = "TZBFinderReaderAt"
+    elif name.startswith("NewFinderFromTZB"):
+        target = "TZBFinder"
+        dataset = "topology-simplified .tzb"
+        mem_key = "TZBFinder"
+    elif name.startswith("TZBFinderReaderAt"):
+        target = "TZBFinder ReaderAt"
+        dataset = "topology-simplified .tzb"
+        mem_key = "TZBFinderReaderAt"
+    elif name.startswith("TZBFinder"):
+        target = "TZBFinder"
+        dataset = "topology-simplified .tzb"
+        mem_key = "TZBFinder"
+    elif name.startswith("DefaultFinder"):
         target = "DefaultFinder"
         dataset = "topology-simplified + preindex"
         mem_key = "DefaultFinder"
@@ -94,6 +110,9 @@ def bench_meta(bench_name):
         mem_key = "Finder"
 
     # --- Scenario ---
+    if name.startswith("NewFinderFromTZB"):
+        return target, dataset, mem_key, "construction"
+
     if "GetTimezoneNames" in name:
         method = "GetTimezoneNames"
     else:
@@ -174,7 +193,7 @@ def main():
         print("No benchmark data found.")
         return
 
-    rows.sort(key=lambda r: r["scenario"])
+    rows.sort(key=lambda r: (r["scenario"], r["target"]))
 
     lines = ["# Benchmark Summary\n"]
     lines.append("| Target | Dataset | Scenario | Median (ns) | p99 (ns) | Approx throughput (ops/s) | Memory (MiB) |")
