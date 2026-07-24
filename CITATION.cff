@@ -5,8 +5,8 @@ message: >-
   metadata from this file.
 type: software
 authors:
-  - given-names: XIAO
-    family-names: Han
+  - given-names: Han
+    family-names: XIAO
     email: ringsaturn.me@gmail.com
 repository-code: 'https://github.com/ringsaturn/tzf'
 url: 'https://project-tzf.ringsaturn.me'
