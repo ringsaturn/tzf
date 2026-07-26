@@ -1,0 +1,5 @@
+# INTERNAL CMD
+
+Please note that the commands in this directory are intended for internal use
+only and may change without notice. They are not part of the public API and
+should not be relied upon in production code. Use them at your own risk.
