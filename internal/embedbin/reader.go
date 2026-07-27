@@ -282,7 +282,7 @@ func (r *Reader) readRaw(dst []byte, off uint64) error {
 		return nil
 	}
 	n, err := r.readerAt.ReadAt(dst, int64(off))
-	if err != nil && !(err == io.EOF && n == len(dst)) {
+	if err != nil && (err != io.EOF || n != len(dst)) {
 		return fmt.Errorf("%w: read: %v", ErrMalformed, err)
 	}
 	if n != len(dst) {
