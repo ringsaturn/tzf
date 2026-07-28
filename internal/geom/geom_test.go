@@ -42,7 +42,113 @@ func TestPolygonContainsPoint_OnEdge(t *testing.T) {
 		if poly.ContainsPoint(p) {
 			t.Errorf("expected edge point %v to be outside (strict containment)", p)
 		}
+		if !poly.ContainsPointAllowOnEdge(p) {
+			t.Errorf("expected edge point %v to be inside under the allow-on-edge rule", p)
+		}
 	}
+}
+
+// shiftRing returns ring translated by dx along the x axis.
+func shiftRing(ring []Point, dx float64) []Point {
+	out := make([]Point, len(ring))
+	for i, p := range ring {
+		out[i] = Point{p.X + dx, p.Y}
+	}
+	return out
+}
+
+// TestPolygonContainsPoint_SharedBorder covers two squares sharing the x == 10
+// border: under the strict rule a query on that border belongs to neither,
+// which is how a tiled polygon set grows gaps along its internal edges.
+func TestPolygonContainsPoint_SharedBorder(t *testing.T) {
+	// The dense rings cross minIndexSegments, so both the linear and the
+	// YStripes-indexed code path get exercised.
+	for _, tc := range []struct {
+		name      string
+		left      []Point
+		right     []Point
+		wantIndex bool
+	}{
+		{"linear", square(0, 10), shiftRing(square(0, 10), 10), false},
+		{"indexed", denseSquare(0, 10, 200), shiftRing(denseSquare(0, 10, 200), 10), true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			left := NewPolygon(tc.left, nil)
+			right := NewPolygon(tc.right, nil)
+
+			if got := left.extIdx != nil; got != tc.wantIndex {
+				t.Fatalf("YStripes index built = %v, want %v", got, tc.wantIndex)
+			}
+
+			for _, p := range []Point{{10, 5}, {10, 10}, {10, 0}} {
+				if left.ContainsPoint(p) || right.ContainsPoint(p) {
+					t.Errorf("border point %v: expected strict containment to reject both sides", p)
+				}
+				if !left.ContainsPointAllowOnEdge(p) {
+					t.Errorf("border point %v: expected left polygon to claim it", p)
+				}
+				if !right.ContainsPointAllowOnEdge(p) {
+					t.Errorf("border point %v: expected right polygon to claim it", p)
+				}
+			}
+
+			// Points off the border are unaffected by the edge rule.
+			for _, p := range []Point{{5, 5}, {15, 5}, {25, 5}, {10, 25}} {
+				if left.ContainsPoint(p) != left.ContainsPointAllowOnEdge(p) {
+					t.Errorf("point %v: left polygon changed under the edge rule", p)
+				}
+				if right.ContainsPoint(p) != right.ContainsPointAllowOnEdge(p) {
+					t.Errorf("point %v: right polygon changed under the edge rule", p)
+				}
+			}
+		})
+	}
+}
+
+// TestPolygonContainsPoint_AllowOnEdgeHoleBoundary pins the rule to the
+// exterior: a hole's boundary counts as polygon interior either way, so the
+// ring filling the hole and the ring around it both claim it rather than both
+// dropping it.
+func TestPolygonContainsPoint_AllowOnEdgeHoleBoundary(t *testing.T) {
+	poly := NewPolygon(square(0, 10), [][]Point{square(3, 7)})
+	fill := NewPolygon(square(3, 7), nil)
+
+	for _, p := range []Point{{3, 5}, {3, 3}} {
+		if !poly.ContainsPoint(p) || !poly.ContainsPointAllowOnEdge(p) {
+			t.Errorf("hole boundary %v: expected the surrounding polygon to claim it under both rules", p)
+		}
+		if fill.ContainsPoint(p) {
+			t.Errorf("hole boundary %v: expected strict containment to reject the filling polygon", p)
+		}
+		if !fill.ContainsPointAllowOnEdge(p) {
+			t.Errorf("hole boundary %v: expected the filling polygon to claim it under the allow-on-edge rule", p)
+		}
+	}
+
+	// Inside the hole proper stays outside under both rules.
+	if poly.ContainsPoint(Point{5, 5}) || poly.ContainsPointAllowOnEdge(Point{5, 5}) {
+		t.Error("expected a point inside the hole to stay outside under both rules")
+	}
+}
+
+// denseSquare returns a square ring with n extra vertices per side, enough to
+// cross the minimum segment count for building a YStripes index.
+func denseSquare(min, max float64, n int) []Point {
+	step := (max - min) / float64(n)
+	ring := make([]Point, 0, 4*n+1)
+	for i := range n { // left edge, going up
+		ring = append(ring, Point{min, min + step*float64(i)})
+	}
+	for i := range n { // top edge
+		ring = append(ring, Point{min + step*float64(i), max})
+	}
+	for i := range n { // right edge, going down
+		ring = append(ring, Point{max, max - step*float64(i)})
+	}
+	for i := range n { // bottom edge
+		ring = append(ring, Point{max - step*float64(i), min})
+	}
+	return append(ring, ring[0])
 }
 
 func TestPolygonContainsPoint_WithHole(t *testing.T) {
@@ -156,7 +262,7 @@ func BenchmarkContainsPoint_LinearScan(b *testing.B) {
 	p := Point{1, 1}
 	b.ResetTimer()
 	for range b.N {
-		ringContainsPoint(r, nil, p) // nil index → linear scan
+		ringContainsPoint(r, nil, p, false) // nil index → linear scan
 	}
 }
 

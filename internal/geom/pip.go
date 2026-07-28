@@ -110,15 +110,15 @@ func raycastSeg(a, b, p Point) raycastResult {
 	return raycastResult{}
 }
 
-// ringContainsPoint reports whether p is strictly inside ring r using the
-// even-odd ray-casting rule.  Points on the ring boundary return false.
+// ringContainsPoint reports whether p is inside ring r using the even-odd
+// ray-casting rule.  A point on the ring boundary returns allowOnEdge.
 // p must be in the ring's storage space (degrees for float64 rings,
 // 1e5-scaled for int32 rings); segment endpoints are converted to float64 in
 // registers, so the raycast itself is identical for both storage types.
 //
 // When idx is non-nil, only the candidate segments returned by the YStripes
 // index are examined; otherwise all n segments are checked linearly.
-func ringContainsPoint[T Coord](r RingOf[T], idx *yStripesIndex, p Point) bool {
+func ringContainsPoint[T Coord](r RingOf[T], idx *yStripesIndex, p Point, allowOnEdge bool) bool {
 	n := len(r)
 	if n < 3 {
 		return false
@@ -132,7 +132,7 @@ func ringContainsPoint[T Coord](r RingOf[T], idx *yStripesIndex, p Point) bool {
 			j := (i + 1) % n
 			res := raycastSeg(segPoint(r[i]), segPoint(r[j]), p)
 			if res.on {
-				inside = false
+				inside = allowOnEdge
 				return false // stop
 			}
 			if res.inside {
@@ -148,7 +148,7 @@ func ringContainsPoint[T Coord](r RingOf[T], idx *yStripesIndex, p Point) bool {
 		j := (i + 1) % n
 		res := raycastSeg(segPoint(r[i]), segPoint(r[j]), p)
 		if res.on {
-			return false
+			return allowOnEdge
 		}
 		if res.inside {
 			inside = !inside

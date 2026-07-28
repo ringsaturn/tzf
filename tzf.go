@@ -45,7 +45,12 @@ type tzitem[T geom.Coord] struct {
 
 func (i *tzitem[T]) ContainsPoint(p geom.Point) bool {
 	for _, poly := range i.polys {
-		if poly.ContainsPoint(p) {
+		// Timezone polygons tile the globe, so a query that lands exactly on a
+		// shared border must belong to both neighbours rather than to neither.
+		// The nautical zones make this easy to hit: their borders sit on whole
+		// meridians (7.5, 22.5, ...), which is exactly the kind of coordinate
+		// people type by hand.
+		if poly.ContainsPointAllowOnEdge(p) {
 			return true
 		}
 	}

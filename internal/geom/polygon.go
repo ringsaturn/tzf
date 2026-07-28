@@ -92,19 +92,41 @@ func newPolygonOf[T Coord](exterior []PointOf[T], holes [][]PointOf[T], scale fl
 }
 
 // ContainsPoint reports whether the degree-space point p lies strictly inside
-// the polygon: inside the exterior ring and outside all hole rings. Points on
-// a ring boundary return false.
+// the polygon: inside the exterior ring and outside all hole rings. A point on
+// the exterior boundary returns false.
+//
+// Use [PolygonOf.ContainsPointAllowOnEdge] when the boundary should belong to
+// the polygon — for example when adjacent polygons tile a plane and a query on
+// a shared edge must not fall through the crack between them.
 func (poly *PolygonOf[T]) ContainsPoint(p Point) bool {
+	return poly.containsPoint(p, false)
+}
+
+// ContainsPointAllowOnEdge is like [PolygonOf.ContainsPoint], but a point on
+// the exterior boundary returns true.
+//
+// For a set of polygons sharing borders this makes the boundary belong to every
+// polygon that touches it, so no query can land in a gap. The flip side is that
+// a shared edge matches more than one polygon; callers that need a single
+// answer must break the tie themselves.
+func (poly *PolygonOf[T]) ContainsPointAllowOnEdge(p Point) bool {
+	return poly.containsPoint(p, true)
+}
+
+// containsPoint applies allowOnEdge to the exterior ring only. Hole rings are
+// always tested with allowOnEdge = false, so a point on a hole's boundary
+// counts as not in the hole, i.e. inside the polygon under either rule.
+func (poly *PolygonOf[T]) containsPoint(p Point, allowOnEdge bool) bool {
 	sp := Point{X: p.X * poly.scale, Y: p.Y * poly.scale}
 	if sp.X < float64(poly.min.X) || sp.X > float64(poly.max.X) ||
 		sp.Y < float64(poly.min.Y) || sp.Y > float64(poly.max.Y) {
 		return false
 	}
-	if !ringContainsPoint(poly.exterior, poly.extIdx, sp) {
+	if !ringContainsPoint(poly.exterior, poly.extIdx, sp, allowOnEdge) {
 		return false
 	}
 	for i, h := range poly.holes {
-		if ringContainsPoint(h, poly.holeIdxs[i], sp) {
+		if ringContainsPoint(h, poly.holeIdxs[i], sp, false) {
 			return false
 		}
 	}
