@@ -3,7 +3,7 @@ module github.com/ringsaturn/tzf
 go 1.25.0
 
 require (
-	github.com/paulmach/orb v0.14.0
+	github.com/paulmach/orb v0.13.0
 	github.com/ringsaturn/go-cities.json v0.6.13
 	github.com/ringsaturn/tzf-dist v0.0.2026-c-fix1
 	github.com/tidwall/rtree v1.10.0
@@ -14,3 +14,5 @@ require (
 require github.com/tidwall/geoindex v1.7.0 // indirect
 
 replace github.com/paulmach/orb => github.com/ringsaturn/orb v0.14.0
+
+retract v1.2.4 // requires the nonexistent github.com/paulmach/orb v0.14.0
