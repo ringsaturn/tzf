@@ -36,6 +36,26 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Test external module consumption
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_root="$PWD"
+          consumer_dir="$(mktemp -d)"
+          trap 'rm -rf "$consumer_dir"' EXIT
+          cd "$consumer_dir"
+          go mod init example.com/tzf-consumer
+          go mod edit -replace="github.com/ringsaturn/tzf=$repo_root"
+          printf '%s\n' \
+            'package main' \
+            '' \
+            'import _ "github.com/ringsaturn/tzf"' \
+            '' \
+            'func main() {}' \
+            > main.go
+          go mod tidy
+          go test ./...
+
       - run: ls -al
 
       - name: golangci-lint
