@@ -33,9 +33,9 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/paulmach/orb"
-	"github.com/paulmach/orb/maptile"
-	"github.com/paulmach/orb/maptile/tilecover"
+	"github.com/ringsaturn/orb"
+	"github.com/ringsaturn/orb/maptile"
+	"github.com/ringsaturn/orb/maptile/tilecover"
 	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/geom"

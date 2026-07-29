@@ -36,6 +36,30 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # A `replace` directive only applies when its module is the main module,
+      # so a dependency graph that resolves here can still be broken for
+      # consumers (see #217). Build tzf from a throwaway module where tzf is a
+      # dependency, which is the only way that difference shows up.
+      - name: Test external module consumption
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_root="$PWD"
+          consumer_dir="$(mktemp -d)"
+          trap 'rm -rf "$consumer_dir"' EXIT
+          cd "$consumer_dir"
+          go mod init example.com/tzf-consumer
+          go mod edit -replace="github.com/ringsaturn/tzf=$repo_root"
+          printf '%s\n' \
+            'package main' \
+            '' \
+            'import _ "github.com/ringsaturn/tzf"' \
+            '' \
+            'func main() {}' \
+            > main.go
+          go mod tidy
+          go test ./...
+
       - run: ls -al
 
       - name: golangci-lint

@@ -286,7 +286,9 @@ more information.
 
 ## Thanks
 
-- <https://github.com/paulmach/orb>
+- <https://github.com/paulmach/orb> (used via the
+  [ringsaturn/orb](https://github.com/ringsaturn/orb) fork, which drops the
+  BSON/`mongo-driver` dependency)
 - <https://github.com/tidwall/geojson>
 - <https://github.com/tidwall/tg>
 - <https://github.com/jannikmi/timezonefinder>
