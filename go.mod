@@ -12,3 +12,5 @@ require (
 )
 
 require github.com/tidwall/geoindex v1.7.0 // indirect
+
+retract v1.2.4 // requires the nonexistent github.com/paulmach/orb v0.14.0
