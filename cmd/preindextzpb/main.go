@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/paulmach/orb/maptile"
+	"github.com/ringsaturn/orb/maptile"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/preindex"
 	"google.golang.org/protobuf/proto"

@@ -9,8 +9,8 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/paulmach/orb"
-	"github.com/paulmach/orb/simplify"
+	"github.com/ringsaturn/orb"
+	"github.com/ringsaturn/orb/simplify"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/tidwall/rtree"
 )

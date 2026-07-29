@@ -3,7 +3,7 @@ package preindex
 import (
 	"testing"
 
-	"github.com/paulmach/orb/maptile"
+	"github.com/ringsaturn/orb/maptile"
 	"github.com/ringsaturn/tzf/internal/geom"
 )
 
