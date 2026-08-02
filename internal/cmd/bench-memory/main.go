@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"runtime"
 	"runtime/debug"
@@ -10,6 +11,7 @@ import (
 	"github.com/ringsaturn/tzf"
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/embedbin"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -24,6 +26,18 @@ func readHeap() uint64 {
 func report(name string, before, after uint64) {
 	mb := float64(int64(after)-int64(before)) / (1024 * 1024)
 	fmt.Printf("MEMORY\t%s\t%.1f\n", name, mb)
+}
+
+func buildTZB() []byte {
+	input := &pb.CompressedTopoTimezones{}
+	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
+		panic(err)
+	}
+	data, err := embedbin.Encode(input, embedbin.EncodeOptions{AllowShortcut: true})
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 func main() {
@@ -75,6 +89,32 @@ func main() {
 		}
 		after = readHeap()
 		report("FinderNoGrid", before, after)
+		runtime.KeepAlive(f)
+	}
+
+	// TZBFinder (lite .tzb retained as a byte slice)
+	before = readHeap()
+	{
+		data := buildTZB()
+		f, err := tzf.NewFinderFromTZB(data)
+		if err != nil {
+			panic(err)
+		}
+		after = readHeap()
+		report("TZBFinder", before, after)
+		runtime.KeepAlive(f)
+	}
+
+	// TZBFinderReaderAt (lite .tzb through an io.ReaderAt source)
+	before = readHeap()
+	{
+		data := buildTZB()
+		f, err := tzf.NewFinderFromTZBReaderAt(bytes.NewReader(data), int64(len(data)))
+		if err != nil {
+			panic(err)
+		}
+		after = readHeap()
+		report("TZBFinderReaderAt", before, after)
 		runtime.KeepAlive(f)
 	}
 

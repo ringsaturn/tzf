@@ -105,6 +105,30 @@ func TestPolygonContainsPoint_SharedBorder(t *testing.T) {
 	}
 }
 
+func TestRaycastSeg(t *testing.T) {
+	tests := []struct {
+		name       string
+		a, b, p    Point
+		inside, on bool
+	}{
+		{"crossing", Point{10, -1}, Point{10, 1}, Point{0, 0}, true, false},
+		{"right of segment", Point{10, -1}, Point{10, 1}, Point{20, 0}, false, false},
+		{"horizontal boundary", Point{0, 0}, Point{10, 0}, Point{5, 0}, false, true},
+		{"vertical boundary", Point{0, 0}, Point{0, 10}, Point{0, 5}, false, true},
+		{"diagonal boundary", Point{0, 0}, Point{10, 10}, Point{5, 5}, false, true},
+		{"degenerate boundary", Point{2, 3}, Point{2, 3}, Point{2, 3}, false, true},
+		{"degenerate miss", Point{2, 3}, Point{2, 3}, Point{3, 3}, false, false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			inside, on := RaycastSeg(tc.a, tc.b, tc.p)
+			if inside != tc.inside || on != tc.on {
+				t.Fatalf("RaycastSeg = %v,%v, want %v,%v", inside, on, tc.inside, tc.on)
+			}
+		})
+	}
+}
+
 // TestPolygonContainsPoint_AllowOnEdgeHoleBoundary pins the rule to the
 // exterior: a hole's boundary counts as polygon interior either way, so the
 // ring filling the hole and the ring around it both claim it rather than both
