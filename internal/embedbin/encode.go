@@ -19,6 +19,10 @@ import (
 type EncodeOptions struct {
 	ChunkTarget   int
 	AllowShortcut bool
+	// Preindex, when set, is embedded as the optional FUZZY section so a
+	// single file can back both fuzzy and polygon lookups. Its Version must
+	// equal the geometry input's Version.
+	Preindex *pb.PreindexTimezones
 }
 
 type encChunk struct {
@@ -149,7 +153,14 @@ func Encode(input *pb.CompressedTopoTimezones, opts EncodeOptions) ([]byte, erro
 	if err != nil {
 		return nil, err
 	}
-	return e.serialize(names, input.Version, uint32(target), opts.AllowShortcut, gridBytes)
+	var fuzzyBytes []byte
+	if opts.Preindex != nil {
+		fuzzyBytes, err = encodeFuzzy(opts.Preindex, names, input.Version)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return e.serialize(names, input.Version, uint32(target), opts.AllowShortcut, gridBytes, fuzzyBytes)
 }
 
 func decodePolyline(data []byte) ([]geom.I32Point, error) {
@@ -440,7 +451,7 @@ func encodeGrid(grid *pb.GridIndex, tzCount int) ([]byte, error) {
 	return out, nil
 }
 
-func (e *encoder) serialize(names []string, version string, target uint32, allowShortcut bool, grid []byte) ([]byte, error) {
+func (e *encoder) serialize(names []string, version string, target uint32, allowShortcut bool, grid, fuzzy []byte) ([]byte, error) {
 	nameBlobLen := 0
 	for _, name := range names {
 		if uint64(nameBlobLen)+uint64(len(name)) > math.MaxUint32 {
@@ -526,26 +537,32 @@ func (e *encoder) serialize(names []string, version string, target uint32, allow
 		putBBox(chunkSec, o+8, c.bbox)
 	}
 
-	sections := []struct {
-		typ  uint32
-		data []byte
-	}{
-		{sectionNames, nameSec}, {sectionTZDir, tzSec}, {sectionPolyDir, polySec},
-		{sectionRingDir, ringSec}, {sectionRingOps, opSec}, {sectionGroupDir, groupSec},
-		{sectionChunkDir, chunkSec}, {sectionGrid, grid}, {sectionPoints, pointsSec},
+	type outSection struct {
+		typ   uint32
+		data  []byte
+		align uint64
 	}
+	sections := []outSection{
+		{sectionNames, nameSec, 4}, {sectionTZDir, tzSec, 4}, {sectionPolyDir, polySec, 4},
+		{sectionRingDir, ringSec, 4}, {sectionRingOps, opSec, 4}, {sectionGroupDir, groupSec, 4},
+		{sectionChunkDir, chunkSec, 4}, {sectionGrid, grid, 4},
+	}
+	if fuzzy != nil {
+		// FUZZY sits before POINTS (metadata-first order) and is 8-byte
+		// aligned so its keys array is castable on aligned targets.
+		sections = append(sections, outSection{sectionFuzzy, fuzzy, 8})
+	}
+	sections = append(sections, outSection{sectionPoints, pointsSec, 4})
 	offsets := make([]uint32, len(sections))
-	cursor := align4(headerSize + uint64(len(sections))*sectionEntryLen)
+	cursor := uint64(headerSize) + uint64(len(sections))*sectionEntryLen
 	for i, section := range sections {
+		cursor = alignUp(cursor, section.align)
 		off, err := checkedU32("section offset", cursor)
 		if err != nil {
 			return nil, err
 		}
 		offsets[i] = off
 		cursor += uint64(len(section.data))
-		if i != len(sections)-1 {
-			cursor = align4(cursor)
-		}
 	}
 	fileSize := cursor + footerSize
 	size32, err := checkedU32("file size", fileSize)

@@ -16,9 +16,10 @@ func main() {
 	output := flag.String("o", "", "output .tzb path")
 	chunk := flag.Int("chunk", 0, "target points per chunk (default 256)")
 	allowShortcut := flag.Bool("allow-shortcut", false, "enable the single-candidate GRID shortcut")
+	preindexPath := flag.String("preindex", "", "PreindexTimezones .bin to embed as the FUZZY section")
 	flag.Parse()
 	if flag.NArg() != 1 {
-		fmt.Fprintln(os.Stderr, "usage: topo2embed [-o output.tzb] [-chunk 256] [-allow-shortcut] input.compress.topo.bin")
+		fmt.Fprintln(os.Stderr, "usage: topo2embed [-o output.tzb] [-chunk 256] [-allow-shortcut] [-preindex preindex.bin] input.compress.topo.bin")
 		os.Exit(2)
 	}
 	inputPath := flag.Arg(0)
@@ -30,9 +31,19 @@ func main() {
 	if err := proto.Unmarshal(raw, &input); err != nil {
 		fail("decode CompressedTopoTimezones", err)
 	}
-	data, err := embedbin.Encode(&input, embedbin.EncodeOptions{
-		ChunkTarget: *chunk, AllowShortcut: *allowShortcut,
-	})
+	opts := embedbin.EncodeOptions{ChunkTarget: *chunk, AllowShortcut: *allowShortcut}
+	if *preindexPath != "" {
+		preRaw, err := os.ReadFile(*preindexPath)
+		if err != nil {
+			fail("read preindex", err)
+		}
+		preindex := &pb.PreindexTimezones{}
+		if err := proto.Unmarshal(preRaw, preindex); err != nil {
+			fail("decode PreindexTimezones", err)
+		}
+		opts.Preindex = preindex
+	}
+	data, err := embedbin.Encode(&input, opts)
 	if err != nil {
 		fail("encode .tzb", err)
 	}
@@ -44,7 +55,8 @@ func main() {
 		fail("write output", err)
 	}
 	fmt.Fprintf(os.Stderr, "input:  bytes=%d timezones=%d\n", len(raw), len(input.Timezones))
-	fmt.Fprintf(os.Stderr, "output: bytes=%d chunk=%d shortcut=%v\n", len(data), effectiveChunk(*chunk), *allowShortcut)
+	fmt.Fprintf(os.Stderr, "output: bytes=%d chunk=%d shortcut=%v fuzzy=%v\n",
+		len(data), effectiveChunk(*chunk), *allowShortcut, opts.Preindex != nil)
 	fmt.Println(dest)
 }
 

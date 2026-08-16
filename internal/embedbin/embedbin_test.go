@@ -68,8 +68,8 @@ func TestEncodeLookupAndReaderAt(t *testing.T) {
 		ok       bool
 	}{
 		{5, 5, true},
-		{0, 5, false},
-		{10, 10, false},
+		{0, 5, true},   // on the exterior edge: border belongs to the polygon
+		{10, 10, true}, // exterior vertex
 		{-1, 5, false},
 		{math.NaN(), 0, false},
 		{math.Inf(1), 0, false},
@@ -119,7 +119,12 @@ func TestHoleBoundarySemantics(t *testing.T) {
 	for _, tc := range []struct {
 		x, y float64
 		ok   bool
-	}{{1, 1, true}, {5, 5, false}, {3, 5, true}, {0, 5, false}} {
+	}{
+		{1, 1, true},  // between exterior and hole
+		{5, 5, false}, // inside the hole
+		{3, 5, true},  // on the hole edge: not excluded by the hole
+		{0, 5, true},  // on the exterior edge: contained
+	} {
 		_, ok, err := r.Lookup(tc.x, tc.y)
 		if err != nil || ok != tc.ok {
 			t.Fatalf("Lookup(%v,%v) = %v,%v, want %v", tc.x, tc.y, ok, err, tc.ok)
@@ -145,7 +150,7 @@ func TestGridOptionalLinearFallback(t *testing.T) {
 	for i := 0; i < count; i++ {
 		o := headerSize + i*sectionEntryLen
 		if binary.LittleEndian.Uint32(mutated[o:]) == sectionGrid {
-			binary.LittleEndian.PutUint32(mutated[o:], 10)
+			binary.LittleEndian.PutUint32(mutated[o:], 100)
 			break
 		}
 	}
@@ -405,6 +410,19 @@ func FuzzOpenAndLookup(f *testing.F) {
 		f.Fatal(err)
 	}
 	f.Add(data, 5.0, 5.0)
+	withFuzzy, err := Encode(fixture("Etc/Test"), EncodeOptions{Preindex: &pb.PreindexTimezones{
+		IdxZoom: 4, AggZoom: 2, Version: "test",
+		Keys: []*pb.PreindexTimezone{{Name: "Etc/Test", X: 8, Y: 7, Z: 4}},
+	}})
+	if err != nil {
+		f.Fatal(err)
+	}
+	f.Add(withFuzzy, 5.0, 5.0)
+	edges, err := Encode(sharedEdgeFixture(), EncodeOptions{})
+	if err != nil {
+		f.Fatal(err)
+	}
+	f.Add(edges, 5.0, 5.0)
 	f.Fuzz(func(t *testing.T, data []byte, lng, lat float64) {
 		r, err := Open(data)
 		if err != nil {
@@ -412,5 +430,10 @@ func FuzzOpenAndLookup(f *testing.F) {
 		}
 		_, _, _ = r.Lookup(lng, lat)
 		_, _ = r.LookupInto(lng, lat, make([]int32, 0, r.TimezoneCount()))
+		if r.HasFuzzy() {
+			_, _, _ = r.FuzzyLookup(lng, lat)
+			_, _ = r.FuzzyLookupAppend(make([]int32, 0, r.FuzzyLookupBufferSize()), lng, lat)
+		}
+		_, _ = r.Expand()
 	})
 }

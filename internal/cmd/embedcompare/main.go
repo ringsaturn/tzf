@@ -2,6 +2,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -17,11 +18,25 @@ import (
 
 type point struct{ lng, lat float64 }
 
+// checker bundles the query-parity pairs exercised on every sample point:
+// the in-place reader, the expansion loader, and (when a preindex is given)
+// the FUZZY view, each against its protobuf-backed reference.
+type checker struct {
+	reader      *embedbin.Reader
+	reference   tzf.F
+	expanded    tzf.F
+	expandedRef tzf.F
+	fuzzy       tzf.F
+	fuzzyRef    tzf.F
+	dst         []int32
+}
+
 func main() {
 	step := flag.Float64("dense-step", 0.1, "global grid spacing in degrees, 0 disables")
 	boundarySamples := flag.Int("boundary-samples", 50000, "number of boundary-biased samples")
 	seed := flag.Int64("seed", 42, "random seed")
 	deepOnly := flag.Bool("deep-only", false, "run semantic verification without query sampling")
+	preindexPath := flag.String("preindex", "", "source PreindexTimezones .bin for FUZZY parity")
 	flag.Parse()
 	if flag.NArg() != 2 {
 		fmt.Fprintln(os.Stderr, "usage: embedcompare [flags] input.compress.topo.bin input.tzb")
@@ -46,26 +61,59 @@ func main() {
 	if err := embedbin.Verify(&input, reader); err != nil {
 		fail(err)
 	}
-	fmt.Fprintf(os.Stderr, "deep verification passed: version=%s timezones=%d bytes=%d\n",
-		reader.DataVersion(), reader.TimezoneCount(), len(tzb))
+	fmt.Fprintf(os.Stderr, "deep verification passed: version=%s timezones=%d bytes=%d fuzzy=%v\n",
+		reader.DataVersion(), reader.TimezoneCount(), len(tzb), reader.HasFuzzy())
 	if *deepOnly {
 		return
 	}
 
+	c := &checker{reader: reader, dst: make([]int32, 0, reader.TimezoneCount())}
 	referenceInput := proto.Clone(&input).(*pb.CompressedTopoTimezones)
 	if !reader.ShortcutEnabled() {
 		referenceInput.GridIndex = nil
 	}
-	reference, err := tzf.NewFinderFromCompressedTopo(referenceInput)
+	c.reference, err = tzf.NewFinderFromCompressedTopo(referenceInput)
 	if err != nil {
 		fail(err)
 	}
-	dst := make([]int32, 0, reader.TimezoneCount())
+	// The expansion parity contract is against NewFinderFromCompressedTopo
+	// over the unmodified source (grid included): the shortcut flag governs
+	// only the in-place reader.
+	c.expanded, err = tzf.NewFinderFromTZBExpanded(tzb)
+	if err != nil {
+		fail(err)
+	}
+	c.expandedRef, err = tzf.NewFinderFromCompressedTopo(&input)
+	if err != nil {
+		fail(err)
+	}
+	if *preindexPath != "" {
+		if !reader.HasFuzzy() {
+			fail(errors.New("-preindex given but .tzb has no FUZZY section"))
+		}
+		preRaw, err := os.ReadFile(*preindexPath)
+		if err != nil {
+			fail(err)
+		}
+		preindex := &pb.PreindexTimezones{}
+		if err := proto.Unmarshal(preRaw, preindex); err != nil {
+			fail(err)
+		}
+		c.fuzzy, err = tzf.NewFuzzyFinderFromTZB(tzb)
+		if err != nil {
+			fail(err)
+		}
+		c.fuzzyRef, err = tzf.NewFuzzyFinderFromPB(preindex)
+		if err != nil {
+			fail(err)
+		}
+	}
+
 	checked := 0
 	if *step > 0 {
 		for lat := -90.0; lat <= 90.0+1e-12; lat += *step {
 			for lng := -180.0; lng <= 180.0+1e-12; lng += *step {
-				if err := compareSingle(reader, reference, lng, lat); err != nil {
+				if err := c.compareSingle(lng, lat); err != nil {
 					fail(err)
 				}
 				checked++
@@ -82,48 +130,84 @@ func main() {
 		if lng < -180 || lng > 180 || lat < -90 || lat > 90 {
 			continue
 		}
-		if err := compareSingle(reader, reference, lng, lat); err != nil {
+		if err := c.compareSingle(lng, lat); err != nil {
 			fail(err)
 		}
-		got, err := reader.LookupInto(lng, lat, dst)
-		if err != nil {
+		if err := c.compareMulti(lng, lat); err != nil {
 			fail(err)
-		}
-		want, err := reference.GetTimezoneNames(lng, lat)
-		if err != nil {
-			fail(err)
-		}
-		gotNames := make([]string, len(got))
-		for i, idx := range got {
-			name, err := reader.Name(idx)
-			if err != nil {
-				fail(err)
-			}
-			gotNames[i] = string(name)
-		}
-		if !slices.Equal(gotNames, want) {
-			fail(fmt.Errorf("multi parity at (%f,%f): got %v want %v", lng, lat, gotNames, want))
 		}
 	}
 	fmt.Fprintf(os.Stderr, "boundary parity passed: points=%d seed=%d\n", len(reservoir), *seed)
 }
 
-func compareSingle(reader *embedbin.Reader, reference tzf.F, lng, lat float64) error {
-	idx, ok, err := reader.Lookup(lng, lat)
+func (c *checker) compareSingle(lng, lat float64) error {
+	idx, ok, err := c.reader.Lookup(lng, lat)
 	if err != nil {
 		return err
 	}
 	var got string
 	if ok {
-		name, err := reader.Name(idx)
+		name, err := c.reader.Name(idx)
 		if err != nil {
 			return err
 		}
 		got = string(name)
 	}
-	want := reference.GetTimezoneName(lng, lat)
+	want := c.reference.GetTimezoneName(lng, lat)
 	if got != want {
 		return fmt.Errorf("single parity at (%f,%f): got %q want %q", lng, lat, got, want)
+	}
+	if got, want := c.expanded.GetTimezoneName(lng, lat), c.expandedRef.GetTimezoneName(lng, lat); got != want {
+		return fmt.Errorf("expanded single parity at (%f,%f): got %q want %q", lng, lat, got, want)
+	}
+	if c.fuzzy != nil {
+		if got, want := c.fuzzy.GetTimezoneName(lng, lat), c.fuzzyRef.GetTimezoneName(lng, lat); got != want {
+			return fmt.Errorf("fuzzy single parity at (%f,%f): got %q want %q", lng, lat, got, want)
+		}
+	}
+	return nil
+}
+
+func (c *checker) compareMulti(lng, lat float64) error {
+	got, err := c.reader.LookupInto(lng, lat, c.dst)
+	if err != nil {
+		return err
+	}
+	want, err := c.reference.GetTimezoneNames(lng, lat)
+	if err != nil {
+		return err
+	}
+	gotNames := make([]string, len(got))
+	for i, idx := range got {
+		name, err := c.reader.Name(idx)
+		if err != nil {
+			return err
+		}
+		gotNames[i] = string(name)
+	}
+	if !slices.Equal(gotNames, want) {
+		return fmt.Errorf("multi parity at (%f,%f): got %v want %v", lng, lat, gotNames, want)
+	}
+	expGot, err := c.expanded.GetTimezoneNames(lng, lat)
+	if err != nil {
+		return err
+	}
+	expWant, err := c.expandedRef.GetTimezoneNames(lng, lat)
+	if err != nil {
+		return err
+	}
+	if !slices.Equal(expGot, expWant) {
+		return fmt.Errorf("expanded multi parity at (%f,%f): got %v want %v", lng, lat, expGot, expWant)
+	}
+	if c.fuzzy != nil {
+		fzGot, gotErr := c.fuzzy.GetTimezoneNames(lng, lat)
+		fzWant, wantErr := c.fuzzyRef.GetTimezoneNames(lng, lat)
+		if (gotErr == nil) != (wantErr == nil) {
+			return fmt.Errorf("fuzzy multi parity at (%f,%f): errors %v vs %v", lng, lat, gotErr, wantErr)
+		}
+		if !slices.Equal(fzGot, fzWant) {
+			return fmt.Errorf("fuzzy multi parity at (%f,%f): got %v want %v", lng, lat, fzGot, fzWant)
+		}
 	}
 	return nil
 }

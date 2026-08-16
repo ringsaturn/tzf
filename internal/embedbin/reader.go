@@ -34,13 +34,14 @@ type Reader struct {
 	tzCount     uint32
 	chunkTarget uint32
 	version     string
-	sections    [10]section
+	sections    [11]section
 	polyCount   uint32
 	ringCount   uint32
 	opCount     uint32
 	groupCount  uint32
 	chunkCount  uint32
 	grid        gridInfo
+	fuzzy       fuzzyInfo
 	mu          sync.Mutex
 	work        readWorkspace
 }
@@ -122,6 +123,9 @@ func (r *Reader) open() error {
 	if string(h[0:4]) != "TZFB" || h[4] != formatMajor {
 		return fmt.Errorf("%w: magic or format major", ErrMalformed)
 	}
+	if h[profileOffset] != profileE {
+		return fmt.Errorf("%w: unsupported profile %d", ErrMalformed, h[profileOffset])
+	}
 	if binary.LittleEndian.Uint16(h[6:]) != headerSize ||
 		binary.LittleEndian.Uint32(h[12:]) != coordScale ||
 		uint64(binary.LittleEndian.Uint32(h[16:])) != r.size {
@@ -159,7 +163,7 @@ func (r *Reader) open() error {
 	if err := r.verifyCRC(); err != nil {
 		return err
 	}
-	var seen [10]bool
+	var seen [11]bool
 	for i := uint32(0); i < sectionCount; i++ {
 		entry, err := r.sectionEntry(i)
 		if err != nil {
@@ -177,7 +181,7 @@ func (r *Reader) open() error {
 			return err
 		}
 		typ := binary.LittleEndian.Uint32(raw[:])
-		if typ >= sectionNames && typ <= sectionPoints {
+		if typ >= sectionNames && typ <= sectionFuzzy {
 			if seen[typ] {
 				return fmt.Errorf("%w: duplicate known section %d", ErrMalformed, typ)
 			}
@@ -224,6 +228,11 @@ func (r *Reader) open() error {
 	}
 	if hasGrid {
 		if err := r.validateGrid(); err != nil {
+			return err
+		}
+	}
+	if seen[sectionFuzzy] {
+		if err := r.validateFuzzy(); err != nil {
 			return err
 		}
 	}
@@ -692,7 +701,11 @@ func (r *Reader) timezoneContains(index uint32, x, y float64) (bool, error) {
 		if !p.box.contains(x, y) {
 			continue
 		}
-		inside, err := r.ringContains(p.first, x, y)
+		// Exterior rings allow on-edge containment and hole rings do not,
+		// matching geom.PolygonOf.ContainsPointAllowOnEdge: a border query
+		// belongs to every polygon touching it, and a point on a hole's
+		// boundary stays inside the polygon.
+		inside, err := r.ringContains(p.first, x, y, true)
 		if err != nil || !inside {
 			if err != nil {
 				return false, err
@@ -708,7 +721,7 @@ func (r *Reader) timezoneContains(index uint32, x, y float64) (bool, error) {
 			if !hr.box.contains(x, y) {
 				continue
 			}
-			inHole, err := r.ringContains(p.first+h, x, y)
+			inHole, err := r.ringContains(p.first+h, x, y, false)
 			if err != nil {
 				return false, err
 			}
@@ -724,7 +737,9 @@ func (r *Reader) timezoneContains(index uint32, x, y float64) (bool, error) {
 	return false, nil
 }
 
-func (r *Reader) ringContains(index uint32, x, y float64) (bool, error) {
+// ringContains reports whether the ring contains (x, y). A point on any ring
+// segment returns allowOnEdge, mirroring geom.ringContainsPoint.
+func (r *Reader) ringContains(index uint32, x, y float64, allowOnEdge bool) (bool, error) {
 	ring, err := r.ringAt(index)
 	if err != nil || !ring.box.contains(x, y) {
 		return false, err
@@ -752,7 +767,7 @@ func (r *Reader) ringContains(index uint32, x, y float64) (bool, error) {
 		} else if !samePoint(previousExit, entry) {
 			cross, on := geom.RaycastSeg(toPoint(previousExit), toPoint(entry), p)
 			if on {
-				return false, nil
+				return allowOnEdge, nil
 			}
 			if cross {
 				inside = !inside
@@ -765,7 +780,7 @@ func (r *Reader) ringContains(index uint32, x, y float64) (bool, error) {
 				return false, err
 			}
 			if on {
-				return false, nil
+				return allowOnEdge, nil
 			}
 		}
 	}
@@ -775,7 +790,7 @@ func (r *Reader) ringContains(index uint32, x, y float64) (bool, error) {
 	if !samePoint(previousExit, firstEntry) {
 		cross, on := geom.RaycastSeg(toPoint(previousExit), toPoint(firstEntry), p)
 		if on {
-			return false, nil
+			return allowOnEdge, nil
 		}
 		if cross {
 			inside = !inside

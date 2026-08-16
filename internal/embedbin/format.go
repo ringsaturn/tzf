@@ -14,9 +14,15 @@ const (
 	sectionEntryLen = 16
 	footerSize      = 4
 	formatMajor     = 1
-	formatMinor     = 0
+	formatMinor     = 1
 	coordScale      = uint32(100000)
 	defaultChunk    = 256
+
+	// profileOffset is the header byte assigned as `profile` in format
+	// revision 1.1 (previously reserved-zero, so all v1.0 files are valid
+	// E-profile files). Only profileE is defined for .tzb.
+	profileOffset = 48
+	profileE      = byte(0)
 
 	flagGrid       = uint32(1 << 0)
 	flagNoShortcut = uint32(1 << 1)
@@ -30,18 +36,28 @@ const (
 	sectionChunkDir = uint32(7)
 	sectionGrid     = uint32(8)
 	sectionPoints   = uint32(9)
+	sectionFuzzy    = uint32(10)
 
 	tzRecordLen    = uint32(24)
 	polyRecordLen  = uint32(24)
 	ringRecordLen  = uint32(28)
 	groupRecordLen = uint32(44)
 	chunkRecordLen = uint32(24)
+
+	fuzzyHeaderLen = uint64(16)
+	// fuzzyMulti marks a FUZZY value word as a multi_dir group reference;
+	// the low 15 bits are then a group index instead of a NAMES index.
+	fuzzyMulti = uint16(1 << 15)
+	// fuzzyMaxNames bounds tz_count when a FUZZY section is present: value
+	// words carry NAMES indices in 15 bits.
+	fuzzyMaxNames = 1 << 15
 )
 
 var (
 	ErrMalformed      = errors.New("embedbin: malformed file")
 	ErrBufferTooSmall = errors.New("embedbin: destination buffer too small")
 	ErrIndex          = errors.New("embedbin: timezone index out of range")
+	ErrNoFuzzy        = errors.New("embedbin: file has no FUZZY section")
 )
 
 type bbox struct {
@@ -98,6 +114,10 @@ func pointInDomain(p geom.I32Point) bool {
 
 func align4(n uint64) uint64 {
 	return (n + 3) &^ 3
+}
+
+func alignUp(n, align uint64) uint64 {
+	return (n + align - 1) &^ (align - 1)
 }
 
 func checkedU16(name string, n int) (uint16, error) {

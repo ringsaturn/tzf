@@ -46,6 +46,30 @@ old float32 protobuf round-trip). One interface dispatch per query; everything
 below it is monomorphised. `internal/cmd/i32compare` cross-checks the two
 storage paths on the bundled dataset.
 
+### Embedded Binary Format `.tzb` (`internal/embedbin`, `tzf_tzb*.go`)
+
+Sectioned little-endian container (format 1.1): header with a profile byte,
+CRC32 footer, optional dense `GRID` and `FUZZY` (type 10,
+preindex tiles as one sorted TileID array) sections. Built by `cmd/topo2embed`
+(`-preindex` embeds FUZZY); parity harness `internal/cmd/embedcompare`.
+
+Load paths (all protobuf-free at runtime):
+
+- `NewFinderFromTZB` / `NewFinderFromTZBReaderAt` — in-place queries over the
+  compressed file, <1KB heap, ~6µs/query.
+- `NewFinderFromTZBExpanded` — one-pass expansion into `finderImpl[int32]`;
+  query parity and speed identical to `NewFinderFromCompressedTopo`, ~2.8×
+  faster load than the pb path, junction-duplicate vertices dropped.
+- `NewFuzzyFinderFromTZB` — rebuilds the `FuzzyFinder` hash maps from the
+  FUZZY section (~2.4MB heap, pb-FuzzyFinder query speed; the in-place
+  binary-search API stays on `embedbin.Reader` for zero-heap consumers).
+- `NewDefaultFinderFromTZB` — both from one file; fuzzy first, expanded
+  polygon fallback; source bytes released after load.
+
+Boundary semantics everywhere match post-#216 `ContainsPointAllowOnEdge`:
+a point on a shared border belongs to every touching polygon (exterior rings
+allow on-edge, hole rings do not).
+
 ### Data Pipeline
 
 ```

@@ -40,6 +40,22 @@ func buildTZB() []byte {
 	return data
 }
 
+func buildTZBWithFuzzy() []byte {
+	input := &pb.CompressedTopoTimezones{}
+	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
+		panic(err)
+	}
+	preindex := &pb.PreindexTimezones{}
+	if err := proto.Unmarshal(tzfdist.PreindexData, preindex); err != nil {
+		panic(err)
+	}
+	data, err := embedbin.Encode(input, embedbin.EncodeOptions{AllowShortcut: true, Preindex: preindex})
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
 func main() {
 	var before, after uint64
 
@@ -115,6 +131,34 @@ func main() {
 		}
 		after = readHeap()
 		report("TZBFinderReaderAt", before, after)
+		runtime.KeepAlive(f)
+	}
+
+	// ExpandedTZBFinder (lite .tzb expanded into the materialized finder;
+	// the source byte slice is released after expansion)
+	before = readHeap()
+	{
+		data := buildTZB()
+		f, err := tzf.NewFinderFromTZBExpanded(data)
+		if err != nil {
+			panic(err)
+		}
+		after = readHeap()
+		report("ExpandedTZBFinder", before, after)
+		runtime.KeepAlive(f)
+	}
+
+	// DefaultFinderTZB (one .tzb with FUZZY: fuzzy hash maps rebuilt from the
+	// FUZZY section + expanded finder; the byte slice is released after load)
+	before = readHeap()
+	{
+		data := buildTZBWithFuzzy()
+		f, err := tzf.NewDefaultFinderFromTZB(data)
+		if err != nil {
+			panic(err)
+		}
+		after = readHeap()
+		report("DefaultFinderTZB", before, after)
 		runtime.KeepAlive(f)
 	}
 
