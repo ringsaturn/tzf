@@ -39,6 +39,10 @@ type tzbFinder struct {
 var _ F = (*tzbFinder)(nil)
 
 func newTZBFinder(reader *embedbin.Reader) (*tzbFinder, error) {
+	if reader.ProfileM() {
+		// M files carry no chunked point streams; use NewFinderFromTZM.
+		return nil, embedbin.ErrProfile
+	}
 	names := make([]string, reader.TimezoneCount())
 	for i := range names {
 		name, err := reader.Name(int32(i))

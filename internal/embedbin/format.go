@@ -20,9 +20,11 @@ const (
 
 	// profileOffset is the header byte assigned as `profile` in format
 	// revision 1.1 (previously reserved-zero, so all v1.0 files are valid
-	// E-profile files). Only profileE is defined for .tzb.
+	// E-profile files). profileE is the embedded profile (.tzb); profileM is
+	// the memory profile (.tzm) whose sections are the query-time structures.
 	profileOffset = 48
 	profileE      = byte(0)
+	profileM      = byte(1)
 
 	flagGrid       = uint32(1 << 0)
 	flagNoShortcut = uint32(1 << 1)
@@ -37,12 +39,22 @@ const (
 	sectionGrid     = uint32(8)
 	sectionPoints   = uint32(9)
 	sectionFuzzy    = uint32(10)
+	// M-profile sections (spec rev 1 §6.1). sectionYStripes is assigned but
+	// not emitted by this encoder (spec §6.4: v1-of-M ships without it);
+	// readers rebuild stripes in heap at open instead.
+	sectionFlatPoints  = uint32(12)
+	sectionFlatRingDir = uint32(13)
+	sectionYStripes    = uint32(14)
 
-	tzRecordLen    = uint32(24)
-	polyRecordLen  = uint32(24)
-	ringRecordLen  = uint32(28)
-	groupRecordLen = uint32(44)
-	chunkRecordLen = uint32(24)
+	// sectionSlots sizes the per-type section table (types 1..14).
+	sectionSlots = 15
+
+	tzRecordLen       = uint32(24)
+	polyRecordLen     = uint32(24)
+	ringRecordLen     = uint32(28)
+	groupRecordLen    = uint32(44)
+	chunkRecordLen    = uint32(24)
+	flatRingRecordLen = uint32(24)
 
 	fuzzyHeaderLen = uint64(16)
 	// fuzzyMulti marks a FUZZY value word as a multi_dir group reference;
@@ -58,6 +70,7 @@ var (
 	ErrBufferTooSmall = errors.New("embedbin: destination buffer too small")
 	ErrIndex          = errors.New("embedbin: timezone index out of range")
 	ErrNoFuzzy        = errors.New("embedbin: file has no FUZZY section")
+	ErrProfile        = errors.New("embedbin: operation not supported by the file's profile")
 )
 
 type bbox struct {

@@ -73,37 +73,65 @@ type edgeGroup struct {
 
 // Encode converts a compressed topology protobuf into the v1 embedded layout.
 func Encode(input *pb.CompressedTopoTimezones, opts EncodeOptions) ([]byte, error) {
+	e, names, gridBytes, fuzzyBytes, target, err := build(input, opts)
+	if err != nil {
+		return nil, err
+	}
+	return e.serialize(names, input.Version, target, opts.AllowShortcut, gridBytes, fuzzyBytes)
+}
+
+// EncodeM converts a compressed topology protobuf into an M-profile (.tzm)
+// file whose sections are the query-time structures (spec rev 1 §6): every
+// ring stored as an open flat point run in FLATPOINTS, junction duplicates
+// removed by the §5.1 expansion, directories identical to the E profile.
+// ChunkTarget and AllowShortcut have no effect on the M output (chunking and
+// the in-place shortcut flag are E-profile concepts).
+func EncodeM(input *pb.CompressedTopoTimezones, opts EncodeOptions) ([]byte, error) {
+	e, names, gridBytes, fuzzyBytes, _, err := build(input, opts)
+	if err != nil {
+		return nil, err
+	}
+	return e.serializeM(names, input.Version, gridBytes, fuzzyBytes)
+}
+
+// build runs the shared front half of both encoders: decode and clean the
+// source topology into groups/rings/polygons/timezones plus the GRID and
+// optional FUZZY section bytes.
+func build(input *pb.CompressedTopoTimezones, opts EncodeOptions) (*encoder, []string, []byte, []byte, uint32, error) {
+	fail := func(err error) (*encoder, []string, []byte, []byte, uint32, error) {
+		return nil, nil, nil, nil, 0, err
+	}
 	if input == nil {
-		return nil, fmt.Errorf("input: %w: nil", ErrMalformed)
+		return fail(fmt.Errorf("input: %w: nil", ErrMalformed))
 	}
 	if input.Method != pb.CompressMethod_COMPRESS_METHOD_POLYLINE {
-		return nil, fmt.Errorf("input: %w: unsupported compression method %v", ErrMalformed, input.Method)
+		return fail(fmt.Errorf("input: %w: unsupported compression method %v", ErrMalformed, input.Method))
 	}
 	target := opts.ChunkTarget
 	if target == 0 {
 		target = defaultChunk
 	}
 	if target < 1 || target > math.MaxUint16 {
-		return nil, fmt.Errorf("chunk target: %w: %d", ErrMalformed, target)
+		return fail(fmt.Errorf("chunk target: %w: %d", ErrMalformed, target))
 	}
 	if len(input.Timezones) == 0 || len(input.Timezones) > math.MaxUint16 {
-		return nil, fmt.Errorf("timezone count: %w: %d", ErrMalformed, len(input.Timezones))
+		return fail(fmt.Errorf("timezone count: %w: %d", ErrMalformed, len(input.Timezones)))
 	}
 	if len(input.Version) > 16 || !utf8.ValidString(input.Version) || strings.IndexByte(input.Version, 0) >= 0 {
-		return nil, fmt.Errorf("data version: %w", ErrMalformed)
+		return fail(fmt.Errorf("data version: %w", ErrMalformed))
 	}
 
-	e := encoder{chunkTarget: target, edgeGroups: make(map[int32]edgeGroup, len(input.SharedEdges))}
+	e := &encoder{chunkTarget: target, edgeGroups: make(map[int32]edgeGroup, len(input.SharedEdges))}
 	for _, edge := range input.SharedEdges {
 		if edge == nil || edge.Id < 0 {
-			return nil, fmt.Errorf("shared edge: %w: invalid id", ErrMalformed)
+			return fail(fmt.Errorf("shared edge: %w: invalid id", ErrMalformed))
 		}
 		if _, exists := e.edgeGroups[edge.Id]; exists {
-			return nil, fmt.Errorf("shared edge: %w: duplicate id %d", ErrMalformed, edge.Id)
+			return fail(fmt.Errorf("shared edge: %w: duplicate id %d", ErrMalformed, edge.Id))
 		}
 		points, err := decodePolyline(edge.Points)
 		if err != nil {
-			return nil, fmt.Errorf("shared edge %d: %w", edge.Id, err)
+			return fail(fmt.Errorf("shared edge %d: %w", edge.Id, err))
 		}
 		points = cleanPoints(points)
 		if len(points) < 2 {
@@ -112,7 +140,7 @@ func Encode(input *pb.CompressedTopoTimezones, opts EncodeOptions) ([]byte, erro
 		}
 		idx, err := e.addGroup(points)
 		if err != nil {
-			return nil, fmt.Errorf("shared edge %d: %w", edge.Id, err)
+			return fail(fmt.Errorf("shared edge %d: %w", edge.Id, err))
 		}
 		e.edgeGroups[edge.Id] = edgeGroup{index: idx}
 	}
@@ -120,27 +148,27 @@ func Encode(input *pb.CompressedTopoTimezones, opts EncodeOptions) ([]byte, erro
 	names := make([]string, len(input.Timezones))
 	for i, tz := range input.Timezones {
 		if tz == nil || tz.Name == "" || !utf8.ValidString(tz.Name) || strings.IndexByte(tz.Name, 0) >= 0 {
-			return nil, fmt.Errorf("timezone %d name: %w", i, ErrMalformed)
+			return fail(fmt.Errorf("timezone %d name: %w", i, ErrMalformed))
 		}
 		if len(tz.Polygons) == 0 {
-			return nil, fmt.Errorf("timezone %q: %w: no polygons", tz.Name, ErrMalformed)
+			return fail(fmt.Errorf("timezone %q: %w: no polygons", tz.Name, ErrMalformed))
 		}
 		names[i] = tz.Name
 		first := len(e.polys)
 		if uint64(first) > math.MaxUint32 {
-			return nil, fmt.Errorf("POLYDIR: %w: index capacity", ErrMalformed)
+			return fail(fmt.Errorf("POLYDIR: %w: index capacity", ErrMalformed))
 		}
 		tb := emptyBBox()
 		for j, poly := range tz.Polygons {
 			ep, err := e.addPolygon(poly)
 			if err != nil {
-				return nil, fmt.Errorf("timezone %q polygon %d: %w", tz.Name, j, err)
+				return fail(fmt.Errorf("timezone %q polygon %d: %w", tz.Name, j, err))
 			}
 			tb.union(ep.bbox)
 		}
 		count, err := checkedU16("timezone polygon count", len(e.polys)-first)
 		if err != nil {
-			return nil, err
+			return fail(err)
 		}
 		e.tzs = append(e.tzs, encTZ{polyFirst: uint32(first), polyCount: count, bbox: tb})
 	}
@@ -151,16 +179,16 @@ func Encode(input *pb.CompressedTopoTimezones, opts EncodeOptions) ([]byte, erro
 	}
 	gridBytes, err := encodeGrid(grid, len(input.Timezones))
 	if err != nil {
-		return nil, err
+		return fail(err)
 	}
 	var fuzzyBytes []byte
 	if opts.Preindex != nil {
 		fuzzyBytes, err = encodeFuzzy(opts.Preindex, names, input.Version)
 		if err != nil {
-			return nil, err
+			return fail(err)
 		}
 	}
-	return e.serialize(names, input.Version, uint32(target), opts.AllowShortcut, gridBytes, fuzzyBytes)
+	return e, names, gridBytes, fuzzyBytes, uint32(target), nil
 }
 
 func decodePolyline(data []byte) ([]geom.I32Point, error) {
@@ -451,7 +479,8 @@ func encodeGrid(grid *pb.GridIndex, tzCount int) ([]byte, error) {
 	return out, nil
 }
 
-func (e *encoder) serialize(names []string, version string, target uint32, allowShortcut bool, grid, fuzzy []byte) ([]byte, error) {
+// buildNamesSection serializes the NAMES section.
+func buildNamesSection(names []string) ([]byte, error) {
 	nameBlobLen := 0
 	for _, name := range names {
 		if uint64(nameBlobLen)+uint64(len(name)) > math.MaxUint32 {
@@ -473,7 +502,11 @@ func (e *encoder) serialize(names []string, version string, target uint32, allow
 		pos += len(name)
 	}
 	binary.LittleEndian.PutUint32(nameSec[4+len(names)*4:], uint32(pos))
+	return nameSec, nil
+}
 
+// buildTZSection serializes TZDIR; the record layout is shared by both profiles.
+func (e *encoder) buildTZSection() []byte {
 	tzSec := make([]byte, int(tzRecordLen)*len(e.tzs))
 	for i, t := range e.tzs {
 		o := i * int(tzRecordLen)
@@ -481,6 +514,12 @@ func (e *encoder) serialize(names []string, version string, target uint32, allow
 		binary.LittleEndian.PutUint16(tzSec[o+4:], t.polyCount)
 		putBBox(tzSec, o+8, t.bbox)
 	}
+	return tzSec
+}
+
+// buildPolySection serializes POLYDIR; ring_first indexes RINGDIR in the E
+// profile and FLATRINGDIR in the M profile, with identical record content.
+func (e *encoder) buildPolySection() []byte {
 	polySec := make([]byte, int(polyRecordLen)*len(e.polys))
 	for i, p := range e.polys {
 		o := i * int(polyRecordLen)
@@ -488,6 +527,16 @@ func (e *encoder) serialize(names []string, version string, target uint32, allow
 		binary.LittleEndian.PutUint16(polySec[o+4:], p.ringCount)
 		putBBox(polySec, o+8, p.bbox)
 	}
+	return polySec
+}
+
+func (e *encoder) serialize(names []string, version string, target uint32, allowShortcut bool, grid, fuzzy []byte) ([]byte, error) {
+	nameSec, err := buildNamesSection(names)
+	if err != nil {
+		return nil, err
+	}
+	tzSec := e.buildTZSection()
+	polySec := e.buildPolySection()
 	ringSec := make([]byte, int(ringRecordLen)*len(e.rings))
 	for i, r := range e.rings {
 		o := i * int(ringRecordLen)
@@ -537,11 +586,6 @@ func (e *encoder) serialize(names []string, version string, target uint32, allow
 		putBBox(chunkSec, o+8, c.bbox)
 	}
 
-	type outSection struct {
-		typ   uint32
-		data  []byte
-		align uint64
-	}
 	sections := []outSection{
 		{sectionNames, nameSec, 4}, {sectionTZDir, tzSec, 4}, {sectionPolyDir, polySec, 4},
 		{sectionRingDir, ringSec, 4}, {sectionRingOps, opSec, 4}, {sectionGroupDir, groupSec, 4},
@@ -553,6 +597,107 @@ func (e *encoder) serialize(names []string, version string, target uint32, allow
 		sections = append(sections, outSection{sectionFuzzy, fuzzy, 8})
 	}
 	sections = append(sections, outSection{sectionPoints, pointsSec, 4})
+	flags := flagGrid
+	if !allowShortcut {
+		flags |= flagNoShortcut
+	}
+	return assembleFile(profileE, flags, target, len(names), version, sections)
+}
+
+// ringPoints materializes one ring's open point run from the in-memory
+// groups/ops, the encoder-side twin of Reader.expandRing (spec rev 1 §5.1):
+// every op after the first drops its duplicated junction entry point and the
+// final closing point is dropped.
+func (e *encoder) ringPoints(r *encRing) ([]geom.I32Point, error) {
+	pts := make([]geom.I32Point, 0, uint64(r.pointCount)+1)
+	for k, word := range r.ops {
+		g := e.groups[word&0x7fffffff].points
+		reversed := word>>31 != 0
+		skip := k > 0
+		if reversed {
+			for i := len(g) - 1; i >= 0; i-- {
+				if skip && i == len(g)-1 {
+					continue
+				}
+				pts = append(pts, g[i])
+			}
+		} else {
+			if skip {
+				pts = append(pts, g[1:]...)
+			} else {
+				pts = append(pts, g...)
+			}
+		}
+	}
+	if uint64(len(pts)) != uint64(r.pointCount)+1 || !samePoint(pts[len(pts)-1], pts[0]) {
+		return nil, fmt.Errorf("ring expansion: %w: point count or closing junction", ErrMalformed)
+	}
+	return pts[: len(pts)-1 : len(pts)-1], nil
+}
+
+// serializeM writes the M-profile (.tzm) layout: FLATRINGDIR records over one
+// contiguous FLATPOINTS pair array, with NAMES/TZDIR/POLYDIR/GRID/FUZZY
+// byte-identical to the E profile. The chunk_target header field is 0 and the
+// shortcut flag is not set: both govern only the E in-place reader.
+func (e *encoder) serializeM(names []string, version string, grid, fuzzy []byte) ([]byte, error) {
+	nameSec, err := buildNamesSection(names)
+	if err != nil {
+		return nil, err
+	}
+	tzSec := e.buildTZSection()
+	polySec := e.buildPolySection()
+
+	flatRingSec := make([]byte, int(flatRingRecordLen)*len(e.rings))
+	var flatPoints []byte
+	var pairTotal uint64
+	for i := range e.rings {
+		r := &e.rings[i]
+		pts, err := e.ringPoints(r)
+		if err != nil {
+			return nil, err
+		}
+		first, err := checkedU32("FLATRINGDIR point_first", pairTotal)
+		if err != nil {
+			return nil, err
+		}
+		o := i * int(flatRingRecordLen)
+		binary.LittleEndian.PutUint32(flatRingSec[o:], first)
+		binary.LittleEndian.PutUint32(flatRingSec[o+4:], uint32(len(pts)))
+		putBBox(flatRingSec, o+8, r.bbox)
+		for _, p := range pts {
+			var pair [8]byte
+			binary.LittleEndian.PutUint32(pair[0:], uint32(p.X))
+			binary.LittleEndian.PutUint32(pair[4:], uint32(p.Y))
+			flatPoints = append(flatPoints, pair[:]...)
+		}
+		pairTotal += uint64(len(pts))
+	}
+	if _, err := checkedU32("FLATPOINTS pair count", pairTotal); err != nil {
+		return nil, err
+	}
+
+	sections := []outSection{
+		{sectionNames, nameSec, 4}, {sectionTZDir, tzSec, 4}, {sectionPolyDir, polySec, 4},
+		{sectionFlatRingDir, flatRingSec, 4}, {sectionGrid, grid, 4},
+	}
+	if fuzzy != nil {
+		sections = append(sections, outSection{sectionFuzzy, fuzzy, 8})
+	}
+	// FLATPOINTS is 8-byte aligned so a reader may alias it as a point slice
+	// on aligned little-endian targets (spec rev 1 §6.2).
+	sections = append(sections, outSection{sectionFlatPoints, flatPoints, 8})
+	return assembleFile(profileM, flagGrid, 0, len(names), version, sections)
+}
+
+type outSection struct {
+	typ   uint32
+	data  []byte
+	align uint64
+}
+
+// assembleFile lays the sections out behind the shared 64-byte header and
+// section table, and seals the file with its CRC32 footer.
+func assembleFile(profile byte, flags, chunkTarget uint32, tzCount int, version string, sections []outSection) ([]byte, error) {
 	offsets := make([]uint32, len(sections))
 	cursor := uint64(headerSize) + uint64(len(sections))*sectionEntryLen
 	for i, section := range sections {
@@ -576,17 +721,14 @@ func (e *encoder) serialize(names []string, version string, target uint32, allow
 	copy(out[0:4], "TZFB")
 	out[4], out[5] = formatMajor, formatMinor
 	binary.LittleEndian.PutUint16(out[6:], headerSize)
-	flags := flagGrid
-	if !allowShortcut {
-		flags |= flagNoShortcut
-	}
 	binary.LittleEndian.PutUint32(out[8:], flags)
 	binary.LittleEndian.PutUint32(out[12:], coordScale)
 	binary.LittleEndian.PutUint32(out[16:], size32)
 	binary.LittleEndian.PutUint32(out[20:], uint32(len(sections)))
 	copy(out[24:40], version)
-	binary.LittleEndian.PutUint32(out[40:], uint32(len(names)))
-	binary.LittleEndian.PutUint32(out[44:], target)
+	binary.LittleEndian.PutUint32(out[40:], uint32(tzCount))
+	binary.LittleEndian.PutUint32(out[44:], chunkTarget)
+	out[profileOffset] = profile
 	for i, section := range sections {
 		o := headerSize + i*sectionEntryLen
 		binary.LittleEndian.PutUint32(out[o:], section.typ)

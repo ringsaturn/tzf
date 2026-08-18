@@ -1,0 +1,122 @@
+package embedbin
+
+import (
+	"encoding/binary"
+	"fmt"
+
+	"github.com/ringsaturn/tzf/internal/geom"
+)
+
+// TranscodeM converts an E-profile (.tzb) file into the M-profile (.tzm)
+// layout without touching protobuf: ring geometry is materialized by the
+// §5.1 expansion and written as FLATRINGDIR/FLATPOINTS, while the
+// profile-shared sections (NAMES, TZDIR, POLYDIR, GRID, FUZZY) are copied
+// byte-for-byte. The output is identical to EncodeM over the E file's source
+// dataset, so a consumer can ship the compact .tzb and produce the memory
+// image locally (for example into an mmap-backed cache) instead of
+// distributing the much larger .tzm.
+func (r *Reader) TranscodeM() ([]byte, error) {
+	if r.profile != profileE {
+		return nil, ErrProfile
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.work.cacheValid = false
+
+	groups := make([][]geom.I32Point, r.groupCount)
+	for i := uint32(0); i < r.groupCount; i++ {
+		g, err := r.groupAt(i)
+		if err != nil {
+			return nil, err
+		}
+		points := make([]geom.I32Point, 0, min(g.pointCount, 1<<16))
+		for j := uint32(0); j < uint32(g.count); j++ {
+			part, err := r.decodeChunkPointsAt(g.first + j)
+			if err != nil {
+				return nil, fmt.Errorf("transcode group %d chunk %d: %w", i, j, err)
+			}
+			points = append(points, part...)
+		}
+		if uint32(len(points)) != g.pointCount ||
+			!samePoint(points[0], g.entry) || !samePoint(points[len(points)-1], g.exit) {
+			return nil, fmt.Errorf("transcode group %d: %w: endpoints or count", i, ErrMalformed)
+		}
+		groups[i] = points
+	}
+
+	flatRingSec := make([]byte, int(flatRingRecordLen)*int(r.ringCount))
+	var flatPoints []byte
+	var pairTotal uint64
+	for i := uint32(0); i < r.ringCount; i++ {
+		ring, err := r.ringAt(i)
+		if err != nil {
+			return nil, err
+		}
+		pts, err := r.expandRing(i, groups)
+		if err != nil {
+			return nil, err
+		}
+		first, err := checkedU32("FLATRINGDIR point_first", pairTotal)
+		if err != nil {
+			return nil, err
+		}
+		o := int(i) * int(flatRingRecordLen)
+		binary.LittleEndian.PutUint32(flatRingSec[o:], first)
+		binary.LittleEndian.PutUint32(flatRingSec[o+4:], uint32(len(pts)))
+		putBBox(flatRingSec, o+8, ring.box)
+		for _, p := range pts {
+			var pair [8]byte
+			binary.LittleEndian.PutUint32(pair[0:], uint32(p.X))
+			binary.LittleEndian.PutUint32(pair[4:], uint32(p.Y))
+			flatPoints = append(flatPoints, pair[:]...)
+		}
+		pairTotal += uint64(len(pts))
+	}
+	if _, err := checkedU32("FLATPOINTS pair count", pairTotal); err != nil {
+		return nil, err
+	}
+
+	copySection := func(typ uint32) ([]byte, error) {
+		b, err := r.sectionBytes(typ)
+		if err != nil {
+			return nil, err
+		}
+		// sectionBytes aliases byte-backed readers; assembleFile only reads
+		// the slice, so no copy is needed here.
+		return b, nil
+	}
+	nameSec, err := copySection(sectionNames)
+	if err != nil {
+		return nil, err
+	}
+	tzSec, err := copySection(sectionTZDir)
+	if err != nil {
+		return nil, err
+	}
+	polySec, err := copySection(sectionPolyDir)
+	if err != nil {
+		return nil, err
+	}
+	sections := []outSection{
+		{sectionNames, nameSec, 4}, {sectionTZDir, tzSec, 4}, {sectionPolyDir, polySec, 4},
+		{sectionFlatRingDir, flatRingSec, 4},
+	}
+	flags := uint32(0)
+	if r.grid.present {
+		gridSec, err := copySection(sectionGrid)
+		if err != nil {
+			return nil, err
+		}
+		sections = append(sections, outSection{sectionGrid, gridSec, 4})
+		flags |= flagGrid
+	}
+	if r.fuzzy.present {
+		fuzzySec, err := copySection(sectionFuzzy)
+		if err != nil {
+			return nil, err
+		}
+		sections = append(sections, outSection{sectionFuzzy, fuzzySec, 8})
+	}
+	sections = append(sections, outSection{sectionFlatPoints, flatPoints, 8})
+	return assembleFile(profileM, flags, 0, int(r.tzCount), r.version, sections)
+}

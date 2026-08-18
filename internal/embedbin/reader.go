@@ -25,25 +25,30 @@ type readWorkspace struct {
 	cacheValid bool
 }
 
-// Reader performs direct lookups over a validated .tzb source.
+// Reader performs direct lookups over a validated .tzb or .tzm source.
 type Reader struct {
 	data        []byte
 	readerAt    io.ReaderAt
 	size        uint64
+	profile     byte
 	flags       uint32
 	tzCount     uint32
 	chunkTarget uint32
 	version     string
-	sections    [11]section
+	sections    [sectionSlots]section
 	polyCount   uint32
-	ringCount   uint32
-	opCount     uint32
-	groupCount  uint32
-	chunkCount  uint32
-	grid        gridInfo
-	fuzzy       fuzzyInfo
-	mu          sync.Mutex
-	work        readWorkspace
+	// ringCount counts RINGDIR records in the E profile and FLATRINGDIR
+	// records in the M profile; POLYDIR bounds-checks against it either way.
+	ringCount uint32
+	opCount   uint32
+	// flatPairCount is the FLATPOINTS pair count (M profile only).
+	flatPairCount uint32
+	groupCount    uint32
+	chunkCount    uint32
+	grid          gridInfo
+	fuzzy         fuzzyInfo
+	mu            sync.Mutex
+	work          readWorkspace
 }
 
 type gridInfo struct {
@@ -123,8 +128,9 @@ func (r *Reader) open() error {
 	if string(h[0:4]) != "TZFB" || h[4] != formatMajor {
 		return fmt.Errorf("%w: magic or format major", ErrMalformed)
 	}
-	if h[profileOffset] != profileE {
-		return fmt.Errorf("%w: unsupported profile %d", ErrMalformed, h[profileOffset])
+	r.profile = h[profileOffset]
+	if r.profile != profileE && r.profile != profileM {
+		return fmt.Errorf("%w: unsupported profile %d", ErrMalformed, r.profile)
 	}
 	if binary.LittleEndian.Uint16(h[6:]) != headerSize ||
 		binary.LittleEndian.Uint32(h[12:]) != coordScale ||
@@ -134,9 +140,13 @@ func (r *Reader) open() error {
 	r.flags = binary.LittleEndian.Uint32(h[8:])
 	r.tzCount = binary.LittleEndian.Uint32(h[40:])
 	r.chunkTarget = binary.LittleEndian.Uint32(h[44:])
-	if r.tzCount == 0 || r.tzCount > math.MaxUint16 ||
-		r.chunkTarget == 0 || r.chunkTarget > math.MaxUint16 {
+	if r.tzCount == 0 || r.tzCount > math.MaxUint16 {
 		return fmt.Errorf("%w: header counts", ErrMalformed)
+	}
+	// chunk_target is an E-profile field; M files carry 0 there.
+	if r.profile == profileE && (r.chunkTarget == 0 || r.chunkTarget > math.MaxUint16) ||
+		r.profile == profileM && r.chunkTarget != 0 {
+		return fmt.Errorf("%w: header chunk target", ErrMalformed)
 	}
 	versionEnd := 16
 	for i, b := range h[24:40] {
@@ -163,7 +173,7 @@ func (r *Reader) open() error {
 	if err := r.verifyCRC(); err != nil {
 		return err
 	}
-	var seen [11]bool
+	var seen [sectionSlots]bool
 	for i := uint32(0); i < sectionCount; i++ {
 		entry, err := r.sectionEntry(i)
 		if err != nil {
@@ -181,9 +191,12 @@ func (r *Reader) open() error {
 			return err
 		}
 		typ := binary.LittleEndian.Uint32(raw[:])
-		if typ >= sectionNames && typ <= sectionFuzzy {
+		if typ >= sectionNames && typ < sectionSlots {
 			if seen[typ] {
 				return fmt.Errorf("%w: duplicate known section %d", ErrMalformed, typ)
+			}
+			if !profileAllowsSection(r.profile, typ) {
+				return fmt.Errorf("%w: section %d not valid in profile %d", ErrMalformed, typ, r.profile)
 			}
 			seen[typ] = true
 			r.sections[typ] = entry
@@ -198,7 +211,12 @@ func (r *Reader) open() error {
 			}
 		}
 	}
-	for _, typ := range []uint32{sectionNames, sectionTZDir, sectionPolyDir, sectionRingDir, sectionRingOps, sectionGroupDir, sectionChunkDir, sectionPoints} {
+	// Mandatory sections are per-profile (spec rev 1 §6.1).
+	mandatory := []uint32{sectionNames, sectionTZDir, sectionPolyDir, sectionRingDir, sectionRingOps, sectionGroupDir, sectionChunkDir, sectionPoints}
+	if r.profile == profileM {
+		mandatory = []uint32{sectionNames, sectionTZDir, sectionPolyDir, sectionFlatRingDir, sectionFlatPoints}
+	}
+	for _, typ := range mandatory {
 		if !seen[typ] {
 			return fmt.Errorf("%w: missing section %d", ErrMalformed, typ)
 		}
@@ -208,19 +226,30 @@ func (r *Reader) open() error {
 		return fmt.Errorf("%w: GRID flag mismatch", ErrMalformed)
 	}
 	if r.sections[sectionTZDir].len != r.tzCount*tzRecordLen ||
-		r.sections[sectionPolyDir].len%polyRecordLen != 0 ||
-		r.sections[sectionRingDir].len%ringRecordLen != 0 ||
-		r.sections[sectionRingOps].len%4 != 0 ||
-		r.sections[sectionGroupDir].len%groupRecordLen != 0 ||
-		r.sections[sectionChunkDir].len%chunkRecordLen != 0 {
+		r.sections[sectionPolyDir].len%polyRecordLen != 0 {
 		return fmt.Errorf("%w: directory section length", ErrMalformed)
 	}
 	r.polyCount = r.sections[sectionPolyDir].len / polyRecordLen
-	r.ringCount = r.sections[sectionRingDir].len / ringRecordLen
-	r.opCount = r.sections[sectionRingOps].len / 4
-	r.groupCount = r.sections[sectionGroupDir].len / groupRecordLen
-	r.chunkCount = r.sections[sectionChunkDir].len / chunkRecordLen
-	if r.polyCount == 0 || r.ringCount == 0 || r.opCount == 0 || r.groupCount == 0 || r.chunkCount == 0 {
+	if r.profile == profileM {
+		if err := r.openFlatSections(); err != nil {
+			return err
+		}
+	} else {
+		if r.sections[sectionRingDir].len%ringRecordLen != 0 ||
+			r.sections[sectionRingOps].len%4 != 0 ||
+			r.sections[sectionGroupDir].len%groupRecordLen != 0 ||
+			r.sections[sectionChunkDir].len%chunkRecordLen != 0 {
+			return fmt.Errorf("%w: directory section length", ErrMalformed)
+		}
+		r.ringCount = r.sections[sectionRingDir].len / ringRecordLen
+		r.opCount = r.sections[sectionRingOps].len / 4
+		r.groupCount = r.sections[sectionGroupDir].len / groupRecordLen
+		r.chunkCount = r.sections[sectionChunkDir].len / chunkRecordLen
+		if r.opCount == 0 || r.groupCount == 0 || r.chunkCount == 0 {
+			return fmt.Errorf("%w: empty directory", ErrMalformed)
+		}
+	}
+	if r.polyCount == 0 || r.ringCount == 0 {
 		return fmt.Errorf("%w: empty directory", ErrMalformed)
 	}
 	if err := r.validateNames(); err != nil {
@@ -236,10 +265,80 @@ func (r *Reader) open() error {
 			return err
 		}
 	}
-	if err := r.validateChunkOffsets(); err != nil {
-		return err
+	if r.profile == profileE {
+		if err := r.validateChunkOffsets(); err != nil {
+			return err
+		}
 	}
 	return nil
+}
+
+// profileAllowsSection reports whether a known section type may appear in a
+// file of the given profile (spec rev 1 §6.1). YSTRIPES is accepted in M
+// files but not consumed by this reader (spec §6.4: readers without stripe
+// loading rebuild them at open).
+func profileAllowsSection(profile byte, typ uint32) bool {
+	switch typ {
+	case sectionFlatPoints, sectionFlatRingDir, sectionYStripes:
+		return profile == profileM
+	case sectionRingDir, sectionRingOps, sectionGroupDir, sectionChunkDir, sectionPoints:
+		return profile == profileE
+	default:
+		return true
+	}
+}
+
+// openFlatSections validates the M-profile FLATRINGDIR/FLATPOINTS structure:
+// alignment, exact pair arithmetic, and ring ranges partitioning FLATPOINTS
+// in order.
+func (r *Reader) openFlatSections() error {
+	points := r.sections[sectionFlatPoints]
+	if points.off%8 != 0 || points.len%8 != 0 {
+		return fmt.Errorf("%w: FLATPOINTS alignment or length", ErrMalformed)
+	}
+	r.flatPairCount = points.len / 8
+	if r.sections[sectionFlatRingDir].len%flatRingRecordLen != 0 {
+		return fmt.Errorf("%w: FLATRINGDIR section length", ErrMalformed)
+	}
+	r.ringCount = r.sections[sectionFlatRingDir].len / flatRingRecordLen
+	var next uint64
+	for i := uint32(0); i < r.ringCount; i++ {
+		rec, err := r.flatRingAt(i)
+		if err != nil {
+			return err
+		}
+		if uint64(rec.first) != next {
+			return fmt.Errorf("%w: FLATRINGDIR rings do not partition FLATPOINTS", ErrMalformed)
+		}
+		next += uint64(rec.count)
+	}
+	if next != uint64(r.flatPairCount) {
+		return fmt.Errorf("%w: FLATPOINTS trailing pairs", ErrMalformed)
+	}
+	return nil
+}
+
+type flatRingRecord struct {
+	first uint32
+	count uint32
+	box   bbox
+}
+
+// flatRingAt reads one FLATRINGDIR record (M profile).
+func (r *Reader) flatRingAt(index uint32) (flatRingRecord, error) {
+	raw, err := r.readRecord(sectionFlatRingDir, index, r.ringCount, flatRingRecordLen)
+	if err != nil {
+		return flatRingRecord{}, err
+	}
+	v := flatRingRecord{
+		first: binary.LittleEndian.Uint32(raw),
+		count: binary.LittleEndian.Uint32(raw[4:]),
+		box:   getBBox(raw, 8),
+	}
+	if v.count < 3 || uint64(v.first)+uint64(v.count) > uint64(r.flatPairCount) || !v.box.inDomain() {
+		return flatRingRecord{}, fmt.Errorf("%w: FLATRINGDIR record", ErrMalformed)
+	}
+	return v, nil
 }
 
 func (r *Reader) verifyCRC() error {
@@ -562,8 +661,15 @@ func (r *Reader) LookupBufferSize() int {
 // ShortcutEnabled reports whether single-candidate GRID lookups may skip PIP.
 func (r *Reader) ShortcutEnabled() bool { return r.flags&flagNoShortcut == 0 }
 
+// ProfileM reports whether the file is an M-profile (.tzm) memory image.
+func (r *Reader) ProfileM() bool { return r.profile == profileM }
+
 // Lookup returns the first containing timezone index in source order.
+// E profile only; M files are queried through Flat.
 func (r *Reader) Lookup(lng, lat float64) (int32, bool, error) {
+	if r.profile != profileE {
+		return 0, false, ErrProfile
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.work.cacheValid = false
@@ -603,7 +709,11 @@ func (r *Reader) lookup(lng, lat float64) (int32, bool, error) {
 }
 
 // LookupInto appends all matching indices to dst and sorts them by name.
+// E profile only; M files are queried through Flat.
 func (r *Reader) LookupInto(lng, lat float64, dst []int32) ([]int32, error) {
+	if r.profile != profileE {
+		return dst[:0], ErrProfile
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.work.cacheValid = false

@@ -10,6 +10,7 @@ import (
 
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/internal/polyline"
 	"google.golang.org/protobuf/proto"
 )
@@ -423,6 +424,11 @@ func FuzzOpenAndLookup(f *testing.F) {
 		f.Fatal(err)
 	}
 	f.Add(edges, 5.0, 5.0)
+	mProfile, err := EncodeM(sharedEdgeFixture(), EncodeOptions{})
+	if err != nil {
+		f.Fatal(err)
+	}
+	f.Add(mProfile, 5.0, 5.0)
 	f.Fuzz(func(t *testing.T, data []byte, lng, lat float64) {
 		r, err := Open(data)
 		if err != nil {
@@ -435,5 +441,22 @@ func FuzzOpenAndLookup(f *testing.F) {
 			_, _ = r.FuzzyLookupAppend(make([]int32, 0, r.FuzzyLookupBufferSize()), lng, lat)
 		}
 		_, _ = r.Expand()
+		if view, err := r.Flat(); err == nil {
+			// Structurally valid M data must survive polygon assembly and
+			// PIP over arbitrary coordinates without crashing.
+			p := geom.Point{X: lng, Y: lat}
+			for _, polys := range view.Polygons {
+				for _, poly := range polys {
+					pg := geom.NewI32Polygon(poly.Exterior, poly.Holes)
+					_ = pg.ContainsPointAllowOnEdge(p)
+				}
+			}
+			if view.Grid != nil {
+				off, count := view.Grid.CellRange(lng, lat)
+				for i := range count {
+					_ = view.Grid.Candidate(off + i)
+				}
+			}
+		}
 	})
 }

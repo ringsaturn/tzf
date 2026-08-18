@@ -1,4 +1,6 @@
-// Command topo2embed converts CompressedTopoTimezones protobuf data to .tzb.
+// Command topo2embed converts CompressedTopoTimezones protobuf data to the
+// embedded binary container: profile e emits the chunked .tzb layout, profile
+// m emits the flat memory-image .tzm layout.
 package main
 
 import (
@@ -13,13 +15,14 @@ import (
 )
 
 func main() {
-	output := flag.String("o", "", "output .tzb path")
-	chunk := flag.Int("chunk", 0, "target points per chunk (default 256)")
-	allowShortcut := flag.Bool("allow-shortcut", false, "enable the single-candidate GRID shortcut")
+	output := flag.String("o", "", "output path (default: input name with .tzb/.tzm)")
+	chunk := flag.Int("chunk", 0, "target points per chunk (default 256; E profile only)")
+	allowShortcut := flag.Bool("allow-shortcut", false, "enable the single-candidate GRID shortcut (E profile only)")
 	preindexPath := flag.String("preindex", "", "PreindexTimezones .bin to embed as the FUZZY section")
+	profile := flag.String("profile", "e", "output profile: e (.tzb, embedded) or m (.tzm, memory image)")
 	flag.Parse()
-	if flag.NArg() != 1 {
-		fmt.Fprintln(os.Stderr, "usage: topo2embed [-o output.tzb] [-chunk 256] [-allow-shortcut] [-preindex preindex.bin] input.compress.topo.bin")
+	if flag.NArg() != 1 || (*profile != "e" && *profile != "m") {
+		fmt.Fprintln(os.Stderr, "usage: topo2embed [-o output] [-profile e|m] [-chunk 256] [-allow-shortcut] [-preindex preindex.bin] input.compress.topo.bin")
 		os.Exit(2)
 	}
 	inputPath := flag.Arg(0)
@@ -43,20 +46,32 @@ func main() {
 		}
 		opts.Preindex = preindex
 	}
-	data, err := embedbin.Encode(&input, opts)
-	if err != nil {
-		fail("encode .tzb", err)
+	var data []byte
+	var err2 error
+	ext := ".tzb"
+	if *profile == "m" {
+		data, err2 = embedbin.EncodeM(&input, opts)
+		ext = ".tzm"
+	} else {
+		data, err2 = embedbin.Encode(&input, opts)
+	}
+	if err2 != nil {
+		fail("encode "+ext, err2)
 	}
 	dest := *output
 	if dest == "" {
-		dest = strings.TrimSuffix(inputPath, ".compress.topo.bin") + ".tzb"
+		dest = strings.TrimSuffix(inputPath, ".compress.topo.bin") + ext
 	}
 	if err := os.WriteFile(dest, data, 0o644); err != nil {
 		fail("write output", err)
 	}
 	fmt.Fprintf(os.Stderr, "input:  bytes=%d timezones=%d\n", len(raw), len(input.Timezones))
-	fmt.Fprintf(os.Stderr, "output: bytes=%d chunk=%d shortcut=%v fuzzy=%v\n",
-		len(data), effectiveChunk(*chunk), *allowShortcut, opts.Preindex != nil)
+	if *profile == "m" {
+		fmt.Fprintf(os.Stderr, "output: bytes=%d profile=m fuzzy=%v\n", len(data), opts.Preindex != nil)
+	} else {
+		fmt.Fprintf(os.Stderr, "output: bytes=%d profile=e chunk=%d shortcut=%v fuzzy=%v\n",
+			len(data), effectiveChunk(*chunk), *allowShortcut, opts.Preindex != nil)
+	}
 	fmt.Println(dest)
 }
 

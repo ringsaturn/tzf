@@ -19,8 +19,9 @@ import (
 type point struct{ lng, lat float64 }
 
 // checker bundles the query-parity pairs exercised on every sample point:
-// the in-place reader, the expansion loader, and (when a preindex is given)
-// the FUZZY view, each against its protobuf-backed reference.
+// the in-place reader, the expansion loader, (when a preindex is given) the
+// FUZZY view, and (when a .tzm is given) the M-profile finder, each against
+// its protobuf-backed reference.
 type checker struct {
 	reader      *embedbin.Reader
 	reference   tzf.F
@@ -28,6 +29,7 @@ type checker struct {
 	expandedRef tzf.F
 	fuzzy       tzf.F
 	fuzzyRef    tzf.F
+	mFinder     tzf.F
 	dst         []int32
 }
 
@@ -37,6 +39,7 @@ func main() {
 	seed := flag.Int64("seed", 42, "random seed")
 	deepOnly := flag.Bool("deep-only", false, "run semantic verification without query sampling")
 	preindexPath := flag.String("preindex", "", "source PreindexTimezones .bin for FUZZY parity")
+	tzmPath := flag.String("tzm", "", "M-profile .tzm built from the same source, for Phase 2 parity")
 	flag.Parse()
 	if flag.NArg() != 2 {
 		fmt.Fprintln(os.Stderr, "usage: embedcompare [flags] input.compress.topo.bin input.tzb")
@@ -63,11 +66,32 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "deep verification passed: version=%s timezones=%d bytes=%d fuzzy=%v\n",
 		reader.DataVersion(), reader.TimezoneCount(), len(tzb), reader.HasFuzzy())
+	var tzmData []byte
+	if *tzmPath != "" {
+		tzmData, err = os.ReadFile(*tzmPath)
+		if err != nil {
+			fail(err)
+		}
+		mReader, err := embedbin.Open(tzmData)
+		if err != nil {
+			fail(err)
+		}
+		if err := embedbin.VerifyM(&input, mReader); err != nil {
+			fail(err)
+		}
+		fmt.Fprintf(os.Stderr, "deep M verification passed: bytes=%d fuzzy=%v\n", len(tzmData), mReader.HasFuzzy())
+	}
 	if *deepOnly {
 		return
 	}
 
 	c := &checker{reader: reader, dst: make([]int32, 0, reader.TimezoneCount())}
+	if tzmData != nil {
+		c.mFinder, err = tzf.NewFinderFromTZM(tzmData)
+		if err != nil {
+			fail(err)
+		}
+	}
 	referenceInput := proto.Clone(&input).(*pb.CompressedTopoTimezones)
 	if !reader.ShortcutEnabled() {
 		referenceInput.GridIndex = nil
@@ -160,6 +184,11 @@ func (c *checker) compareSingle(lng, lat float64) error {
 	if got, want := c.expanded.GetTimezoneName(lng, lat), c.expandedRef.GetTimezoneName(lng, lat); got != want {
 		return fmt.Errorf("expanded single parity at (%f,%f): got %q want %q", lng, lat, got, want)
 	}
+	if c.mFinder != nil {
+		if got, want := c.mFinder.GetTimezoneName(lng, lat), c.expandedRef.GetTimezoneName(lng, lat); got != want {
+			return fmt.Errorf("tzm single parity at (%f,%f): got %q want %q", lng, lat, got, want)
+		}
+	}
 	if c.fuzzy != nil {
 		if got, want := c.fuzzy.GetTimezoneName(lng, lat), c.fuzzyRef.GetTimezoneName(lng, lat); got != want {
 			return fmt.Errorf("fuzzy single parity at (%f,%f): got %q want %q", lng, lat, got, want)
@@ -198,6 +227,15 @@ func (c *checker) compareMulti(lng, lat float64) error {
 	}
 	if !slices.Equal(expGot, expWant) {
 		return fmt.Errorf("expanded multi parity at (%f,%f): got %v want %v", lng, lat, expGot, expWant)
+	}
+	if c.mFinder != nil {
+		mGot, err := c.mFinder.GetTimezoneNames(lng, lat)
+		if err != nil {
+			return err
+		}
+		if !slices.Equal(mGot, expWant) {
+			return fmt.Errorf("tzm multi parity at (%f,%f): got %v want %v", lng, lat, mGot, expWant)
+		}
 	}
 	if c.fuzzy != nil {
 		fzGot, gotErr := c.fuzzy.GetTimezoneNames(lng, lat)

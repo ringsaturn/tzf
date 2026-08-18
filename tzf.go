@@ -12,6 +12,7 @@ import (
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	"github.com/ringsaturn/tzf/convert"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	"github.com/ringsaturn/tzf/internal/embedbin"
 	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/internal/gridindex"
 	"github.com/ringsaturn/tzf/internal/polyline"
@@ -97,6 +98,11 @@ type finderImpl[T geom.Coord] struct {
 	// Populated automatically when loading CompressedTopoTimezones that
 	// contains an embedded GridIndex.
 	grid map[[2]int16][]int32
+	// dense queries a .tzm file's GRID section in place instead of a
+	// materialized map, keeping open-time heap low (spec rev 1 §6.5). At
+	// most one of grid and dense is set; both carry the same content and
+	// produce identical results.
+	dense *embedbin.DenseGrid
 }
 
 // Finder is based on point-in-polygon search algo.
@@ -310,6 +316,24 @@ func (c *finderImpl[T]) gridCandidates(lng float64, lat float64) ([]int32, bool)
 }
 
 func (c *finderImpl[T]) getTimezoneName(lng float64, lat float64) string {
+	if c.dense != nil {
+		off, count := c.dense.CellRange(lng, lat)
+		if count == 0 {
+			return ""
+		}
+		// Same single-candidate short-circuit as the map-backed grid below.
+		if count == 1 && lng > -179 && lng < 179 && lat > -89 && lat < 89 {
+			return c.items[c.dense.Candidate(off)].name
+		}
+		p := geom.Point{X: lng, Y: lat}
+		for i := range count {
+			idx := c.dense.Candidate(off + i)
+			if c.items[idx].ContainsPoint(p) {
+				return c.items[idx].name
+			}
+		}
+		return ""
+	}
 	if candidates, ok := c.gridCandidates(lng, lat); ok {
 		// Single-candidate short-circuit: skip PIP when there is only one
 		// candidate and we are away from the antimeridian / pole edges.
@@ -337,6 +361,17 @@ func (c *finderImpl[T]) getTimezoneNames(lng float64, lat float64) []string {
 	p := geom.Point{X: lng, Y: lat}
 	var res []string
 
+	if c.dense != nil {
+		off, count := c.dense.CellRange(lng, lat)
+		for i := range count {
+			idx := c.dense.Candidate(off + i)
+			if c.items[idx].ContainsPoint(p) {
+				res = append(res, c.items[idx].name)
+			}
+		}
+		slices.Sort(res)
+		return res
+	}
 	if candidates, ok := c.gridCandidates(lng, lat); ok {
 		for _, idx := range candidates {
 			if c.items[idx].ContainsPoint(p) {

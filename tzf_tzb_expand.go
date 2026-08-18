@@ -2,7 +2,6 @@ package tzf
 
 import (
 	"github.com/ringsaturn/tzf/internal/embedbin"
-	"github.com/ringsaturn/tzf/internal/geom"
 )
 
 // NewFinderFromTZBExpanded builds a [Finder] by expanding a TZF embedded
@@ -35,18 +34,7 @@ func newFinderFromTZBReader(reader *embedbin.Reader, opts ...OptionFunc) (*Finde
 	if err != nil {
 		return nil, err
 	}
-	items := make([]*tzitem[int32], len(expanded.Polygons))
-	for i, polys := range expanded.Polygons {
-		newItem := &tzitem[int32]{name: expanded.Names[i]}
-		newItem.polys = make([]*geom.I32Polygon, len(polys))
-		for j, poly := range polys {
-			newItem.polys[j] = geom.NewI32Polygon(poly.Exterior, poly.Holes)
-		}
-		minp, maxp := newItem.getMinMax()
-		newItem.min = minp
-		newItem.max = maxp
-		items[i] = newItem
-	}
+	items := assembleI32Items(expanded.Names, expanded.Polygons)
 	return &Finder{
 		core:    &finderImpl[int32]{items: items, grid: expanded.Grid},
 		names:   expanded.Names,

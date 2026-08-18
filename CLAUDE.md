@@ -46,25 +46,46 @@ old float32 protobuf round-trip). One interface dispatch per query; everything
 below it is monomorphised. `internal/cmd/i32compare` cross-checks the two
 storage paths on the bundled dataset.
 
-### Embedded Binary Format `.tzb` (`internal/embedbin`, `tzf_tzb*.go`)
+### Embedded Binary Format `.tzb` / `.tzm` (`internal/embedbin`, `tzf_tzb*.go`, `tzf_tzm.go`)
 
 Sectioned little-endian container (format 1.1): header with a profile byte,
 CRC32 footer, optional dense `GRID` and `FUZZY` (type 10,
-preindex tiles as one sorted TileID array) sections. Built by `cmd/topo2embed`
-(`-preindex` embeds FUZZY); parity harness `internal/cmd/embedcompare`.
+preindex tiles as one sorted TileID array) sections. Two profiles share the
+container: **E** (`.tzb`, profile 0) is the chunked varint layout above;
+**M** (`.tzm`, profile 1) replaces the chunk machinery with `FLATRINGDIR`
+(type 13, 24-byte records) over one contiguous `FLATPOINTS` (type 12,
+8-byte-aligned `(i32,i32)` pairs, junction dedup pre-expanded) so the file
+*is* the query-time structure; `YSTRIPES` (type 14) is assigned but not
+emitted. Mandatory sections are per-profile and cross-profile section types
+are rejected. Built by `cmd/topo2embed` (`-profile e|m`, `-preindex` embeds
+FUZZY); parity harness `internal/cmd/embedcompare` (`-tzm` adds the M leg,
+`embedbin.VerifyM` derives expected flat rings from the source pb
+independently of the encoder).
 
 Load paths (all protobuf-free at runtime):
 
 - `NewFinderFromTZB` / `NewFinderFromTZBReaderAt` — in-place queries over the
   compressed file, <1KB heap, ~6µs/query.
 - `NewFinderFromTZBExpanded` — one-pass expansion into `finderImpl[int32]`;
-  query parity and speed identical to `NewFinderFromCompressedTopo`, ~2.8×
-  faster load than the pb path, junction-duplicate vertices dropped.
+  query parity and speed identical to `NewFinderFromCompressedTopo`,
+  junction-duplicate vertices dropped. Item assembly is parallelized
+  (shared `assembleI32Items` with the .tzm loader): ~5× faster load than
+  the pb path (lite 18.6 ms vs 96 ms; full 78.5 ms vs 288 ms).
 - `NewFuzzyFinderFromTZB` — rebuilds the `FuzzyFinder` hash maps from the
   FUZZY section (~2.4MB heap, pb-FuzzyFinder query speed; the in-place
   binary-search API stays on `embedbin.Reader` for zero-heap consumers).
 - `NewDefaultFinderFromTZB` — both from one file; fuzzy first, expanded
   polygon fallback; source bytes released after load.
+- `embedbin.(*Reader).TranscodeM` — pb-free `.tzb` → `.tzm` conversion
+  (expand rings, copy profile-shared sections byte-wise); output is
+  byte-identical to `EncodeM` over the same source. Ship the compact `.tzb`,
+  build the memory image locally — never distribute `.tzm`.
+- `NewFinderFromTZM` / `NewDefaultFinderFromTZM` — M-profile memory image:
+  ring slices alias FLATPOINTS in place (little-endian hosts; explicit-LE
+  copy fallback elsewhere), GRID queried in place via `finderImpl.dense`,
+  YStripes rebuilt at open in parallel (~5ms lite). Query ~312ns (vs Finder
+  349ns); heap beyond the retained mapping ~10MB (stripes + items). The
+  source bytes must stay live and unmodified.
 
 Boundary semantics everywhere match post-#216 `ContainsPointAllowOnEdge`:
 a point on a shared border belongs to every touching polygon (exterior rings

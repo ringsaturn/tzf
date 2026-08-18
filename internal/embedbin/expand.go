@@ -34,6 +34,9 @@ type Expanded struct {
 // The removed vertices are zero-length PIP no-ops, so queries over the result
 // match the in-place reader; exported vertex lists simply omit duplicates.
 func (r *Reader) Expand() (*Expanded, error) {
+	if r.profile != profileE {
+		return nil, ErrProfile
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.work.cacheValid = false

@@ -56,6 +56,26 @@ func buildTZBWithFuzzy() []byte {
 	return data
 }
 
+func buildTZM(withFuzzy bool) []byte {
+	input := &pb.CompressedTopoTimezones{}
+	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
+		panic(err)
+	}
+	opts := embedbin.EncodeOptions{}
+	if withFuzzy {
+		preindex := &pb.PreindexTimezones{}
+		if err := proto.Unmarshal(tzfdist.PreindexData, preindex); err != nil {
+			panic(err)
+		}
+		opts.Preindex = preindex
+	}
+	data, err := embedbin.EncodeM(input, opts)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
 func main() {
 	var before, after uint64
 
@@ -160,6 +180,36 @@ func main() {
 		after = readHeap()
 		report("DefaultFinderTZB", before, after)
 		runtime.KeepAlive(f)
+	}
+
+	// TZMFinder (lite .tzm memory image; rings alias the retained byte slice,
+	// so retained heap = mapping + rebuilt stripes + directory objects)
+	before = readHeap()
+	{
+		data := buildTZM(false)
+		f, err := tzf.NewFinderFromTZM(data)
+		if err != nil {
+			panic(err)
+		}
+		after = readHeap()
+		report("TZMFinder", before, after)
+		runtime.KeepAlive(f)
+		runtime.KeepAlive(data)
+	}
+
+	// DefaultFinderTZM (one .tzm with FUZZY: fuzzy hash maps + in-place
+	// polygon view; the byte slice stays live as polygon storage)
+	before = readHeap()
+	{
+		data := buildTZM(true)
+		f, err := tzf.NewDefaultFinderFromTZM(data)
+		if err != nil {
+			panic(err)
+		}
+		after = readHeap()
+		report("DefaultFinderTZM", before, after)
+		runtime.KeepAlive(f)
+		runtime.KeepAlive(data)
 	}
 
 	// DefaultFinder (FuzzyFinder + Finder combined, lite data)
