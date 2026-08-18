@@ -9,6 +9,12 @@ import (
 // NewFinderFromTZB builds a Finder over a byte-backed TZF embedded binary
 // file. The file is validated when opened and retained without expanding its
 // geometry into Go polygon objects.
+//
+// When the file carries a FUZZY section, GetTimezoneName consults it before
+// the point-in-polygon scan — an in-place binary search, still allocation
+// free — mirroring [DefaultFinder]: a tile hit answers directly (which may
+// differ slightly from the polygon answer near tile borders), a miss falls
+// through to the exact scan. GetTimezoneNames always uses the polygon scan.
 func NewFinderFromTZB(data []byte) (F, error) {
 	reader, err := embedbin.Open(data)
 	if err != nil {
@@ -22,6 +28,7 @@ func NewFinderFromTZB(data []byte) (F, error) {
 //
 // Queries use a fixed internal workspace and are safe for concurrent callers.
 // ReaderAt access is serialized to preserve the zero-allocation query path.
+// The FUZZY fast path documented on [NewFinderFromTZB] applies here too.
 func NewFinderFromTZBReaderAt(source io.ReaderAt, size int64) (F, error) {
 	reader, err := embedbin.OpenReaderAt(source, size)
 	if err != nil {
@@ -34,6 +41,7 @@ type tzbFinder struct {
 	reader         *embedbin.Reader
 	names          []string
 	lookupCapacity int
+	fuzzy          bool
 }
 
 var _ F = (*tzbFinder)(nil)
@@ -53,6 +61,7 @@ func newTZBFinder(reader *embedbin.Reader) (*tzbFinder, error) {
 	}
 	return &tzbFinder{
 		reader: reader, names: names, lookupCapacity: reader.LookupBufferSize(),
+		fuzzy: reader.HasFuzzy(),
 	}, nil
 }
 
@@ -62,6 +71,11 @@ func newTZBFinder(reader *embedbin.Reader) (*tzbFinder, error) {
 // treated as no match. Open-time validation and the CRC catch ordinary file
 // corruption before queries begin.
 func (f *tzbFinder) GetTimezoneName(lng, lat float64) string {
+	if f.fuzzy {
+		if idx, ok, err := f.reader.FuzzyLookup(lng, lat); err == nil && ok {
+			return f.names[idx]
+		}
+	}
 	idx, ok, err := f.reader.Lookup(lng, lat)
 	if err != nil || !ok {
 		return ""

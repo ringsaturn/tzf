@@ -65,7 +65,9 @@ independently of the encoder).
 Load paths (all protobuf-free at runtime):
 
 - `NewFinderFromTZB` / `NewFinderFromTZBReaderAt` — in-place queries over the
-  compressed file, <1KB heap, ~6µs/query.
+  compressed file, <1KB heap, ~6µs/query PIP. When the file carries FUZZY,
+  `GetTimezoneName` probes it first in place (DefaultFinder semantics,
+  p50 ~0.5µs); `GetTimezoneNames` stays polygon-only.
 - `NewFinderFromTZBExpanded` — one-pass expansion into `finderImpl[int32]`;
   query parity and speed identical to `NewFinderFromCompressedTopo`,
   junction-duplicate vertices dropped. Item assembly is parallelized

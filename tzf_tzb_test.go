@@ -113,6 +113,63 @@ func TestFinderFromTZBParity(t *testing.T) {
 	}
 }
 
+// TestFinderFromTZBFuzzyFastPath checks the mode-C FUZZY fast path: over a
+// file carrying a FUZZY section, GetTimezoneName answers like DefaultFinder
+// (fuzzy tile hit first, polygon scan on miss) while GetTimezoneNames stays
+// polygon-exact, and both remain allocation-free.
+func TestFinderFromTZBFuzzyFastPath(t *testing.T) {
+	data, preindex := loadTZBWithFuzzy(t)
+	_, topo := loadTZBTestData(t)
+	got, err := NewFinderFromTZB(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fuzzyRef, err := NewFuzzyFinderFromPB(proto.Clone(preindex).(*pb.PreindexTimezones))
+	if err != nil {
+		t.Fatal(err)
+	}
+	polyRef, err := NewFinderFromCompressedTopo(proto.Clone(topo).(*pb.CompressedTopoTimezones))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rng := rand.New(rand.NewSource(42))
+	fuzzyHits := 0
+	for i := 0; i < 10000; i++ {
+		lng := rng.Float64()*360 - 180
+		lat := rng.Float64()*180 - 90
+		want := fuzzyRef.GetTimezoneName(lng, lat)
+		if want != "" {
+			fuzzyHits++
+		} else {
+			want = polyRef.GetTimezoneName(lng, lat)
+		}
+		if a := got.GetTimezoneName(lng, lat); a != want {
+			t.Fatalf("fast-path parity at (%f,%f): got %q want %q", lng, lat, a, want)
+		}
+		if i%100 == 0 {
+			a, err := got.GetTimezoneNames(lng, lat)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, err := polyRef.GetTimezoneNames(lng, lat)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !slices.Equal(a, b) {
+				t.Fatalf("multi parity at (%f,%f): got %v want %v", lng, lat, a, b)
+			}
+		}
+	}
+	if fuzzyHits == 0 {
+		t.Fatal("no fuzzy tile hits in 10000 samples; fast path untested")
+	}
+	if allocs := testing.AllocsPerRun(100, func() {
+		_ = got.GetTimezoneName(139.6917, 35.6895)
+	}); allocs != 0 {
+		t.Fatalf("fuzzy fast-path GetTimezoneName allocations = %v", allocs)
+	}
+}
+
 func TestFinderFromTZBRejectsCorruption(t *testing.T) {
 	data, _ := loadTZBTestData(t)
 	corrupt := slices.Clone(data)

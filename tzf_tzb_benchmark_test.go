@@ -23,6 +23,15 @@ var tzbBenchmarkData = func() []byte {
 	return data
 }()
 
+// In-place finder over a FUZZY-carrying file: mode-C fuzzy fast path.
+var tzbInPlaceFuzzyBenchmarkFinder = func() tzf.F {
+	finder, err := tzf.NewFinderFromTZB(tzbFuzzyBenchmarkData)
+	if err != nil {
+		panic(err)
+	}
+	return finder
+}()
+
 var tzbBenchmarkFinder = func() tzf.F {
 	finder, err := tzf.NewFinderFromTZB(tzbBenchmarkData)
 	if err != nil {
@@ -55,6 +64,11 @@ func BenchmarkTZBFinder_GetTimezoneName_Random_WorldCities(b *testing.B) {
 func BenchmarkTZBFinder_GetTimezoneNames_Random_WorldCities(b *testing.B) {
 	b.ReportAllocs()
 	benchRandomNames(b, tzbBenchmarkFinder)
+}
+
+func BenchmarkTZBFinderFuzzyFastPath_GetTimezoneName_Random_WorldCities(b *testing.B) {
+	b.ReportAllocs()
+	benchRandom(b, tzbInPlaceFuzzyBenchmarkFinder)
 }
 
 func BenchmarkTZBFinderReaderAt_GetTimezoneName_Random_WorldCities(b *testing.B) {
