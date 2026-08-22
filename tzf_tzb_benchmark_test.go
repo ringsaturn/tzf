@@ -8,6 +8,7 @@ import (
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/embedbin"
+	"github.com/ringsaturn/tzf/x"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -41,7 +42,7 @@ var tzbBenchmarkFinder = func() tzf.F {
 }()
 
 var tzbReaderAtBenchmarkFinder = func() tzf.F {
-	finder, err := tzf.NewFinderFromTZBReaderAt(
+	finder, err := x.NewFinderFromTZBReaderAt(
 		bytes.NewReader(tzbBenchmarkData),
 		int64(len(tzbBenchmarkData)),
 	)
@@ -88,7 +89,7 @@ func BenchmarkNewFinderFromTZB(b *testing.B) {
 func BenchmarkNewFinderFromTZBReaderAt(b *testing.B) {
 	b.ReportAllocs()
 	for b.Loop() {
-		if _, err := tzf.NewFinderFromTZBReaderAt(
+		if _, err := x.NewFinderFromTZBReaderAt(
 			bytes.NewReader(tzbBenchmarkData),
 			int64(len(tzbBenchmarkData)),
 		); err != nil {

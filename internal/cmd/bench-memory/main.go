@@ -12,6 +12,7 @@ import (
 	tzfdist "github.com/ringsaturn/tzf-dist"
 	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
 	"github.com/ringsaturn/tzf/internal/embedbin"
+	"github.com/ringsaturn/tzf/x"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -145,7 +146,7 @@ func main() {
 	before = readHeap()
 	{
 		data := buildTZB()
-		f, err := tzf.NewFinderFromTZBReaderAt(bytes.NewReader(data), int64(len(data)))
+		f, err := x.NewFinderFromTZBReaderAt(bytes.NewReader(data), int64(len(data)))
 		if err != nil {
 			panic(err)
 		}

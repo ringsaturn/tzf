@@ -43,30 +43,17 @@ func (r *Reader) Expand() (*Expanded, error) {
 
 	groups := make([][]geom.I32Point, r.groupCount)
 	for i := uint32(0); i < r.groupCount; i++ {
-		g, err := r.groupAt(i)
+		points, err := r.decodeGroupAt(i)
 		if err != nil {
 			return nil, err
 		}
-		// Cap the preallocation: pointCount is file-controlled, so a forged
-		// header must not demand memory before decode proves the data exists.
-		points := make([]geom.I32Point, 0, min(g.pointCount, 1<<16))
-		for j := uint32(0); j < uint32(g.count); j++ {
-			part, err := r.decodeChunkPointsAt(g.first + j)
-			if err != nil {
-				return nil, fmt.Errorf("expand group %d chunk %d: %w", i, j, err)
-			}
-			points = append(points, part...)
-		}
-		if uint32(len(points)) != g.pointCount ||
-			!samePoint(points[0], g.entry) || !samePoint(points[len(points)-1], g.exit) {
-			return nil, fmt.Errorf("expand group %d: %w: endpoints or count", i, ErrMalformed)
-		}
 		groups[i] = points
 	}
+	group := func(i uint32) ([]geom.I32Point, error) { return groups[i], nil }
 
 	rings := make([][]geom.I32Point, r.ringCount)
 	for i := uint32(0); i < r.ringCount; i++ {
-		ring, err := r.expandRing(i, groups)
+		ring, err := r.expandRing(i, group)
 		if err != nil {
 			return nil, err
 		}
@@ -110,9 +97,37 @@ func (r *Reader) Expand() (*Expanded, error) {
 	return &Expanded{Version: r.version, Names: names, Polygons: polygons, Grid: grid}, nil
 }
 
+// groupSource resolves one shared-edge group's decoded points. Expand hands
+// it a pre-decoded slice; ExpandTimezone decodes on demand.
+type groupSource func(index uint32) ([]geom.I32Point, error)
+
+// decodeGroupAt decodes one GROUPDIR entry's chunks into its point run and
+// checks the run against the record's stored endpoints and count.
+func (r *Reader) decodeGroupAt(index uint32) ([]geom.I32Point, error) {
+	g, err := r.groupAt(index)
+	if err != nil {
+		return nil, err
+	}
+	// Cap the preallocation: pointCount is file-controlled, so a forged
+	// header must not demand memory before decode proves the data exists.
+	points := make([]geom.I32Point, 0, min(g.pointCount, 1<<16))
+	for j := uint32(0); j < uint32(g.count); j++ {
+		part, err := r.decodeChunkPointsAt(g.first + j)
+		if err != nil {
+			return nil, fmt.Errorf("expand group %d chunk %d: %w", index, j, err)
+		}
+		points = append(points, part...)
+	}
+	if uint32(len(points)) != g.pointCount ||
+		!samePoint(points[0], g.entry) || !samePoint(points[len(points)-1], g.exit) {
+		return nil, fmt.Errorf("expand group %d: %w: endpoints or count", index, ErrMalformed)
+	}
+	return points, nil
+}
+
 // expandRing assembles one ring from its ops, skipping the duplicated
 // junction vertex at each op boundary and the stored closing vertex.
-func (r *Reader) expandRing(index uint32, groups [][]geom.I32Point) ([]geom.I32Point, error) {
+func (r *Reader) expandRing(index uint32, group groupSource) ([]geom.I32Point, error) {
 	ring, err := r.ringAt(index)
 	if err != nil {
 		return nil, err
@@ -123,7 +138,10 @@ func (r *Reader) expandRing(index uint32, groups [][]geom.I32Point) ([]geom.I32P
 		if err != nil {
 			return nil, err
 		}
-		g := groups[word&0x7fffffff]
+		g, err := group(word & 0x7fffffff)
+		if err != nil {
+			return nil, err
+		}
 		reversed := word>>31 != 0
 		skip := k > 0
 		if skip {
@@ -166,6 +184,65 @@ func (r *Reader) decodeChunkPointsAt(index uint32) ([]geom.I32Point, error) {
 		return nil, err
 	}
 	return r.decodeChunkPoints(index, c)
+}
+
+// ExpandTimezone decodes one timezone's polygons, with the same per-ring
+// result Expand produces for that timezone. Only the shared-edge groups its
+// rings reference are decoded — each at most once — so exporting a single
+// timezone costs a fraction of a full Expand. Callers that need every
+// timezone should use Expand, which decodes each group exactly once overall.
+func (r *Reader) ExpandTimezone(index int32) ([]ExpandedPolygon, error) {
+	if r.profile != profileE {
+		return nil, ErrProfile
+	}
+	if index < 0 || uint32(index) >= r.tzCount {
+		return nil, ErrIndex
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.work.cacheValid = false
+
+	decoded := make(map[uint32][]geom.I32Point)
+	group := func(i uint32) ([]geom.I32Point, error) {
+		if points, ok := decoded[i]; ok {
+			return points, nil
+		}
+		points, err := r.decodeGroupAt(i)
+		if err != nil {
+			return nil, err
+		}
+		decoded[i] = points
+		return points, nil
+	}
+
+	t, err := r.tzAt(uint32(index))
+	if err != nil {
+		return nil, err
+	}
+	polys := make([]ExpandedPolygon, t.count)
+	for j := uint32(0); j < uint32(t.count); j++ {
+		p, err := r.polyAt(t.first + j)
+		if err != nil {
+			return nil, err
+		}
+		exterior, err := r.expandRing(p.first, group)
+		if err != nil {
+			return nil, err
+		}
+		ep := ExpandedPolygon{Exterior: exterior}
+		if p.count > 1 {
+			ep.Holes = make([][]geom.I32Point, p.count-1)
+			for h := uint32(1); h < uint32(p.count); h++ {
+				hole, err := r.expandRing(p.first+h, group)
+				if err != nil {
+					return nil, err
+				}
+				ep.Holes[h-1] = hole
+			}
+		}
+		polys[j] = ep
+	}
+	return polys, nil
 }
 
 // gridToMap materializes the dense GRID section into the candidate map used

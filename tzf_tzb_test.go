@@ -1,7 +1,6 @@
 package tzf
 
 import (
-	"bytes"
 	"math/rand"
 	"slices"
 	"sync"
@@ -61,22 +60,6 @@ func TestFinderFromTZB(t *testing.T) {
 		_ = finder.GetTimezoneName(139.6917, 35.6895)
 	}); allocs != 0 {
 		t.Fatalf("GetTimezoneName allocations = %v", allocs)
-	}
-}
-
-func TestFinderFromTZBReaderAt(t *testing.T) {
-	data, _ := loadTZBTestData(t)
-	finder, err := NewFinderFromTZBReaderAt(bytes.NewReader(data), int64(len(data)))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got := finder.GetTimezoneName(151.2093, -33.8688); got != "Australia/Sydney" {
-		t.Fatalf("Sydney lookup = %q", got)
-	}
-	if allocs := testing.AllocsPerRun(100, func() {
-		_ = finder.GetTimezoneName(151.2093, -33.8688)
-	}); allocs != 0 {
-		t.Fatalf("ReaderAt GetTimezoneName allocations = %v", allocs)
 	}
 }
 

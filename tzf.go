@@ -5,7 +5,6 @@
 package tzf
 
 import (
-	"errors"
 	"math"
 	"slices"
 
@@ -16,11 +15,14 @@ import (
 	"github.com/ringsaturn/tzf/internal/geom"
 	"github.com/ringsaturn/tzf/internal/gridindex"
 	"github.com/ringsaturn/tzf/internal/polyline"
+	"github.com/ringsaturn/tzf/internal/tzerr"
 	"github.com/ringsaturn/tzf/reduce"
 	"google.golang.org/protobuf/proto"
 )
 
-var ErrNoTimezoneFound = errors.New("tzf: no timezone found")
+// ErrNoTimezoneFound is returned when no timezone covers the query point, or
+// when a GeoJSON export names a timezone the dataset does not contain.
+var ErrNoTimezoneFound = tzerr.ErrNoTimezoneFound
 
 type Option struct {
 	DropPBTZ bool
@@ -116,6 +118,11 @@ type Finder struct {
 	opt     *Option
 	version string
 }
+
+var (
+	_ F         = (*Finder)(nil)
+	_ GeoJSONer = (*Finder)(nil)
+)
 
 func NewFinderFromRawJSON(input *convert.BoundaryFile, opts ...OptionFunc) (F, error) {
 	timezones, err := convert.Do(input)

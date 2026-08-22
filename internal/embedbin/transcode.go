@@ -25,24 +25,13 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 
 	groups := make([][]geom.I32Point, r.groupCount)
 	for i := uint32(0); i < r.groupCount; i++ {
-		g, err := r.groupAt(i)
+		points, err := r.decodeGroupAt(i)
 		if err != nil {
-			return nil, err
-		}
-		points := make([]geom.I32Point, 0, min(g.pointCount, 1<<16))
-		for j := uint32(0); j < uint32(g.count); j++ {
-			part, err := r.decodeChunkPointsAt(g.first + j)
-			if err != nil {
-				return nil, fmt.Errorf("transcode group %d chunk %d: %w", i, j, err)
-			}
-			points = append(points, part...)
-		}
-		if uint32(len(points)) != g.pointCount ||
-			!samePoint(points[0], g.entry) || !samePoint(points[len(points)-1], g.exit) {
-			return nil, fmt.Errorf("transcode group %d: %w: endpoints or count", i, ErrMalformed)
+			return nil, fmt.Errorf("transcode: %w", err)
 		}
 		groups[i] = points
 	}
+	group := func(i uint32) ([]geom.I32Point, error) { return groups[i], nil }
 
 	flatRingSec := make([]byte, int(flatRingRecordLen)*int(r.ringCount))
 	var flatPoints []byte
@@ -52,7 +41,7 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		pts, err := r.expandRing(i, groups)
+		pts, err := r.expandRing(i, group)
 		if err != nil {
 			return nil, err
 		}

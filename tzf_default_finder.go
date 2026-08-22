@@ -18,6 +18,11 @@ type DefaultFinder struct {
 	finder      F
 }
 
+var (
+	_ F         = (*DefaultFinder)(nil)
+	_ GeoJSONer = (*DefaultFinder)(nil)
+)
+
 func NewDefaultFinder() (F, error) {
 	fuzzyFinder, err := func() (F, error) {
 		input := &pb.PreindexTimezones{}

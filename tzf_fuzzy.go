@@ -26,6 +26,11 @@ type FuzzyFinder struct {
 	names   []string
 }
 
+var (
+	_ F         = (*FuzzyFinder)(nil)
+	_ GeoJSONer = (*FuzzyFinder)(nil)
+)
+
 func NewFuzzyFinderFromPB(input *pb.PreindexTimezones) (F, error) {
 	f := &FuzzyFinder{
 		single:  make(map[geom.TileID]uint16),

@@ -64,10 +64,12 @@ independently of the encoder).
 
 Load paths (all protobuf-free at runtime):
 
-- `NewFinderFromTZB` / `NewFinderFromTZBReaderAt` — in-place queries over the
-  compressed file, <1KB heap, ~6µs/query PIP. When the file carries FUZZY,
+- `NewFinderFromTZB` / `x.NewFinderFromTZBReaderAt` — in-place queries over
+  the compressed file, <1KB heap, ~6µs/query PIP. When the file carries FUZZY,
   `GetTimezoneName` probes it first in place (DefaultFinder semantics,
-  p50 ~0.5µs); `GetTimezoneNames` stays polygon-only.
+  p50 ~0.5µs); `GetTimezoneNames` stays polygon-only. Both build
+  `internal/inplace.Finder`; they differ only in how the `embedbin.Reader`
+  was opened.
 - `NewFinderFromTZBExpanded` — one-pass expansion into `finderImpl[int32]`;
   query parity and speed identical to `NewFinderFromCompressedTopo`,
   junction-duplicate vertices dropped. Item assembly is parallelized
@@ -88,6 +90,29 @@ Load paths (all protobuf-free at runtime):
   YStripes rebuilt at open in parallel (~5ms lite). Query ~312ns (vs Finder
   349ns); heap beyond the retained mapping ~10MB (stripes + items). The
   source bytes must stay live and unmodified.
+
+### GeoJSON Export (`f.go`, `internal/inplace`, `convert`)
+
+`GeoJSONer` (`GetTZGeoJSON(name)` / `GetGeoJSON()`) is a separate exported
+interface, deliberately not part of `F` — constructors return `F`, so callers
+assert the behavior: `finder.(tzf.GeoJSONer).GetGeoJSON()`. Every finder here
+satisfies it (compile-time assertions live next to each type). The expanded
+and `.tzm` finders export polygons they already hold; the in-place finder
+decodes on demand through `embedbin.(*Reader).ExpandTimezone`, which pulls
+only the shared-edge groups the requested timezone's rings reference. Output
+is byte-identical between the two paths (`TestInPlaceGeoJSONMatchesExpanded`
+checks the whole world). `GetGeoJSON` has no error return, so the in-place
+implementation omits an undecodable timezone the way `GetTimezoneName`
+treats a lazy read error as no match.
+
+### `x` Package
+
+`github.com/ringsaturn/tzf/x` holds experimental surface, exempt from the
+module's semver promise: **a minor-version bump may break it**
+(golang.org/x-style, stated in the package doc). Today it holds exactly
+`NewFinderFromTZBReaderAt`. It imports the root package plus
+`internal/embedbin` and `internal/inplace`; the root package must never
+import `x`.
 
 Boundary semantics everywhere match post-#216 `ContainsPointAllowOnEdge`:
 a point on a shared border belongs to every touching polygon (exterior rings
