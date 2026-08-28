@@ -3,6 +3,7 @@ package tzf
 import (
 	tzfdist "github.com/ringsaturn/tzf-dist"
 
+	"github.com/ringsaturn/tzf/v2/internal/convert"
 	"github.com/ringsaturn/tzf/v2/internal/embedbin"
 	"github.com/ringsaturn/tzf/v2/internal/inplace"
 )
@@ -75,4 +76,26 @@ func (f *defaultFinder) GetTZGeoJSON(tzName string) ([]byte, error) {
 // GetGeoJSON returns a GeoJSON FeatureCollection covering all timezones.
 func (f *defaultFinder) GetGeoJSON() []byte {
 	return f.finder.GetGeoJSON()
+}
+
+// GetTZPreindexGeoJSON returns a GeoJSON FeatureCollection holding the FUZZY
+// preindex tiles that name tzName; see [GeoJSONer].
+func (f *defaultFinder) GetTZPreindexGeoJSON(tzName string) ([]byte, error) {
+	feature := f.fuzzy.preindexFeature(tzName)
+	if feature == nil {
+		return nil, ErrNoTimezoneFound
+	}
+	return convert.MustMarshal(&convert.BoundaryFile{
+		Type:     "FeatureCollection",
+		Features: []*convert.FeatureItem{feature},
+	}), nil
+}
+
+// GetPreindexGeoJSON returns a GeoJSON FeatureCollection covering the whole
+// FUZZY preindex; see [GeoJSONer].
+func (f *defaultFinder) GetPreindexGeoJSON() ([]byte, error) {
+	return convert.MustMarshal(&convert.BoundaryFile{
+		Type:     "FeatureCollection",
+		Features: f.fuzzy.preindexFeatures(),
+	}), nil
 }

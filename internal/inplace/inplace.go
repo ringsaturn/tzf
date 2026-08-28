@@ -137,3 +137,50 @@ func (f *Finder) feature(idx int32) (*convert.FeatureItem, error) {
 	}
 	return convert.RevertItemFromGeomPolygons(f.names[idx], polys), nil
 }
+
+// GetTZPreindexGeoJSON returns a GeoJSON FeatureCollection holding the FUZZY
+// preindex tiles that name tzName: one Feature whose MultiPolygon carries
+// each tile's bounding rectangle, coarsest zoom first. The tile maps are
+// rebuilt from the file on each call. A file without a FUZZY section returns
+// embedbin.ErrNoFuzzy; a name the dataset does not contain, or one no tile
+// names, returns ErrNoTimezoneFound.
+func (f *Finder) GetTZPreindexGeoJSON(tzName string) ([]byte, error) {
+	single, multi, err := f.reader.FuzzyMaps()
+	if err != nil {
+		return nil, err
+	}
+	var targets []uint16
+	for i, name := range f.names {
+		if name == tzName {
+			targets = append(targets, uint16(i))
+		}
+	}
+	tiles := convert.PreindexTilesFor(single, multi, targets)
+	if len(tiles) == 0 {
+		return nil, tzerr.ErrNoTimezoneFound
+	}
+	return convert.MustMarshal(&convert.BoundaryFile{
+		Type:     "FeatureCollection",
+		Features: []*convert.FeatureItem{convert.RevertItemFromTiles(tzName, tiles)},
+	}), nil
+}
+
+// GetPreindexGeoJSON returns a GeoJSON FeatureCollection covering the whole
+// FUZZY preindex: one Feature per timezone owning at least one tile, in
+// dataset order. A file without a FUZZY section returns embedbin.ErrNoFuzzy.
+func (f *Finder) GetPreindexGeoJSON() ([]byte, error) {
+	single, multi, err := f.reader.FuzzyMaps()
+	if err != nil {
+		return nil, err
+	}
+	grouped := convert.PreindexTilesGrouped(single, multi)
+	output := &convert.BoundaryFile{Type: "FeatureCollection"}
+	for i, name := range f.names {
+		tiles, ok := grouped[uint16(i)]
+		if !ok {
+			continue
+		}
+		output.Features = append(output.Features, convert.RevertItemFromTiles(name, tiles))
+	}
+	return convert.MustMarshal(output), nil
+}

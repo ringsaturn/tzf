@@ -234,3 +234,16 @@ func (f *finder) GetTZGeoJSON(tzName string) ([]byte, error) {
 func (f *finder) GetGeoJSON() []byte {
 	return convert.MustMarshal(&convert.BoundaryFile{Type: "FeatureCollection", Features: f.core.revertFeatures("", true)})
 }
+
+// GetTZPreindexGeoJSON implements [GeoJSONer]. The plain expanded finder is
+// only constructed for files without a FUZZY section — [NewFinderFromTZB]
+// wraps it in the preindex composition otherwise — so there is nothing to
+// export.
+func (f *finder) GetTZPreindexGeoJSON(string) ([]byte, error) {
+	return nil, ErrNoFuzzySection
+}
+
+// GetPreindexGeoJSON implements [GeoJSONer]; see [finder.GetTZPreindexGeoJSON].
+func (f *finder) GetPreindexGeoJSON() ([]byte, error) {
+	return nil, ErrNoFuzzySection
+}

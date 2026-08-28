@@ -1,6 +1,7 @@
 package tzf
 
 import (
+	"github.com/ringsaturn/tzf/v2/internal/convert"
 	"github.com/ringsaturn/tzf/v2/internal/embedbin"
 	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
@@ -65,4 +66,39 @@ func (f *fuzzyIndex) getTimezoneName(lng float64, lat float64) string {
 		}
 	}
 	return ""
+}
+
+// preindexFeature builds the preindex-tile Feature for tzName, or nil when
+// the dataset does not contain the name or no tile names it. The same name
+// may map to more than one directory item, so all matching indices count.
+func (f *fuzzyIndex) preindexFeature(tzName string) *convert.FeatureItem {
+	var targets []uint16
+	for i, name := range f.names {
+		if name == tzName {
+			targets = append(targets, uint16(i))
+		}
+	}
+	if len(targets) == 0 {
+		return nil
+	}
+	tiles := convert.PreindexTilesFor(f.single, f.multi, targets)
+	if len(tiles) == 0 {
+		return nil
+	}
+	return convert.RevertItemFromTiles(tzName, tiles)
+}
+
+// preindexFeatures builds one Feature per timezone owning at least one
+// preindex tile, in dataset order.
+func (f *fuzzyIndex) preindexFeatures() []*convert.FeatureItem {
+	grouped := convert.PreindexTilesGrouped(f.single, f.multi)
+	features := make([]*convert.FeatureItem, 0, len(grouped))
+	for i, name := range f.names {
+		tiles, ok := grouped[uint16(i)]
+		if !ok {
+			continue
+		}
+		features = append(features, convert.RevertItemFromTiles(name, tiles))
+	}
+	return features
 }
