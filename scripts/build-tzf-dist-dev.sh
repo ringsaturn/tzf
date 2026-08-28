@@ -6,8 +6,12 @@
 # and parity fixtures (TZF_PARITY_TOPO/PREINDEX); they are never distributed.
 #
 # Run once after cloning (needs ../tzf-dist checked out; CI checks out
-# ringsaturn/tzf-dist next to this repo). Drop the go.mod replace and this
-# script once tzf-dist publishes the artifact release.
+# ringsaturn/tzf-dist next to this repo). The installed artifacts are
+# uncommitted worktree state over tzf-dist's committed placeholders — real
+# data is never committed on main; restore with
+#   git -C ../tzf-dist checkout -- lite.tzb lite.tzm full.tzb
+# Drop the go.mod replace and this script once tzf-dist publishes the
+# artifact release.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -80,3 +84,8 @@ go run ./cmd/tzb2tzm -o "$DIST_DIR"/lite.tzm "$DIST_DIR"/lite.tzb
 
 echo "tzf-dist artifacts installed:"
 ls -l "$DIST_DIR"/lite.tzb "$DIST_DIR"/lite.tzm "$DIST_DIR"/full.tzb
+echo
+echo "note: these overwrite the committed placeholders in $DIST_DIR as"
+echo "uncommitted worktree state (real data is never committed on main —"
+echo "it ships via tags on the data branch). Restore the placeholders with:"
+echo "  git -C $DIST_DIR checkout -- lite.tzb lite.tzm full.tzb"
