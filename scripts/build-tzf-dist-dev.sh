@@ -23,9 +23,9 @@ fi
 mkdir -p "$WORK_DIR"
 
 # The artifact embeds ship on tzf-dist's v2-artifacts branch; when building
-# against a checkout that predates them (e.g. main in CI), add the embed file
-# so the replace target compiles.
-if [ ! -f "$DIST_DIR"/embed_v2.go ]; then
+# against a checkout that predates them (e.g. main before the branch merges),
+# add the embed file so the replace target compiles.
+if ! grep -qs "var LiteTZB" "$DIST_DIR"/*.go; then
   cat > "$DIST_DIR"/embed_v2.go <<'EOF'
 package tzfdist
 
@@ -42,8 +42,8 @@ var LiteTZM []byte
 //go:embed full.tzb
 var FullTZB []byte
 EOF
+  touch "$DIST_DIR"/lite.tzb "$DIST_DIR"/lite.tzm "$DIST_DIR"/full.tzb
 fi
-touch "$DIST_DIR"/lite.tzb "$DIST_DIR"/lite.tzm "$DIST_DIR"/full.tzb
 
 # Fetch the upstream boundary release (skipped when already present).
 GEOJSON="$WORK_DIR"/combined-with-oceans.json
