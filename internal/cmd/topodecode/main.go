@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/topology"
-	"github.com/ringsaturn/tzf/reduce"
-	"google.golang.org/protobuf/proto"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/reduce"
+	"github.com/ringsaturn/tzf/v2/internal/topology"
 )
 
 func main() {
@@ -17,11 +16,11 @@ func main() {
 		panic(err)
 	}
 	compressed := &pb.CompressedTopoTimezones{}
-	if err := proto.Unmarshal(raw, compressed); err != nil {
+	if err := pb.Unmarshal(raw, compressed); err != nil {
 		panic(err)
 	}
 	flat := topology.DecodeTopoTimezones(reduce.DecompressTopoTimezones(compressed))
-	out, err := proto.Marshal(flat)
+	out, err := pb.Marshal(flat)
 	if err != nil {
 		panic(err)
 	}

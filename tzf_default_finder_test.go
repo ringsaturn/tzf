@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ringsaturn/tzf"
+	"github.com/ringsaturn/tzf/v2"
 )
 
 var (
@@ -19,7 +19,7 @@ func init() {
 	defaultFinder = finder
 }
 
-func ExampleDefaultFinder_GetTimezoneName() {
+func ExampleNewDefaultFinder() {
 	finder, err := tzf.NewDefaultFinder()
 	if err != nil {
 		panic(err)
@@ -28,7 +28,7 @@ func ExampleDefaultFinder_GetTimezoneName() {
 	// Output: Asia/Shanghai
 }
 
-func ExampleDefaultFinder_GetTimezoneNames() {
+func ExampleNewDefaultFinder_getTimezoneNames() {
 	finder, err := tzf.NewDefaultFinder()
 	if err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func ExampleDefaultFinder_GetTimezoneNames() {
 	// Output: [Asia/Shanghai Asia/Urumqi] <nil>
 }
 
-func ExampleDefaultFinder_TimezoneNames() {
+func ExampleNewDefaultFinder_timezoneNames() {
 	finder, err := tzf.NewDefaultFinder()
 	if err != nil {
 		panic(err)

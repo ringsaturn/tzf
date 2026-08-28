@@ -1,5 +1,3 @@
-github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
-github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
 github.com/ringsaturn/go-cities.json v0.6.13 h1:p5afPcJ/tEE6uzFCOzLSHJYXgWnGdPmwZB9KBrEASxc=
 github.com/ringsaturn/go-cities.json v0.6.13/go.mod h1:VtklT4Sod9i6kvXXNZV63sfjeCX9l11OQfaAvPu+p4M=
 github.com/ringsaturn/orb v0.15.0 h1:+jLFo3JzHX2yg5kILpfcLHokKXywqNHBtgEDo6SJOuk=
@@ -16,5 +14,3 @@ github.com/tidwall/rtree v1.11.1 h1:Rsy9+LvduwOALW3QjW6Wsg3bNkxEZ82QsIClyl2HznY=
 github.com/tidwall/rtree v1.11.1/go.mod h1:9ZTMZJGMIG0/QI2hlCS0LQM/bULKMnK3cruKip+9BiQ=
 golang.org/x/sync v0.22.0 h1:SZjpbeLmrCk4xhRSZFNZW5gFUeCeFgjekvI/+gfScek=
 golang.org/x/sync v0.22.0/go.mod h1:9xrNwdLfx4jkKbNva9FpL6vEN7evnE43NNNJQ2LF3+0=
-google.golang.org/protobuf v1.36.12 h1:pJOKDDOyeXErUroCihFAd5LQuwXBSpVnKGrj5o/fwxc=
-google.golang.org/protobuf v1.36.12/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=

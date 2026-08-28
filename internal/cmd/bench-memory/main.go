@@ -8,12 +8,10 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	"github.com/ringsaturn/tzf"
 	tzfdist "github.com/ringsaturn/tzf-dist"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/embedbin"
-	"github.com/ringsaturn/tzf/x"
-	"google.golang.org/protobuf/proto"
+
+	tzf "github.com/ringsaturn/tzf/v2"
+	"github.com/ringsaturn/tzf/v2/x"
 )
 
 func readHeap() uint64 {
@@ -29,123 +27,26 @@ func report(name string, before, after uint64) {
 	fmt.Printf("MEMORY\t%s\t%.1f\n", name, mb)
 }
 
-func buildTZB() []byte {
-	input := &pb.CompressedTopoTimezones{}
-	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
-		panic(err)
-	}
-	data, err := embedbin.Encode(input, embedbin.EncodeOptions{AllowShortcut: true})
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
-func buildTZBWithFuzzy() []byte {
-	input := &pb.CompressedTopoTimezones{}
-	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
-		panic(err)
-	}
-	preindex := &pb.PreindexTimezones{}
-	if err := proto.Unmarshal(tzfdist.PreindexData, preindex); err != nil {
-		panic(err)
-	}
-	data, err := embedbin.Encode(input, embedbin.EncodeOptions{AllowShortcut: true, Preindex: preindex})
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
-func buildTZM(withFuzzy bool) []byte {
-	input := &pb.CompressedTopoTimezones{}
-	if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
-		panic(err)
-	}
-	opts := embedbin.EncodeOptions{}
-	if withFuzzy {
-		preindex := &pb.PreindexTimezones{}
-		if err := proto.Unmarshal(tzfdist.PreindexData, preindex); err != nil {
-			panic(err)
-		}
-		opts.Preindex = preindex
-	}
-	data, err := embedbin.EncodeM(input, opts)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
 func main() {
 	var before, after uint64
 
-	// FuzzyFinder
+	// EmbeddedFinder (lite .tzb queried in place; the embedded bytes are the
+	// storage, so retained heap is the reader's directories only)
 	before = readHeap()
 	{
-		input := &pb.PreindexTimezones{}
-		if err := proto.Unmarshal(tzfdist.PreindexData, input); err != nil {
-			panic(err)
-		}
-		f, err := tzf.NewFuzzyFinderFromPB(input)
+		f, err := tzf.NewEmbeddedFinder()
 		if err != nil {
 			panic(err)
 		}
 		after = readHeap()
-		report("FuzzyFinder", before, after)
-		runtime.KeepAlive(f)
-	}
-
-	// Finder (lite, topology compress topo, with GridIndex)
-	before = readHeap()
-	{
-		input := &pb.CompressedTopoTimezones{}
-		if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
-			panic(err)
-		}
-		f, err := tzf.NewFinderFromCompressedTopo(input)
-		if err != nil {
-			panic(err)
-		}
-		after = readHeap()
-		report("Finder", before, after)
-		runtime.KeepAlive(f)
-	}
-
-	// FinderNoGrid (lite, topology compress topo, GridIndex stripped)
-	before = readHeap()
-	{
-		input := &pb.CompressedTopoTimezones{}
-		if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
-			panic(err)
-		}
-		input.GridIndex = nil
-		f, err := tzf.NewFinderFromCompressedTopo(input)
-		if err != nil {
-			panic(err)
-		}
-		after = readHeap()
-		report("FinderNoGrid", before, after)
-		runtime.KeepAlive(f)
-	}
-
-	// TZBFinder (lite .tzb retained as a byte slice)
-	before = readHeap()
-	{
-		data := buildTZB()
-		f, err := tzf.NewFinderFromTZB(data)
-		if err != nil {
-			panic(err)
-		}
-		after = readHeap()
-		report("TZBFinder", before, after)
+		report("EmbeddedFinder", before, after)
 		runtime.KeepAlive(f)
 	}
 
 	// TZBFinderReaderAt (lite .tzb through an io.ReaderAt source)
 	before = readHeap()
 	{
-		data := buildTZB()
+		data := bytes.Clone(tzfdist.LiteTZB)
 		f, err := x.NewFinderFromTZBReaderAt(bytes.NewReader(data), int64(len(data)))
 		if err != nil {
 			panic(err)
@@ -155,65 +56,21 @@ func main() {
 		runtime.KeepAlive(f)
 	}
 
-	// ExpandedTZBFinder (lite .tzb expanded into the materialized finder;
-	// the source byte slice is released after expansion)
+	// FinderFromTZB (lite .tzb expanded + fuzzy fast path; the source byte
+	// slice is released after expansion)
 	before = readHeap()
 	{
-		data := buildTZB()
-		f, err := tzf.NewFinderFromTZBExpanded(data)
+		f, err := tzf.NewFinderFromTZB(bytes.Clone(tzfdist.LiteTZB))
 		if err != nil {
 			panic(err)
 		}
 		after = readHeap()
-		report("ExpandedTZBFinder", before, after)
+		report("FinderFromTZB", before, after)
 		runtime.KeepAlive(f)
 	}
 
-	// DefaultFinderTZB (one .tzb with FUZZY: fuzzy hash maps rebuilt from the
-	// FUZZY section + expanded finder; the byte slice is released after load)
-	before = readHeap()
-	{
-		data := buildTZBWithFuzzy()
-		f, err := tzf.NewDefaultFinderFromTZB(data)
-		if err != nil {
-			panic(err)
-		}
-		after = readHeap()
-		report("DefaultFinderTZB", before, after)
-		runtime.KeepAlive(f)
-	}
-
-	// TZMFinder (lite .tzm memory image; rings alias the retained byte slice,
-	// so retained heap = mapping + rebuilt stripes + directory objects)
-	before = readHeap()
-	{
-		data := buildTZM(false)
-		f, err := tzf.NewFinderFromTZM(data)
-		if err != nil {
-			panic(err)
-		}
-		after = readHeap()
-		report("TZMFinder", before, after)
-		runtime.KeepAlive(f)
-		runtime.KeepAlive(data)
-	}
-
-	// DefaultFinderTZM (one .tzm with FUZZY: fuzzy hash maps + in-place
-	// polygon view; the byte slice stays live as polygon storage)
-	before = readHeap()
-	{
-		data := buildTZM(true)
-		f, err := tzf.NewDefaultFinderFromTZM(data)
-		if err != nil {
-			panic(err)
-		}
-		after = readHeap()
-		report("DefaultFinderTZM", before, after)
-		runtime.KeepAlive(f)
-		runtime.KeepAlive(data)
-	}
-
-	// DefaultFinder (FuzzyFinder + Finder combined, lite data)
+	// DefaultFinder (lite .tzm memory image: fuzzy hash maps + in-place
+	// polygon view aliasing the embedded bytes)
 	before = readHeap()
 	{
 		f, err := tzf.NewDefaultFinder()
@@ -225,23 +82,7 @@ func main() {
 		runtime.KeepAlive(f)
 	}
 
-	// FullFinderWithoutPreindex (Finder with full-precision data, no FuzzyFinder layer)
-	before = readHeap()
-	{
-		input := &pb.CompressedTopoTimezones{}
-		if err := proto.Unmarshal(tzfdist.CompressTopoData, input); err != nil {
-			panic(err)
-		}
-		f, err := tzf.NewFinderFromCompressedTopo(input)
-		if err != nil {
-			panic(err)
-		}
-		after = readHeap()
-		report("FullFinderWithoutPreindex", before, after)
-		runtime.KeepAlive(f)
-	}
-
-	// FullFinder (DefaultFinder with full-precision data)
+	// FullFinder (full .tzb expanded + fuzzy fast path)
 	before = readHeap()
 	{
 		f, err := tzf.NewFullFinder()

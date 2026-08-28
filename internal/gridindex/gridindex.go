@@ -15,8 +15,8 @@ import (
 	"slices"
 	"sync"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/polyline"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/polyline"
 )
 
 // Build creates a GridIndex from pre-computed bounding boxes.

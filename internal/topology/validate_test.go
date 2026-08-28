@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 func TestValidate_AcceptsSharedBorders(t *testing.T) {

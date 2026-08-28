@@ -2,26 +2,22 @@ package tzf
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"testing"
+
+	tzfdist "github.com/ringsaturn/tzf-dist"
 )
 
 // TestGeoJSONerCoverage pins the contract documented on GeoJSONer: every
 // finder this package constructs can export its geometry, so callers may
 // assert the behavior instead of a concrete type.
 func TestGeoJSONerCoverage(t *testing.T) {
-	tzb, _ := loadTZBTestData(t)
-	tzbFuzzy, _ := loadTZBWithFuzzy(t)
-	_, tzmFuzzy := loadTZMTestData(t)
-
 	build := map[string]func() (F, error){
-		"NewFinderFromTZB":         func() (F, error) { return NewFinderFromTZB(tzb) },
-		"NewFinderFromTZBExpanded": func() (F, error) { return NewFinderFromTZBExpanded(tzb) },
-		"NewFuzzyFinderFromTZB":    func() (F, error) { return NewFuzzyFinderFromTZB(tzbFuzzy) },
-		"NewDefaultFinderFromTZB":  func() (F, error) { return NewDefaultFinderFromTZB(tzbFuzzy) },
-		"NewFinderFromTZM":         func() (F, error) { return NewFinderFromTZM(tzmFuzzy) },
-		"NewDefaultFinderFromTZM":  func() (F, error) { return NewDefaultFinderFromTZM(tzmFuzzy) },
+		"NewDefaultFinder":  NewDefaultFinder,
+		"NewEmbeddedFinder": NewEmbeddedFinder,
+		"NewFullFinder":     NewFullFinder,
+		"NewFinderFromTZB":  func() (F, error) { return NewFinderFromTZB(tzfdist.LiteTZB) },
+		"NewFinderFromTZM":  func() (F, error) { return NewFinderFromTZM(tzfdist.LiteTZM) },
 	}
 	for name, newFinder := range build {
 		t.Run(name, func(t *testing.T) {
@@ -48,12 +44,11 @@ func TestGeoJSONerCoverage(t *testing.T) {
 // both go through the same embedbin ring expansion, so the exported
 // FeatureCollections must be byte-identical, whole-world included.
 func TestInPlaceGeoJSONMatchesExpanded(t *testing.T) {
-	tzb, _ := loadTZBTestData(t)
-	inPlace, err := NewFinderFromTZB(tzb)
+	inPlace, err := NewEmbeddedFinder()
 	if err != nil {
 		t.Fatal(err)
 	}
-	expanded, err := NewFinderFromTZBExpanded(tzb)
+	expanded, err := NewFinderFromTZB(tzfdist.LiteTZB)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,24 +62,15 @@ func TestInPlaceGeoJSONMatchesExpanded(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s expanded: %v", name, err)
 		}
-		if !bytes.Equal(mustJSON(t, got), mustJSON(t, want)) {
+		if !bytes.Equal(got, want) {
 			t.Fatalf("%s: in-place GeoJSON differs from expanded", name)
 		}
 	}
 
-	gotAll := mustJSON(t, inPlace.(GeoJSONer).GetGeoJSON())
-	wantAll := mustJSON(t, expanded.(GeoJSONer).GetGeoJSON())
+	gotAll := inPlace.(GeoJSONer).GetGeoJSON()
+	wantAll := expanded.(GeoJSONer).GetGeoJSON()
 	if !bytes.Equal(gotAll, wantAll) {
 		t.Fatalf("whole-world GeoJSON differs: in place %d bytes, expanded %d bytes",
 			len(gotAll), len(wantAll))
 	}
-}
-
-func mustJSON(t *testing.T, v any) []byte {
-	t.Helper()
-	raw, err := json.Marshal(v)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return raw
 }

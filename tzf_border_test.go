@@ -8,7 +8,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/ringsaturn/tzf"
+	"github.com/ringsaturn/tzf/v2"
 )
 
 func TestNauticalBorderIsNotAGap(t *testing.T) {

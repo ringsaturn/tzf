@@ -13,12 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ringsaturn/tzf/convert"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	border "github.com/ringsaturn/tzf/internal/borderchange"
-	"github.com/ringsaturn/tzf/internal/topology"
-	"github.com/ringsaturn/tzf/reduce"
-	"google.golang.org/protobuf/proto"
+	border "github.com/ringsaturn/tzf/v2/internal/borderchange"
+	"github.com/ringsaturn/tzf/v2/internal/convert"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/reduce"
+	"github.com/ringsaturn/tzf/v2/internal/topology"
 )
 
 type comparisonDetails struct {
@@ -104,7 +103,7 @@ func loadDataset(path string) (*pb.Timezones, error) {
 			return nil, err
 		}
 		compressed := &pb.CompressedTopoTimezones{}
-		if err := proto.Unmarshal(raw, compressed); err != nil {
+		if err := pb.Unmarshal(raw, compressed); err != nil {
 			return nil, fmt.Errorf("decode compressed topology %q: %w", path, err)
 		}
 		return topology.DecodeTopoTimezones(reduce.DecompressTopoTimezones(compressed)), nil
@@ -114,7 +113,7 @@ func loadDataset(path string) (*pb.Timezones, error) {
 			return nil, err
 		}
 		topo := &pb.TopoTimezones{}
-		if err := proto.Unmarshal(raw, topo); err != nil {
+		if err := pb.Unmarshal(raw, topo); err != nil {
 			return nil, fmt.Errorf("decode topology %q: %w", path, err)
 		}
 		return topology.DecodeTopoTimezones(topo), nil
@@ -124,7 +123,7 @@ func loadDataset(path string) (*pb.Timezones, error) {
 			return nil, err
 		}
 		flat := &pb.Timezones{}
-		if err := proto.Unmarshal(raw, flat); err != nil {
+		if err := pb.Unmarshal(raw, flat); err != nil {
 			return nil, fmt.Errorf("decode timezones %q: %w", path, err)
 		}
 		return flat, nil

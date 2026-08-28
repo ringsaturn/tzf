@@ -1,8 +1,6 @@
-name: build-tzpb
+name: build-data
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       timezone-boundary-version:
@@ -11,7 +9,7 @@ on:
         default: ""
 
 jobs:
-  build-tzpb-pipeline:
+  build-data-pipeline:
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -36,73 +34,39 @@ jobs:
               exit 1
             fi
           fi
-          echo "TIMEZONE_BOUNDARY_VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "TIMEZONE_BOUNDARY_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TBB_VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TBB_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Download timezone boundary data
+      # The full chain from upstream raw GeoJSON to the .tzb/.tzm artifact
+      # set — no protobuf anywhere. The gob intermediates it produces are
+      # build-internal (pipeline cache + parity sources); only the artifacts
+      # leave this job.
+      - name: Build artifacts from GeoJSON
+        run: ./scripts/build-tzf-dist-dev.sh
+
+      - name: Verify (deep + dense + boundary parity)
         run: |
-          wget "https://github.com/evansiroky/timezone-boundary-builder/releases/download/$TIMEZONE_BOUNDARY_VERSION/timezones-with-oceans.geojson.zip"
-          unzip timezones-with-oceans.geojson.zip
-
-      - name: Install CLI tools from local source
-        run: |
-          go install ./cmd/geojson2tzpb
-          go install ./cmd/reducetzpb
-          go install ./cmd/deduplicatetzpb
-          go install ./cmd/compresstopotzpb
-          go install ./cmd/preindextzpb
-          go install ./cmd/topo2embed
-          go install ./internal/cmd/embedcompare
-
-      - name: Generate binary files
-        run: |
-          geojson2tzpb combined-with-oceans.json
-
-          # combined-with-oceans.compress.topo.bin: dedup + compress on full precision data
-          deduplicatetzpb -o combined-with-oceans.topo.bin combined-with-oceans.bin \
-            2> >(tee /tmp/stats-dedup-full.txt >&2)
-          compresstopotzpb -o combined-with-oceans.compress.topo.bin combined-with-oceans.topo.bin \
-            2> >(tee /tmp/stats-compress-full.txt >&2)
-
-          # combined-with-oceans.topology.compress.topo.bin: topology-aware simplify + dedup + compress
-          # combined-with-oceans.topology.preindex.bin:      topology-aware simplify + tile pre-index
-          reducetzpb -o combined-with-oceans.topology.bin combined-with-oceans.bin \
-            2> >(tee /tmp/stats-reduce-topo.txt >&2)
-          deduplicatetzpb -o combined-with-oceans.topology.topo.bin combined-with-oceans.topology.bin \
-            2> >(tee /tmp/stats-dedup-topo.txt >&2)
-          compresstopotzpb -o combined-with-oceans.topology.compress.topo.bin combined-with-oceans.topology.topo.bin \
-            2> >(tee /tmp/stats-compress-topo.txt >&2)
-          preindextzpb combined-with-oceans.topology.bin \
-            2> >(tee /tmp/stats-preindex.txt >&2)
-
-          topo2embed -allow-shortcut -o combined-with-oceans.tzb \
-            combined-with-oceans.compress.topo.bin
-          topo2embed -allow-shortcut -o combined-with-oceans.lite.tzb \
-            combined-with-oceans.topology.compress.topo.bin
-
-          embedcompare combined-with-oceans.compress.topo.bin combined-with-oceans.tzb
-          embedcompare combined-with-oceans.topology.compress.topo.bin combined-with-oceans.lite.tzb
-
-          ls -alh combined-with-oceans*.bin combined-with-oceans*.tzb
+          go run ./internal/cmd/embedcompare \
+            -preindex tmp/tzf-dist-dev/combined-with-oceans.topology.preindex.gob \
+            -tzm tmp/tzf-dist-dev/lite.tzm \
+            tmp/tzf-dist-dev/combined-with-oceans.topology.compress.topo.gob \
+            tmp/tzf-dist-dev/lite.tzb
+          go run ./internal/cmd/embedcompare -deep-only \
+            tmp/tzf-dist-dev/combined-with-oceans.compress.topo.gob \
+            tmp/tzf-dist-dev/full.tzb
 
       - name: Collect checksums
         run: |
-          md5sum \
-            combined-with-oceans.compress.topo.bin \
-            combined-with-oceans.topology.compress.topo.bin \
-            combined-with-oceans.topology.preindex.bin \
-            combined-with-oceans.tzb \
-            combined-with-oceans.lite.tzb \
-            > checksums.md5
+          cd tmp/tzf-dist-dev
+          md5sum lite.tzb lite.tzm full.tzb > checksums.md5
           cat checksums.md5
+          ls -alh lite.tzb lite.tzm full.tzb
 
       - uses: actions/upload-artifact@v7
         with:
-          name: tzpb-${{ steps.fetch-version.outputs.TIMEZONE_BOUNDARY_VERSION }}
+          name: tzf-data-${{ steps.fetch-version.outputs.TBB_VERSION }}
           path: |
-            combined-with-oceans.compress.topo.bin
-            combined-with-oceans.topology.compress.topo.bin
-            combined-with-oceans.topology.preindex.bin
-            combined-with-oceans.tzb
-            combined-with-oceans.lite.tzb
-            checksums.md5
+            tmp/tzf-dist-dev/lite.tzb
+            tmp/tzf-dist-dev/lite.tzm
+            tmp/tzf-dist-dev/full.tzb
+            tmp/tzf-dist-dev/checksums.md5

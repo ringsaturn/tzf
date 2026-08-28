@@ -9,26 +9,26 @@ import (
 	"os"
 	"slices"
 
-	"github.com/ringsaturn/tzf"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/embedbin"
-	"github.com/ringsaturn/tzf/internal/polyline"
-	"google.golang.org/protobuf/proto"
+	tzf "github.com/ringsaturn/tzf/v2"
+	"github.com/ringsaturn/tzf/v2/internal/embedbin"
+	"github.com/ringsaturn/tzf/v2/internal/embedenc"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/pbref"
+	"github.com/ringsaturn/tzf/v2/internal/polyline"
 )
 
 type point struct{ lng, lat float64 }
 
 // checker bundles the query-parity pairs exercised on every sample point:
-// the in-place reader, the expansion loader, (when a preindex is given) the
-// FUZZY view, and (when a .tzm is given) the M-profile finder, each against
-// its protobuf-backed reference.
+// the in-place reader against a pure-PIP pb reference, the public loaders
+// (fuzzy-composed when the file carries FUZZY) against the composed pb
+// expectation, and the FUZZY section itself against the source preindex.
 type checker struct {
 	reader      *embedbin.Reader
-	reference   tzf.F
-	expanded    tzf.F
-	expandedRef tzf.F
-	fuzzy       tzf.F
-	fuzzyRef    tzf.F
+	reference   *pbref.Finder // pure PIP, grid per shortcut flag
+	expanded    tzf.F         // tzf.NewFinderFromTZB: fuzzy-composed
+	expandedRef *pbref.Finder // grid included
+	fuzzyRef    *pbref.Fuzzy  // nil without -preindex
 	mFinder     tzf.F
 	dst         []int32
 }
@@ -50,7 +50,7 @@ func main() {
 		fail(err)
 	}
 	var input pb.CompressedTopoTimezones
-	if err := proto.Unmarshal(sourceRaw, &input); err != nil {
+	if err := pb.Unmarshal(sourceRaw, &input); err != nil {
 		fail(err)
 	}
 	tzb, err := os.ReadFile(flag.Arg(1))
@@ -61,7 +61,7 @@ func main() {
 	if err != nil {
 		fail(err)
 	}
-	if err := embedbin.Verify(&input, reader); err != nil {
+	if err := embedenc.Verify(&input, reader); err != nil {
 		fail(err)
 	}
 	fmt.Fprintf(os.Stderr, "deep verification passed: version=%s timezones=%d bytes=%d fuzzy=%v\n",
@@ -76,7 +76,7 @@ func main() {
 		if err != nil {
 			fail(err)
 		}
-		if err := embedbin.VerifyM(&input, mReader); err != nil {
+		if err := embedenc.VerifyM(&input, mReader); err != nil {
 			fail(err)
 		}
 		fmt.Fprintf(os.Stderr, "deep M verification passed: bytes=%d fuzzy=%v\n", len(tzmData), mReader.HasFuzzy())
@@ -92,22 +92,24 @@ func main() {
 			fail(err)
 		}
 	}
-	referenceInput := proto.Clone(&input).(*pb.CompressedTopoTimezones)
+	referenceInput := pb.Clone(&input)
 	if !reader.ShortcutEnabled() {
 		referenceInput.GridIndex = nil
 	}
-	c.reference, err = tzf.NewFinderFromCompressedTopo(referenceInput)
+	c.reference, err = pbref.New(referenceInput)
 	if err != nil {
 		fail(err)
 	}
-	// The expansion parity contract is against NewFinderFromCompressedTopo
-	// over the unmodified source (grid included): the shortcut flag governs
-	// only the in-place reader.
-	c.expanded, err = tzf.NewFinderFromTZBExpanded(tzb)
+	// The expansion parity contract is against the pb reference over the
+	// unmodified source (grid included): the shortcut flag governs only the
+	// in-place reader. tzf.NewFinderFromTZB composes the FUZZY fast path
+	// when the file carries one, so its single-name expectation is
+	// fuzzy-first over the same reference (DefaultFinder semantics).
+	c.expanded, err = tzf.NewFinderFromTZB(tzb)
 	if err != nil {
 		fail(err)
 	}
-	c.expandedRef, err = tzf.NewFinderFromCompressedTopo(&input)
+	c.expandedRef, err = pbref.New(&input)
 	if err != nil {
 		fail(err)
 	}
@@ -120,17 +122,15 @@ func main() {
 			fail(err)
 		}
 		preindex := &pb.PreindexTimezones{}
-		if err := proto.Unmarshal(preRaw, preindex); err != nil {
+		if err := pb.Unmarshal(preRaw, preindex); err != nil {
 			fail(err)
 		}
-		c.fuzzy, err = tzf.NewFuzzyFinderFromTZB(tzb)
+		c.fuzzyRef, err = pbref.NewFuzzy(preindex)
 		if err != nil {
 			fail(err)
 		}
-		c.fuzzyRef, err = tzf.NewFuzzyFinderFromPB(preindex)
-		if err != nil {
-			fail(err)
-		}
+	} else if reader.HasFuzzy() {
+		fail(errors.New(".tzb has a FUZZY section: pass -preindex so the composed finders can be checked"))
 	}
 
 	checked := 0
@@ -164,6 +164,17 @@ func main() {
 	fmt.Fprintf(os.Stderr, "boundary parity passed: points=%d seed=%d\n", len(reservoir), *seed)
 }
 
+// composedWant is the single-name expectation for the public loaders:
+// fuzzy-first over the polygon reference when the file carries FUZZY.
+func (c *checker) composedWant(lng, lat float64) string {
+	if c.fuzzyRef != nil {
+		if name := c.fuzzyRef.GetTimezoneName(lng, lat); name != "" {
+			return name
+		}
+	}
+	return c.expandedRef.GetTimezoneName(lng, lat)
+}
+
 func (c *checker) compareSingle(lng, lat float64) error {
 	idx, ok, err := c.reader.Lookup(lng, lat)
 	if err != nil {
@@ -181,16 +192,29 @@ func (c *checker) compareSingle(lng, lat float64) error {
 	if got != want {
 		return fmt.Errorf("single parity at (%f,%f): got %q want %q", lng, lat, got, want)
 	}
-	if got, want := c.expanded.GetTimezoneName(lng, lat), c.expandedRef.GetTimezoneName(lng, lat); got != want {
-		return fmt.Errorf("expanded single parity at (%f,%f): got %q want %q", lng, lat, got, want)
+	composed := c.composedWant(lng, lat)
+	if got := c.expanded.GetTimezoneName(lng, lat); got != composed {
+		return fmt.Errorf("expanded single parity at (%f,%f): got %q want %q", lng, lat, got, composed)
 	}
 	if c.mFinder != nil {
-		if got, want := c.mFinder.GetTimezoneName(lng, lat), c.expandedRef.GetTimezoneName(lng, lat); got != want {
-			return fmt.Errorf("tzm single parity at (%f,%f): got %q want %q", lng, lat, got, want)
+		if got := c.mFinder.GetTimezoneName(lng, lat); got != composed {
+			return fmt.Errorf("tzm single parity at (%f,%f): got %q want %q", lng, lat, got, composed)
 		}
 	}
-	if c.fuzzy != nil {
-		if got, want := c.fuzzy.GetTimezoneName(lng, lat), c.fuzzyRef.GetTimezoneName(lng, lat); got != want {
+	if c.fuzzyRef != nil {
+		idx, ok, err := c.reader.FuzzyLookup(lng, lat)
+		if err != nil {
+			return err
+		}
+		var got string
+		if ok {
+			name, err := c.reader.Name(idx)
+			if err != nil {
+				return err
+			}
+			got = string(name)
+		}
+		if want := c.fuzzyRef.GetTimezoneName(lng, lat); got != want {
 			return fmt.Errorf("fuzzy single parity at (%f,%f): got %q want %q", lng, lat, got, want)
 		}
 	}
@@ -217,6 +241,9 @@ func (c *checker) compareMulti(lng, lat float64) error {
 	if !slices.Equal(gotNames, want) {
 		return fmt.Errorf("multi parity at (%f,%f): got %v want %v", lng, lat, gotNames, want)
 	}
+	// GetTimezoneNames stays polygon-only in every public finder, so the
+	// multi-name legs compare against the polygon reference even when the
+	// single-name path is fuzzy-composed.
 	expGot, err := c.expanded.GetTimezoneNames(lng, lat)
 	if err != nil {
 		return err
@@ -237,13 +264,24 @@ func (c *checker) compareMulti(lng, lat float64) error {
 			return fmt.Errorf("tzm multi parity at (%f,%f): got %v want %v", lng, lat, mGot, expWant)
 		}
 	}
-	if c.fuzzy != nil {
-		fzGot, gotErr := c.fuzzy.GetTimezoneNames(lng, lat)
-		fzWant, wantErr := c.fuzzyRef.GetTimezoneNames(lng, lat)
-		if (gotErr == nil) != (wantErr == nil) {
-			return fmt.Errorf("fuzzy multi parity at (%f,%f): errors %v vs %v", lng, lat, gotErr, wantErr)
+	if c.fuzzyRef != nil {
+		fzIdxs, err := c.reader.FuzzyLookupAppend(c.dst[:0], lng, lat)
+		if err != nil {
+			return err
 		}
-		if !slices.Equal(fzGot, fzWant) {
+		fzGot := make([]string, len(fzIdxs))
+		for i, idx := range fzIdxs {
+			name, err := c.reader.Name(idx)
+			if err != nil {
+				return err
+			}
+			fzGot[i] = string(name)
+		}
+		fzWant, wantErr := c.fuzzyRef.GetTimezoneNames(lng, lat)
+		if (len(fzGot) == 0) != (wantErr != nil) {
+			return fmt.Errorf("fuzzy multi parity at (%f,%f): got %v vs error %v", lng, lat, fzGot, wantErr)
+		}
+		if wantErr == nil && !slices.Equal(fzGot, fzWant) {
 			return fmt.Errorf("fuzzy multi parity at (%f,%f): got %v want %v", lng, lat, fzGot, fzWant)
 		}
 	}

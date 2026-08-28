@@ -1,4 +1,5 @@
-// CLI tool to convert GeoJSON based Timezone boundary to tzf's Probuf format.
+// CLI tool to convert GeoJSON timezone boundaries to the pipeline's
+// intermediate format.
 package main
 
 import (
@@ -7,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ringsaturn/tzf/convert"
-	"google.golang.org/protobuf/proto"
+	"github.com/ringsaturn/tzf/v2/internal/convert"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 func main() {
@@ -28,8 +29,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	outputPath := strings.Replace(jsonFilePath, ".json", ".bin", 1)
-	outputBin, _ := proto.Marshal(output)
+	outputPath := strings.Replace(jsonFilePath, ".json", ".gob", 1)
+	outputBin, err := pb.Marshal(output)
+	if err != nil {
+		panic(err)
+	}
 
 	f, err := os.Create(outputPath)
 	if err != nil {

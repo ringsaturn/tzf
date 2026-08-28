@@ -15,7 +15,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ringsaturn/tzf/internal/embedbin"
+	"github.com/ringsaturn/tzf/v2/internal/embedbin"
 )
 
 func main() {

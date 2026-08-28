@@ -1,0 +1,8 @@
+go 1.25.0
+
+use .
+
+// Development stand-in for the tzf-dist release that will carry the
+// .tzb/.tzm artifact set (W7); drop once that version is published.
+// Fill it with scripts/build-tzf-dist-dev.sh before building.
+replace github.com/ringsaturn/tzf-dist => ./tmp/tzf-dist-dev

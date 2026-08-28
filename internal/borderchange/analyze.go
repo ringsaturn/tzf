@@ -18,7 +18,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 const authalicRadiusM = 6371007.180918475

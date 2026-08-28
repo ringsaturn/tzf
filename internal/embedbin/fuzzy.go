@@ -4,10 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"slices"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
 
 // FUZZY section (type 10) layout, spec rev 1 §4:
@@ -28,108 +26,6 @@ import (
 // stays castable on aligned targets; explicit little-endian loads remain the
 // normative access method.
 
-// encodeFuzzy builds a FUZZY section from a preindex tile set. Name indices
-// reference the file's NAMES order; the encoder fails on any preindex name
-// absent from names, and on a preindex/geometry data-version mismatch.
-func encodeFuzzy(pre *pb.PreindexTimezones, names []string, version string) ([]byte, error) {
-	if pre == nil || len(pre.Keys) == 0 {
-		return nil, fmt.Errorf("fuzzy: %w: empty preindex", ErrMalformed)
-	}
-	if pre.Version != version {
-		return nil, fmt.Errorf("fuzzy: %w: preindex version %q != data version %q", ErrMalformed, pre.Version, version)
-	}
-	idxZoom, aggZoom := pre.IdxZoom, pre.AggZoom
-	if aggZoom < 0 || aggZoom > idxZoom || idxZoom > 28 {
-		return nil, fmt.Errorf("fuzzy: %w: zoom range agg=%d idx=%d", ErrMalformed, aggZoom, idxZoom)
-	}
-	if len(names) > fuzzyMaxNames {
-		return nil, fmt.Errorf("fuzzy: %w: %d timezones exceed the 15-bit value limit", ErrMalformed, len(names))
-	}
-	nameIdx := make(map[string]uint16, len(names))
-	for i, n := range names {
-		nameIdx[n] = uint16(i)
-	}
-
-	// Group tile entries; order within a tile preserves the source preindex
-	// key order (first-listed wins in single-result lookups).
-	tiles := make(map[geom.TileID][]uint16, len(pre.Keys))
-	for i, item := range pre.Keys {
-		if item == nil {
-			return nil, fmt.Errorf("fuzzy: %w: nil preindex key %d", ErrMalformed, i)
-		}
-		if item.X < 0 || item.Y < 0 || int64(item.X) >= 1<<28 || int64(item.Y) >= 1<<28 {
-			return nil, fmt.Errorf("fuzzy: %w: tile x/y out of range at key %d", ErrMalformed, i)
-		}
-		if item.Z < aggZoom || item.Z > idxZoom {
-			return nil, fmt.Errorf("fuzzy: %w: tile zoom %d outside [%d,%d]", ErrMalformed, item.Z, aggZoom, idxZoom)
-		}
-		idx, ok := nameIdx[item.Name]
-		if !ok {
-			return nil, fmt.Errorf("fuzzy: %w: preindex name %q absent from NAMES", ErrMalformed, item.Name)
-		}
-		key := geom.NewTileIDFromXYZ(uint32(item.X), uint32(item.Y), uint8(item.Z))
-		tiles[key] = append(tiles[key], idx)
-	}
-
-	keys := make([]geom.TileID, 0, len(tiles))
-	for key := range tiles {
-		keys = append(keys, key)
-	}
-	slices.Sort(keys)
-
-	values := make([]uint16, len(keys))
-	var multiDir []uint16
-	var multiValues []uint16
-	for i, key := range keys {
-		group := tiles[key]
-		if len(group) == 1 {
-			values[i] = group[0]
-			continue
-		}
-		groupIndex := len(multiDir) / 2
-		if groupIndex >= fuzzyMaxNames {
-			return nil, fmt.Errorf("fuzzy: %w: multi group count exceeds 15-bit limit", ErrMalformed)
-		}
-		if len(multiValues)+len(group) > math.MaxUint16 {
-			return nil, fmt.Errorf("fuzzy: %w: multi value count exceeds uint16", ErrMalformed)
-		}
-		multiDir = append(multiDir, uint16(len(multiValues)), uint16(len(group)))
-		multiValues = append(multiValues, group...)
-		values[i] = fuzzyMulti | uint16(groupIndex)
-	}
-
-	raw := fuzzyHeaderLen + 8*uint64(len(keys)) + 2*uint64(len(values)) +
-		2*uint64(len(multiDir)) + 2*uint64(len(multiValues))
-	padded := align4(raw)
-	if padded > math.MaxUint32 {
-		return nil, fmt.Errorf("fuzzy: %w: section capacity", ErrMalformed)
-	}
-	out := make([]byte, padded)
-	out[0] = uint8(idxZoom)
-	out[1] = uint8(aggZoom)
-	binary.LittleEndian.PutUint32(out[4:], uint32(len(keys)))
-	binary.LittleEndian.PutUint32(out[8:], uint32(len(multiDir)/2))
-	binary.LittleEndian.PutUint32(out[12:], uint32(len(multiValues)))
-	pos := int(fuzzyHeaderLen)
-	for _, key := range keys {
-		binary.LittleEndian.PutUint64(out[pos:], uint64(key))
-		pos += 8
-	}
-	for _, v := range values {
-		binary.LittleEndian.PutUint16(out[pos:], v)
-		pos += 2
-	}
-	for _, v := range multiDir {
-		binary.LittleEndian.PutUint16(out[pos:], v)
-		pos += 2
-	}
-	for _, v := range multiValues {
-		binary.LittleEndian.PutUint16(out[pos:], v)
-		pos += 2
-	}
-	return out, nil
-}
-
 type fuzzyInfo struct {
 	present         bool
 	idxZoom         uint8
@@ -149,13 +45,13 @@ type fuzzyInfo struct {
 // parity with the source preindex is the build pipeline's job (embedcompare).
 func (r *Reader) validateFuzzy() error {
 	s := r.sections[sectionFuzzy]
-	if s.off%8 != 0 {
+	if s.Off%8 != 0 {
 		return fmt.Errorf("%w: FUZZY section alignment", ErrMalformed)
 	}
-	if uint64(s.len) < fuzzyHeaderLen {
+	if uint64(s.Len) < fuzzyHeaderLen {
 		return fmt.Errorf("%w: FUZZY length", ErrMalformed)
 	}
-	raw, err := r.readSmall(uint64(s.off), int(fuzzyHeaderLen))
+	raw, err := r.readSmall(uint64(s.Off), int(fuzzyHeaderLen))
 	if err != nil {
 		return err
 	}
@@ -173,15 +69,15 @@ func (r *Reader) validateFuzzy() error {
 	}
 	size := fuzzyHeaderLen + 8*uint64(f.tileCount) + 2*uint64(f.tileCount) +
 		4*uint64(f.multiGroupCount) + 2*uint64(f.multiValueCount)
-	if align4(size) != uint64(s.len) {
+	if Align4(size) != uint64(s.Len) {
 		return fmt.Errorf("%w: FUZZY section size", ErrMalformed)
 	}
-	f.keysOff = uint64(s.off) + fuzzyHeaderLen
+	f.keysOff = uint64(s.Off) + fuzzyHeaderLen
 	f.valuesOff = f.keysOff + 8*uint64(f.tileCount)
 	f.multiDirOff = f.valuesOff + 2*uint64(f.tileCount)
 	f.multiValuesOff = f.multiDirOff + 4*uint64(f.multiGroupCount)
-	for pad := size; pad < uint64(s.len); pad++ {
-		b, err := r.byteAt(uint64(s.off) + pad)
+	for pad := size; pad < uint64(s.Len); pad++ {
+		b, err := r.byteAt(uint64(s.Off) + pad)
 		if err != nil {
 			return err
 		}
@@ -244,30 +140,35 @@ func (r *Reader) validateFuzzy() error {
 }
 
 // The fuzzy accessors read via r.data directly when byte-backed: the offsets
-// were bounds-checked against the section at open time, and stack buffers
-// passed through the io.ReaderAt interface would escape and allocate.
+// were bounds-checked against the section at open time, so that path stays
+// lock-free and allocation-free. On the io.ReaderAt backend a stack buffer
+// passed through the interface would escape and allocate on every access, so
+// those reads go through the shared decode workspace instead — callers must
+// hold r.mu (the exported Fuzzy* entry points take it; open-time validation
+// runs single-threaded), which matches the backend's documented
+// queries-serialize-internally behavior.
 
 func (r *Reader) fuzzyKeyAt(i uint32) (uint64, error) {
 	off := r.fuzzy.keysOff + 8*uint64(i)
 	if r.data != nil {
 		return binary.LittleEndian.Uint64(r.data[off:]), nil
 	}
-	var raw [8]byte
-	if err := r.readRaw(raw[:], off); err != nil {
+	raw, err := r.readSmall(off, 8)
+	if err != nil {
 		return 0, err
 	}
-	return binary.LittleEndian.Uint64(raw[:]), nil
+	return binary.LittleEndian.Uint64(raw), nil
 }
 
 func (r *Reader) fuzzyU16At(off uint64) (uint16, error) {
 	if r.data != nil {
 		return binary.LittleEndian.Uint16(r.data[off:]), nil
 	}
-	var raw [2]byte
-	if err := r.readRaw(raw[:], off); err != nil {
+	raw, err := r.readSmall(off, 2)
+	if err != nil {
 		return 0, err
 	}
-	return binary.LittleEndian.Uint16(raw[:]), nil
+	return binary.LittleEndian.Uint16(raw), nil
 }
 
 func (r *Reader) fuzzyGroupAt(g uint32) (first, count uint16, err error) {
@@ -275,11 +176,11 @@ func (r *Reader) fuzzyGroupAt(g uint32) (first, count uint16, err error) {
 	if r.data != nil {
 		return binary.LittleEndian.Uint16(r.data[off:]), binary.LittleEndian.Uint16(r.data[off+2:]), nil
 	}
-	var raw [4]byte
-	if err := r.readRaw(raw[:], off); err != nil {
+	raw, err := r.readSmall(off, 4)
+	if err != nil {
 		return 0, 0, err
 	}
-	return binary.LittleEndian.Uint16(raw[:]), binary.LittleEndian.Uint16(raw[2:]), nil
+	return binary.LittleEndian.Uint16(raw), binary.LittleEndian.Uint16(raw[2:]), nil
 }
 
 // fuzzySearch binary-searches the sorted key array for target and returns its
@@ -319,9 +220,9 @@ func (r *Reader) HasFuzzy() bool { return r.fuzzy.present }
 func (r *Reader) FuzzyLookupBufferSize() int { return int(r.fuzzy.maxGroupLen) }
 
 // fuzzyProbe walks zoom levels coarsest-first and returns the first hit's
-// value position, mirroring FuzzyFinder.GetTimezoneName's loop with the two
-// hash maps replaced by one sorted array. Lock-free: it touches no shared
-// workspace, so concurrent callers are safe on both backends.
+// value position: the tile-map lookup loop with the two hash maps replaced by
+// one sorted array. Byte-backed probes are lock-free; on the ReaderAt backend
+// the caller must hold r.mu (see the accessor note above).
 func (r *Reader) fuzzyProbe(lng, lat float64) (uint16, bool, error) {
 	if !r.fuzzy.present {
 		return 0, false, ErrNoFuzzy
@@ -349,6 +250,10 @@ func (r *Reader) fuzzyProbe(lng, lat float64) (uint16, bool, error) {
 // tiles resolve to the group's first entry (first-listed wins), matching
 // FuzzyFinder.GetTimezoneName.
 func (r *Reader) FuzzyLookup(lng, lat float64) (int32, bool, error) {
+	if r.data == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+	}
 	value, ok, err := r.fuzzyProbe(lng, lat)
 	if err != nil || !ok {
 		return 0, false, err
@@ -371,6 +276,10 @@ func (r *Reader) FuzzyLookup(lng, lat float64) (int32, bool, error) {
 // stored order (the source preindex key order) and returns the extended
 // slice; dst is returned unchanged when no tile matches.
 func (r *Reader) FuzzyLookupAppend(dst []int32, lng, lat float64) ([]int32, error) {
+	if r.data == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+	}
 	value, ok, err := r.fuzzyProbe(lng, lat)
 	if err != nil || !ok {
 		return dst, err
@@ -405,6 +314,10 @@ func (r *Reader) FuzzyZooms() (idxZoom, aggZoom int) {
 func (r *Reader) FuzzyMaps() (single map[geom.TileID]uint16, multi map[geom.TileID][]uint16, err error) {
 	if !r.fuzzy.present {
 		return nil, nil, ErrNoFuzzy
+	}
+	if r.data == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
 	}
 	single = make(map[geom.TileID]uint16, r.fuzzy.tileCount)
 	multi = make(map[geom.TileID][]uint16)

@@ -6,7 +6,7 @@ package polyf
 import (
 	"errors"
 
-	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
 
 var ErrNotFound = errors.New("polyf: not found")

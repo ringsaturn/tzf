@@ -14,9 +14,9 @@ package x
 import (
 	"io"
 
-	"github.com/ringsaturn/tzf"
-	"github.com/ringsaturn/tzf/internal/embedbin"
-	"github.com/ringsaturn/tzf/internal/inplace"
+	"github.com/ringsaturn/tzf/v2"
+	"github.com/ringsaturn/tzf/v2/internal/embedbin"
+	"github.com/ringsaturn/tzf/v2/internal/inplace"
 )
 
 // NewFinderFromTZBReaderAt builds a finder that reads a TZF embedded binary

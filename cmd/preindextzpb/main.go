@@ -7,9 +7,8 @@ import (
 	"strings"
 
 	"github.com/ringsaturn/orb/maptile"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/preindex"
-	"google.golang.org/protobuf/proto"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/preindex"
 )
 
 var (
@@ -26,14 +25,14 @@ func main() {
 		panic(err)
 	}
 	input := &pb.Timezones{}
-	if err := proto.Unmarshal(rawFile, input); err != nil {
+	if err := pb.Unmarshal(rawFile, input); err != nil {
 		panic(err)
 	}
 
 	output := preindex.PreIndexTimezones(input, maptile.Zoom(idxZoom), maptile.Zoom(aggZoom), maptile.Zoom(maxZoomLevelToKeep), layerDrop)
 
-	outputPath := strings.Replace(originalProbufPath, ".bin", ".preindex.bin", 1)
-	outputBin, _ := proto.Marshal(output)
+	outputPath := strings.Replace(originalProbufPath, ".gob", ".preindex.gob", 1)
+	outputBin, _ := pb.Marshal(output)
 	f, err := os.Create(outputPath)
 	if err != nil {
 		panic(err)

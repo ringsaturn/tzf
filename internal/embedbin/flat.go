@@ -5,7 +5,7 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
 
 // hostLittleEndian reports whether native multi-byte loads match the file's
@@ -39,35 +39,35 @@ func (r *Reader) Flat() (*FlatView, error) {
 	defer r.mu.Unlock()
 	r.work.cacheValid = false
 
-	points, err := r.flatPointsSlice()
+	points, err := r.FlatPointsSlice()
 	if err != nil {
 		return nil, err
 	}
 	names := make([]string, r.tzCount)
 	polygons := make([][]ExpandedPolygon, r.tzCount)
 	for i := uint32(0); i < r.tzCount; i++ {
-		name, err := r.nameBytesLocked(int32(i))
+		name, err := r.NameBytesLocked(int32(i))
 		if err != nil {
 			return nil, err
 		}
 		names[i] = string(name)
-		t, err := r.tzAt(i)
+		t, err := r.TZAt(i)
 		if err != nil {
 			return nil, err
 		}
-		polys := make([]ExpandedPolygon, t.count)
-		for j := uint32(0); j < uint32(t.count); j++ {
-			p, err := r.polyAt(t.first + j)
+		polys := make([]ExpandedPolygon, t.Count)
+		for j := uint32(0); j < uint32(t.Count); j++ {
+			p, err := r.PolyAt(t.First + j)
 			if err != nil {
 				return nil, err
 			}
-			rings := make([][]geom.I32Point, p.count)
-			for k := uint32(0); k < uint32(p.count); k++ {
-				rec, err := r.flatRingAt(p.first + k)
+			rings := make([][]geom.I32Point, p.Count)
+			for k := uint32(0); k < uint32(p.Count); k++ {
+				rec, err := r.FlatRingAt(p.First + k)
 				if err != nil {
 					return nil, err
 				}
-				rings[k] = points[rec.first : uint64(rec.first)+uint64(rec.count) : uint64(rec.first)+uint64(rec.count)]
+				rings[k] = points[rec.First : uint64(rec.First)+uint64(rec.Count) : uint64(rec.First)+uint64(rec.Count)]
 			}
 			polys[j] = ExpandedPolygon{Exterior: rings[0], Holes: rings[1:]}
 		}
@@ -85,10 +85,10 @@ func (r *Reader) Flat() (*FlatView, error) {
 func (r *Reader) sectionBytes(typ uint32) ([]byte, error) {
 	s := r.sections[typ]
 	if r.data != nil {
-		return r.data[s.off : uint64(s.off)+uint64(s.len)], nil
+		return r.data[s.Off : uint64(s.Off)+uint64(s.Len)], nil
 	}
-	out := make([]byte, s.len)
-	if err := r.readRaw(out, uint64(s.off)); err != nil {
+	out := make([]byte, s.Len)
+	if err := r.readRaw(out, uint64(s.Off)); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -96,7 +96,7 @@ func (r *Reader) sectionBytes(typ uint32) ([]byte, error) {
 
 // flatPointsSlice returns the FLATPOINTS pairs as a point slice, aliasing the
 // section bytes when the sanctioned §6.2 conditions hold.
-func (r *Reader) flatPointsSlice() ([]geom.I32Point, error) {
+func (r *Reader) FlatPointsSlice() ([]geom.I32Point, error) {
 	b, err := r.sectionBytes(sectionFlatPoints)
 	if err != nil {
 		return nil, err

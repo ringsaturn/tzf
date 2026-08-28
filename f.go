@@ -1,7 +1,5 @@
 package tzf
 
-import "github.com/ringsaturn/tzf/convert"
-
 type F interface {
 	GetTimezoneName(lng float64, lat float64) string
 	GetTimezoneNames(lng float64, lat float64) ([]string, error)
@@ -21,11 +19,12 @@ type F interface {
 //	// ...
 //	boundaries := finder.(tzf.GeoJSONer).GetGeoJSON()
 type GeoJSONer interface {
-	// GetTZGeoJSON returns a FeatureCollection for one timezone name. A name
-	// the dataset does not contain returns [ErrNoTimezoneFound]. The same
-	// name may map to more than one item, so the collection may hold several
-	// Features.
-	GetTZGeoJSON(tzName string) (*convert.BoundaryFile, error)
-	// GetGeoJSON returns a FeatureCollection covering all timezones.
-	GetGeoJSON() *convert.BoundaryFile
+	// GetTZGeoJSON returns a serialized GeoJSON FeatureCollection for one
+	// timezone name. A name the dataset does not contain returns
+	// [ErrNoTimezoneFound]. The same name may map to more than one item, so
+	// the collection may hold several Features.
+	GetTZGeoJSON(tzName string) ([]byte, error)
+	// GetGeoJSON returns a serialized GeoJSON FeatureCollection covering
+	// all timezones.
+	GetGeoJSON() []byte
 }

@@ -2,40 +2,19 @@ package x_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"math/rand"
 	"slices"
-	"sync"
 	"testing"
 
-	"github.com/ringsaturn/tzf"
 	tzfdist "github.com/ringsaturn/tzf-dist"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/embedbin"
-	"github.com/ringsaturn/tzf/x"
-	"google.golang.org/protobuf/proto"
-)
 
-var (
-	testDataOnce sync.Once
-	testData     []byte
-	testDataErr  error
+	tzf "github.com/ringsaturn/tzf/v2"
+	"github.com/ringsaturn/tzf/v2/x"
 )
 
 func loadTZB(t *testing.T) []byte {
 	t.Helper()
-	testDataOnce.Do(func() {
-		input := &pb.CompressedTopoTimezones{}
-		if err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input); err != nil {
-			testDataErr = err
-			return
-		}
-		testData, testDataErr = embedbin.Encode(input, embedbin.EncodeOptions{AllowShortcut: true})
-	})
-	if testDataErr != nil {
-		t.Fatal(testDataErr)
-	}
-	return testData
+	return tzfdist.LiteTZB
 }
 
 func TestNewFinderFromTZBReaderAt(t *testing.T) {
@@ -118,15 +97,7 @@ func TestReaderAtGeoJSON(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
-		gotJSON, err := json.Marshal(got)
-		if err != nil {
-			t.Fatal(err)
-		}
-		wantJSON, err := json.Marshal(want)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(gotJSON, wantJSON) {
+		if !bytes.Equal(got, want) {
 			t.Fatalf("%s: GeoJSON differs between ReaderAt and byte-backed finders", name)
 		}
 	}

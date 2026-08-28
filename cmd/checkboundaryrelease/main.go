@@ -9,8 +9,7 @@ import (
 	"net/http"
 
 	tzfdist "github.com/ringsaturn/tzf-dist"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"google.golang.org/protobuf/proto"
+	"github.com/ringsaturn/tzf/v2/internal/embedbin"
 )
 
 const API = "https://api.github.com/repos/evansiroky/timezone-boundary-builder/tags"
@@ -57,14 +56,13 @@ func main() {
 
 	latestTag := resp[0].Name
 
-	input := &pb.PreindexTimezones{}
-	if err := proto.Unmarshal(tzfdist.PreindexData, input); err != nil {
-		panic(err)
-	}
+	reader, err := embedbin.Open(tzfdist.LiteTZB)
+	must(err)
+	current := reader.DataVersion()
 	if *verbose {
-		log.Printf("input.Version=%v, latestTag=%v\n", input.Version, latestTag)
+		log.Printf("current=%v, latestTag=%v\n", current, latestTag)
 	}
-	if input.Version == latestTag && !*force {
+	if current == latestTag && !*force {
 		log.Println("Same version, bye!")
 		return
 	}

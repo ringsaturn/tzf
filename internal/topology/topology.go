@@ -11,7 +11,7 @@ import (
 
 	"github.com/ringsaturn/orb"
 	"github.com/ringsaturn/orb/simplify"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 	"github.com/tidwall/rtree"
 )
 

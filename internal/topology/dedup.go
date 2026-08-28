@@ -3,7 +3,7 @@ package topology
 import (
 	"slices"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 // BuildTopoTimezones converts a Timezones protobuf into the topology-aware

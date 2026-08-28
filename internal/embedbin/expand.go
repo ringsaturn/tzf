@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
 
 // ExpandedPolygon is one polygon's rings in open form (no closing vertex),
@@ -63,26 +63,26 @@ func (r *Reader) Expand() (*Expanded, error) {
 	names := make([]string, r.tzCount)
 	polygons := make([][]ExpandedPolygon, r.tzCount)
 	for i := uint32(0); i < r.tzCount; i++ {
-		name, err := r.nameBytesLocked(int32(i))
+		name, err := r.NameBytesLocked(int32(i))
 		if err != nil {
 			return nil, err
 		}
 		names[i] = string(name)
-		t, err := r.tzAt(i)
+		t, err := r.TZAt(i)
 		if err != nil {
 			return nil, err
 		}
-		polys := make([]ExpandedPolygon, t.count)
-		for j := uint32(0); j < uint32(t.count); j++ {
-			p, err := r.polyAt(t.first + j)
+		polys := make([]ExpandedPolygon, t.Count)
+		for j := uint32(0); j < uint32(t.Count); j++ {
+			p, err := r.PolyAt(t.First + j)
 			if err != nil {
 				return nil, err
 			}
-			ep := ExpandedPolygon{Exterior: rings[p.first]}
-			if p.count > 1 {
-				ep.Holes = make([][]geom.I32Point, p.count-1)
-				for h := uint32(1); h < uint32(p.count); h++ {
-					ep.Holes[h-1] = rings[p.first+h]
+			ep := ExpandedPolygon{Exterior: rings[p.First]}
+			if p.Count > 1 {
+				ep.Holes = make([][]geom.I32Point, p.Count-1)
+				for h := uint32(1); h < uint32(p.Count); h++ {
+					ep.Holes[h-1] = rings[p.First+h]
 				}
 			}
 			polys[j] = ep
@@ -104,22 +104,22 @@ type groupSource func(index uint32) ([]geom.I32Point, error)
 // decodeGroupAt decodes one GROUPDIR entry's chunks into its point run and
 // checks the run against the record's stored endpoints and count.
 func (r *Reader) decodeGroupAt(index uint32) ([]geom.I32Point, error) {
-	g, err := r.groupAt(index)
+	g, err := r.GroupAt(index)
 	if err != nil {
 		return nil, err
 	}
 	// Cap the preallocation: pointCount is file-controlled, so a forged
 	// header must not demand memory before decode proves the data exists.
-	points := make([]geom.I32Point, 0, min(g.pointCount, 1<<16))
-	for j := uint32(0); j < uint32(g.count); j++ {
-		part, err := r.decodeChunkPointsAt(g.first + j)
+	points := make([]geom.I32Point, 0, min(g.PointCount, 1<<16))
+	for j := uint32(0); j < uint32(g.Count); j++ {
+		part, err := r.decodeChunkPointsAt(g.First + j)
 		if err != nil {
 			return nil, fmt.Errorf("expand group %d chunk %d: %w", index, j, err)
 		}
 		points = append(points, part...)
 	}
-	if uint32(len(points)) != g.pointCount ||
-		!samePoint(points[0], g.entry) || !samePoint(points[len(points)-1], g.exit) {
+	if uint32(len(points)) != g.PointCount ||
+		!SamePoint(points[0], g.Entry) || !SamePoint(points[len(points)-1], g.Exit) {
 		return nil, fmt.Errorf("expand group %d: %w: endpoints or count", index, ErrMalformed)
 	}
 	return points, nil
@@ -128,13 +128,13 @@ func (r *Reader) decodeGroupAt(index uint32) ([]geom.I32Point, error) {
 // expandRing assembles one ring from its ops, skipping the duplicated
 // junction vertex at each op boundary and the stored closing vertex.
 func (r *Reader) expandRing(index uint32, group groupSource) ([]geom.I32Point, error) {
-	ring, err := r.ringAt(index)
+	ring, err := r.RingAt(index)
 	if err != nil {
 		return nil, err
 	}
-	pts := make([]geom.I32Point, 0, min(uint64(ring.pointCount)+1, 1<<16))
-	for k := uint32(0); k < uint32(ring.count); k++ {
-		word, err := r.opAt(ring.first + k)
+	pts := make([]geom.I32Point, 0, min(uint64(ring.PointCount)+1, 1<<16))
+	for k := uint32(0); k < uint32(ring.Count); k++ {
+		word, err := r.OpAt(ring.First + k)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +149,7 @@ func (r *Reader) expandRing(index uint32, group groupSource) ([]geom.I32Point, e
 			if reversed {
 				entry = g[len(g)-1]
 			}
-			if !samePoint(entry, pts[len(pts)-1]) {
+			if !SamePoint(entry, pts[len(pts)-1]) {
 				return nil, fmt.Errorf("expand ring %d: %w: junction mismatch", index, ErrMalformed)
 			}
 		}
@@ -168,10 +168,10 @@ func (r *Reader) expandRing(index uint32, group groupSource) ([]geom.I32Point, e
 			}
 		}
 	}
-	if uint64(len(pts)) != uint64(ring.pointCount)+1 {
+	if uint64(len(pts)) != uint64(ring.PointCount)+1 {
 		return nil, fmt.Errorf("expand ring %d: %w: point count", index, ErrMalformed)
 	}
-	if !samePoint(pts[len(pts)-1], pts[0]) {
+	if !SamePoint(pts[len(pts)-1], pts[0]) {
 		return nil, fmt.Errorf("expand ring %d: %w: closing junction mismatch", index, ErrMalformed)
 	}
 	return pts[:len(pts)-1], nil
@@ -179,11 +179,11 @@ func (r *Reader) expandRing(index uint32, group groupSource) ([]geom.I32Point, e
 
 // decodeChunkPointsAt decodes one chunk's full point run.
 func (r *Reader) decodeChunkPointsAt(index uint32) ([]geom.I32Point, error) {
-	c, err := r.chunkAt(index)
+	c, err := r.ChunkAt(index)
 	if err != nil {
 		return nil, err
 	}
-	return r.decodeChunkPoints(index, c)
+	return r.DecodeChunkPoints(index, c)
 }
 
 // ExpandTimezone decodes one timezone's polygons, with the same per-ring
@@ -215,25 +215,25 @@ func (r *Reader) ExpandTimezone(index int32) ([]ExpandedPolygon, error) {
 		return points, nil
 	}
 
-	t, err := r.tzAt(uint32(index))
+	t, err := r.TZAt(uint32(index))
 	if err != nil {
 		return nil, err
 	}
-	polys := make([]ExpandedPolygon, t.count)
-	for j := uint32(0); j < uint32(t.count); j++ {
-		p, err := r.polyAt(t.first + j)
+	polys := make([]ExpandedPolygon, t.Count)
+	for j := uint32(0); j < uint32(t.Count); j++ {
+		p, err := r.PolyAt(t.First + j)
 		if err != nil {
 			return nil, err
 		}
-		exterior, err := r.expandRing(p.first, group)
+		exterior, err := r.expandRing(p.First, group)
 		if err != nil {
 			return nil, err
 		}
 		ep := ExpandedPolygon{Exterior: exterior}
-		if p.count > 1 {
-			ep.Holes = make([][]geom.I32Point, p.count-1)
-			for h := uint32(1); h < uint32(p.count); h++ {
-				hole, err := r.expandRing(p.first+h, group)
+		if p.Count > 1 {
+			ep.Holes = make([][]geom.I32Point, p.Count-1)
+			for h := uint32(1); h < uint32(p.Count); h++ {
+				hole, err := r.expandRing(p.First+h, group)
 				if err != nil {
 					return nil, err
 				}
@@ -257,7 +257,7 @@ func (r *Reader) gridToMap() (map[[2]int16][]int32, error) {
 	for cy := 0; cy < int(r.grid.latCells); cy++ {
 		for cx := 0; cx < int(r.grid.lngCells); cx++ {
 			cell := uint64(cy)*uint64(r.grid.lngCells) + uint64(cx)
-			raw, err := r.readSmall(uint64(s.off)+12+cell*4, 4)
+			raw, err := r.readSmall(uint64(s.Off)+12+cell*4, 4)
 			if err != nil {
 				return nil, err
 			}

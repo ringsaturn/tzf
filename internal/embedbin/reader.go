@@ -9,12 +9,12 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
 
 type section struct {
-	off uint32
-	len uint32
+	Off uint32
+	Len uint32
 }
 
 type readWorkspace struct {
@@ -62,38 +62,38 @@ type gridInfo struct {
 	candidates uint64
 }
 
-type tzRecord struct {
-	first uint32
-	count uint16
-	box   bbox
+type TZRecord struct {
+	First uint32
+	Count uint16
+	Box   BBox
 }
 
-type polyRecord struct {
-	first uint32
-	count uint16
-	box   bbox
+type PolyRecord struct {
+	First uint32
+	Count uint16
+	Box   BBox
 }
 
-type ringRecord struct {
-	first      uint32
-	pointCount uint32
-	count      uint16
-	box        bbox
+type RingRecord struct {
+	First      uint32
+	PointCount uint32
+	Count      uint16
+	Box        BBox
 }
 
-type groupRecord struct {
-	first      uint32
-	pointCount uint32
-	count      uint16
-	entry      geom.I32Point
-	exit       geom.I32Point
-	box        bbox
+type GroupRecord struct {
+	First      uint32
+	PointCount uint32
+	Count      uint16
+	Entry      geom.I32Point
+	Exit       geom.I32Point
+	Box        BBox
 }
 
-type chunkRecord struct {
-	off   uint32
-	count uint16
-	box   bbox
+type ChunkRecord struct {
+	Off   uint32
+	Count uint16
+	Box   BBox
 }
 
 // Open validates and opens a byte-backed .tzb file.
@@ -179,11 +179,11 @@ func (r *Reader) open() error {
 		if err != nil {
 			return err
 		}
-		if entry.off%4 != 0 {
+		if entry.Off%4 != 0 {
 			return fmt.Errorf("%w: unaligned section", ErrMalformed)
 		}
-		end := uint64(entry.off) + uint64(entry.len)
-		if uint64(entry.off) < tableEnd || end > r.size-footerSize {
+		end := uint64(entry.Off) + uint64(entry.Len)
+		if uint64(entry.Off) < tableEnd || end > r.size-footerSize {
 			return fmt.Errorf("%w: section bounds", ErrMalformed)
 		}
 		var raw [4]byte
@@ -225,26 +225,26 @@ func (r *Reader) open() error {
 	if hasGrid != (r.flags&flagGrid != 0) {
 		return fmt.Errorf("%w: GRID flag mismatch", ErrMalformed)
 	}
-	if r.sections[sectionTZDir].len != r.tzCount*tzRecordLen ||
-		r.sections[sectionPolyDir].len%polyRecordLen != 0 {
+	if r.sections[sectionTZDir].Len != r.tzCount*tzRecordLen ||
+		r.sections[sectionPolyDir].Len%polyRecordLen != 0 {
 		return fmt.Errorf("%w: directory section length", ErrMalformed)
 	}
-	r.polyCount = r.sections[sectionPolyDir].len / polyRecordLen
+	r.polyCount = r.sections[sectionPolyDir].Len / polyRecordLen
 	if r.profile == profileM {
 		if err := r.openFlatSections(); err != nil {
 			return err
 		}
 	} else {
-		if r.sections[sectionRingDir].len%ringRecordLen != 0 ||
-			r.sections[sectionRingOps].len%4 != 0 ||
-			r.sections[sectionGroupDir].len%groupRecordLen != 0 ||
-			r.sections[sectionChunkDir].len%chunkRecordLen != 0 {
+		if r.sections[sectionRingDir].Len%ringRecordLen != 0 ||
+			r.sections[sectionRingOps].Len%4 != 0 ||
+			r.sections[sectionGroupDir].Len%groupRecordLen != 0 ||
+			r.sections[sectionChunkDir].Len%chunkRecordLen != 0 {
 			return fmt.Errorf("%w: directory section length", ErrMalformed)
 		}
-		r.ringCount = r.sections[sectionRingDir].len / ringRecordLen
-		r.opCount = r.sections[sectionRingOps].len / 4
-		r.groupCount = r.sections[sectionGroupDir].len / groupRecordLen
-		r.chunkCount = r.sections[sectionChunkDir].len / chunkRecordLen
+		r.ringCount = r.sections[sectionRingDir].Len / ringRecordLen
+		r.opCount = r.sections[sectionRingOps].Len / 4
+		r.groupCount = r.sections[sectionGroupDir].Len / groupRecordLen
+		r.chunkCount = r.sections[sectionChunkDir].Len / chunkRecordLen
 		if r.opCount == 0 || r.groupCount == 0 || r.chunkCount == 0 {
 			return fmt.Errorf("%w: empty directory", ErrMalformed)
 		}
@@ -293,24 +293,24 @@ func profileAllowsSection(profile byte, typ uint32) bool {
 // in order.
 func (r *Reader) openFlatSections() error {
 	points := r.sections[sectionFlatPoints]
-	if points.off%8 != 0 || points.len%8 != 0 {
+	if points.Off%8 != 0 || points.Len%8 != 0 {
 		return fmt.Errorf("%w: FLATPOINTS alignment or length", ErrMalformed)
 	}
-	r.flatPairCount = points.len / 8
-	if r.sections[sectionFlatRingDir].len%flatRingRecordLen != 0 {
+	r.flatPairCount = points.Len / 8
+	if r.sections[sectionFlatRingDir].Len%flatRingRecordLen != 0 {
 		return fmt.Errorf("%w: FLATRINGDIR section length", ErrMalformed)
 	}
-	r.ringCount = r.sections[sectionFlatRingDir].len / flatRingRecordLen
+	r.ringCount = r.sections[sectionFlatRingDir].Len / flatRingRecordLen
 	var next uint64
 	for i := uint32(0); i < r.ringCount; i++ {
-		rec, err := r.flatRingAt(i)
+		rec, err := r.FlatRingAt(i)
 		if err != nil {
 			return err
 		}
-		if uint64(rec.first) != next {
+		if uint64(rec.First) != next {
 			return fmt.Errorf("%w: FLATRINGDIR rings do not partition FLATPOINTS", ErrMalformed)
 		}
-		next += uint64(rec.count)
+		next += uint64(rec.Count)
 	}
 	if next != uint64(r.flatPairCount) {
 		return fmt.Errorf("%w: FLATPOINTS trailing pairs", ErrMalformed)
@@ -318,25 +318,25 @@ func (r *Reader) openFlatSections() error {
 	return nil
 }
 
-type flatRingRecord struct {
-	first uint32
-	count uint32
-	box   bbox
+type FlatRingRecord struct {
+	First uint32
+	Count uint32
+	Box   BBox
 }
 
 // flatRingAt reads one FLATRINGDIR record (M profile).
-func (r *Reader) flatRingAt(index uint32) (flatRingRecord, error) {
+func (r *Reader) FlatRingAt(index uint32) (FlatRingRecord, error) {
 	raw, err := r.readRecord(sectionFlatRingDir, index, r.ringCount, flatRingRecordLen)
 	if err != nil {
-		return flatRingRecord{}, err
+		return FlatRingRecord{}, err
 	}
-	v := flatRingRecord{
-		first: binary.LittleEndian.Uint32(raw),
-		count: binary.LittleEndian.Uint32(raw[4:]),
-		box:   getBBox(raw, 8),
+	v := FlatRingRecord{
+		First: binary.LittleEndian.Uint32(raw),
+		Count: binary.LittleEndian.Uint32(raw[4:]),
+		Box:   GetBBox(raw, 8),
 	}
-	if v.count < 3 || uint64(v.first)+uint64(v.count) > uint64(r.flatPairCount) || !v.box.inDomain() {
-		return flatRingRecord{}, fmt.Errorf("%w: FLATRINGDIR record", ErrMalformed)
+	if v.Count < 3 || uint64(v.First)+uint64(v.Count) > uint64(r.flatPairCount) || !v.Box.inDomain() {
+		return FlatRingRecord{}, fmt.Errorf("%w: FLATRINGDIR record", ErrMalformed)
 	}
 	return v, nil
 }
@@ -374,11 +374,11 @@ func (r *Reader) sectionEntry(i uint32) (section, error) {
 	if err := r.readRaw(raw[:], uint64(headerSize)+uint64(i)*sectionEntryLen); err != nil {
 		return section{}, err
 	}
-	return section{off: binary.LittleEndian.Uint32(raw[4:]), len: binary.LittleEndian.Uint32(raw[8:])}, nil
+	return section{Off: binary.LittleEndian.Uint32(raw[4:]), Len: binary.LittleEndian.Uint32(raw[8:])}, nil
 }
 
 func rangesOverlap(a, b section) bool {
-	return uint64(a.off) < uint64(b.off)+uint64(b.len) && uint64(b.off) < uint64(a.off)+uint64(a.len)
+	return uint64(a.Off) < uint64(b.Off)+uint64(b.Len) && uint64(b.Off) < uint64(a.Off)+uint64(a.Len)
 }
 
 func (r *Reader) readRaw(dst []byte, off uint64) error {
@@ -413,20 +413,20 @@ func (r *Reader) readSmall(off uint64, n int) ([]byte, error) {
 func (r *Reader) validateNames() error {
 	s := r.sections[sectionNames]
 	prefix := uint64(4) + 4*uint64(r.tzCount+1)
-	if uint64(s.len) < prefix {
+	if uint64(s.Len) < prefix {
 		return fmt.Errorf("%w: NAMES length", ErrMalformed)
 	}
-	raw, err := r.readSmall(uint64(s.off), 4)
+	raw, err := r.readSmall(uint64(s.Off), 4)
 	if err != nil {
 		return err
 	}
 	blobLen := binary.LittleEndian.Uint32(raw)
-	if prefix+uint64(blobLen) != uint64(s.len) {
+	if prefix+uint64(blobLen) != uint64(s.Len) {
 		return fmt.Errorf("%w: NAMES blob length", ErrMalformed)
 	}
 	var prev uint32
 	for i := uint32(0); i <= r.tzCount; i++ {
-		raw, err = r.readSmall(uint64(s.off)+4+uint64(i)*4, 4)
+		raw, err = r.readSmall(uint64(s.Off)+4+uint64(i)*4, 4)
 		if err != nil {
 			return err
 		}
@@ -475,10 +475,10 @@ func (r *Reader) validateNames() error {
 
 func (r *Reader) validateGrid() error {
 	s := r.sections[sectionGrid]
-	if s.len < 12 {
+	if s.Len < 12 {
 		return fmt.Errorf("%w: GRID length", ErrMalformed)
 	}
-	raw, err := r.readSmall(uint64(s.off), 12)
+	raw, err := r.readSmall(uint64(s.Off), 12)
 	if err != nil {
 		return err
 	}
@@ -499,14 +499,14 @@ func (r *Reader) validateGrid() error {
 	}
 	cells := uint64(g.lngCells) * uint64(g.latCells)
 	expect := uint64(12) + cells*4 + uint64(g.candCount)*2
-	if expect != uint64(s.len) || cells > math.MaxUint32 {
+	if expect != uint64(s.Len) || cells > math.MaxUint32 {
 		return fmt.Errorf("%w: GRID section size", ErrMalformed)
 	}
 	g.cellCount = uint32(cells)
-	g.candidates = uint64(s.off) + 12 + cells*4
+	g.candidates = uint64(s.Off) + 12 + cells*4
 	r.grid = g
 	for i := uint32(0); i < g.cellCount; i++ {
-		raw, err := r.readSmall(uint64(s.off)+12+uint64(i)*4, 4)
+		raw, err := r.readSmall(uint64(s.Off)+12+uint64(i)*4, 4)
 		if err != nil {
 			return err
 		}
@@ -531,14 +531,14 @@ func (r *Reader) validateGrid() error {
 func (r *Reader) validateChunkOffsets() error {
 	var prev uint32
 	for i := uint32(0); i < r.chunkCount; i++ {
-		c, err := r.chunkAt(i)
+		c, err := r.ChunkAt(i)
 		if err != nil {
 			return err
 		}
-		if c.count == 0 || c.off >= r.sections[sectionPoints].len || (i > 0 && c.off <= prev) {
+		if c.Count == 0 || c.Off >= r.sections[sectionPoints].Len || (i > 0 && c.Off <= prev) {
 			return fmt.Errorf("%w: chunk offset or count", ErrMalformed)
 		}
-		prev = c.off
+		prev = c.Off
 	}
 	return nil
 }
@@ -548,49 +548,49 @@ func (r *Reader) readRecord(sectionType uint32, index, count, width uint32) ([]b
 		return nil, fmt.Errorf("%w: directory index", ErrMalformed)
 	}
 	s := r.sections[sectionType]
-	return r.readSmall(uint64(s.off)+uint64(index)*uint64(width), int(width))
+	return r.readSmall(uint64(s.Off)+uint64(index)*uint64(width), int(width))
 }
 
-func (r *Reader) tzAt(index uint32) (tzRecord, error) {
+func (r *Reader) TZAt(index uint32) (TZRecord, error) {
 	raw, err := r.readRecord(sectionTZDir, index, r.tzCount, tzRecordLen)
 	if err != nil {
-		return tzRecord{}, err
+		return TZRecord{}, err
 	}
-	v := tzRecord{first: binary.LittleEndian.Uint32(raw), count: binary.LittleEndian.Uint16(raw[4:]), box: getBBox(raw, 8)}
-	if v.count == 0 || uint64(v.first)+uint64(v.count) > uint64(r.polyCount) || !v.box.inDomain() {
-		return tzRecord{}, fmt.Errorf("%w: TZDIR record", ErrMalformed)
+	v := TZRecord{First: binary.LittleEndian.Uint32(raw), Count: binary.LittleEndian.Uint16(raw[4:]), Box: GetBBox(raw, 8)}
+	if v.Count == 0 || uint64(v.First)+uint64(v.Count) > uint64(r.polyCount) || !v.Box.inDomain() {
+		return TZRecord{}, fmt.Errorf("%w: TZDIR record", ErrMalformed)
 	}
 	return v, nil
 }
 
-func (r *Reader) polyAt(index uint32) (polyRecord, error) {
+func (r *Reader) PolyAt(index uint32) (PolyRecord, error) {
 	raw, err := r.readRecord(sectionPolyDir, index, r.polyCount, polyRecordLen)
 	if err != nil {
-		return polyRecord{}, err
+		return PolyRecord{}, err
 	}
-	v := polyRecord{first: binary.LittleEndian.Uint32(raw), count: binary.LittleEndian.Uint16(raw[4:]), box: getBBox(raw, 8)}
-	if v.count == 0 || uint64(v.first)+uint64(v.count) > uint64(r.ringCount) || !v.box.inDomain() {
-		return polyRecord{}, fmt.Errorf("%w: POLYDIR record", ErrMalformed)
+	v := PolyRecord{First: binary.LittleEndian.Uint32(raw), Count: binary.LittleEndian.Uint16(raw[4:]), Box: GetBBox(raw, 8)}
+	if v.Count == 0 || uint64(v.First)+uint64(v.Count) > uint64(r.ringCount) || !v.Box.inDomain() {
+		return PolyRecord{}, fmt.Errorf("%w: POLYDIR record", ErrMalformed)
 	}
 	return v, nil
 }
 
-func (r *Reader) ringAt(index uint32) (ringRecord, error) {
+func (r *Reader) RingAt(index uint32) (RingRecord, error) {
 	raw, err := r.readRecord(sectionRingDir, index, r.ringCount, ringRecordLen)
 	if err != nil {
-		return ringRecord{}, err
+		return RingRecord{}, err
 	}
-	v := ringRecord{
-		first: binary.LittleEndian.Uint32(raw), pointCount: binary.LittleEndian.Uint32(raw[4:]),
-		count: binary.LittleEndian.Uint16(raw[8:]), box: getBBox(raw, 12),
+	v := RingRecord{
+		First: binary.LittleEndian.Uint32(raw), PointCount: binary.LittleEndian.Uint32(raw[4:]),
+		Count: binary.LittleEndian.Uint16(raw[8:]), Box: GetBBox(raw, 12),
 	}
-	if v.count == 0 || v.pointCount < 3 || uint64(v.first)+uint64(v.count) > uint64(r.opCount) || !v.box.inDomain() {
-		return ringRecord{}, fmt.Errorf("%w: RINGDIR record", ErrMalformed)
+	if v.Count == 0 || v.PointCount < 3 || uint64(v.First)+uint64(v.Count) > uint64(r.opCount) || !v.Box.inDomain() {
+		return RingRecord{}, fmt.Errorf("%w: RINGDIR record", ErrMalformed)
 	}
 	return v, nil
 }
 
-func (r *Reader) opAt(index uint32) (uint32, error) {
+func (r *Reader) OpAt(index uint32) (uint32, error) {
 	raw, err := r.readRecord(sectionRingOps, index, r.opCount, 4)
 	if err != nil {
 		return 0, err
@@ -602,44 +602,44 @@ func (r *Reader) opAt(index uint32) (uint32, error) {
 	return word, nil
 }
 
-func (r *Reader) groupAt(index uint32) (groupRecord, error) {
+func (r *Reader) GroupAt(index uint32) (GroupRecord, error) {
 	raw, err := r.readRecord(sectionGroupDir, index, r.groupCount, groupRecordLen)
 	if err != nil {
-		return groupRecord{}, err
+		return GroupRecord{}, err
 	}
-	v := groupRecord{
-		first: binary.LittleEndian.Uint32(raw), pointCount: binary.LittleEndian.Uint32(raw[4:]),
-		count: binary.LittleEndian.Uint16(raw[8:]),
-		entry: geom.I32Point{X: int32(binary.LittleEndian.Uint32(raw[12:])), Y: int32(binary.LittleEndian.Uint32(raw[16:]))},
-		exit:  geom.I32Point{X: int32(binary.LittleEndian.Uint32(raw[20:])), Y: int32(binary.LittleEndian.Uint32(raw[24:]))},
-		box:   getBBox(raw, 28),
+	v := GroupRecord{
+		First: binary.LittleEndian.Uint32(raw), PointCount: binary.LittleEndian.Uint32(raw[4:]),
+		Count: binary.LittleEndian.Uint16(raw[8:]),
+		Entry: geom.I32Point{X: int32(binary.LittleEndian.Uint32(raw[12:])), Y: int32(binary.LittleEndian.Uint32(raw[16:]))},
+		Exit:  geom.I32Point{X: int32(binary.LittleEndian.Uint32(raw[20:])), Y: int32(binary.LittleEndian.Uint32(raw[24:]))},
+		Box:   GetBBox(raw, 28),
 	}
-	if v.count == 0 || v.pointCount < 2 || uint64(v.first)+uint64(v.count) > uint64(r.chunkCount) ||
-		!v.box.inDomain() || !pointInDomain(v.entry) || !pointInDomain(v.exit) {
-		return groupRecord{}, fmt.Errorf("%w: GROUPDIR record", ErrMalformed)
+	if v.Count == 0 || v.PointCount < 2 || uint64(v.First)+uint64(v.Count) > uint64(r.chunkCount) ||
+		!v.Box.inDomain() || !PointInDomain(v.Entry) || !PointInDomain(v.Exit) {
+		return GroupRecord{}, fmt.Errorf("%w: GROUPDIR record", ErrMalformed)
 	}
 	var total uint64
-	for i := uint32(0); i < uint32(v.count); i++ {
-		c, err := r.chunkAt(v.first + i)
+	for i := uint32(0); i < uint32(v.Count); i++ {
+		c, err := r.ChunkAt(v.First + i)
 		if err != nil {
-			return groupRecord{}, err
+			return GroupRecord{}, err
 		}
-		total += uint64(c.count)
+		total += uint64(c.Count)
 	}
-	if total != uint64(v.pointCount) {
-		return groupRecord{}, fmt.Errorf("%w: group point count", ErrMalformed)
+	if total != uint64(v.PointCount) {
+		return GroupRecord{}, fmt.Errorf("%w: group point count", ErrMalformed)
 	}
 	return v, nil
 }
 
-func (r *Reader) chunkAt(index uint32) (chunkRecord, error) {
+func (r *Reader) ChunkAt(index uint32) (ChunkRecord, error) {
 	raw, err := r.readRecord(sectionChunkDir, index, r.chunkCount, chunkRecordLen)
 	if err != nil {
-		return chunkRecord{}, err
+		return ChunkRecord{}, err
 	}
-	v := chunkRecord{off: binary.LittleEndian.Uint32(raw), count: binary.LittleEndian.Uint16(raw[4:]), box: getBBox(raw, 8)}
-	if v.count == 0 || v.off >= r.sections[sectionPoints].len || !v.box.inDomain() {
-		return chunkRecord{}, fmt.Errorf("%w: CHUNKDIR record", ErrMalformed)
+	v := ChunkRecord{Off: binary.LittleEndian.Uint32(raw), Count: binary.LittleEndian.Uint16(raw[4:]), Box: GetBBox(raw, 8)}
+	if v.Count == 0 || v.Off >= r.sections[sectionPoints].Len || !v.Box.inDomain() {
+		return ChunkRecord{}, fmt.Errorf("%w: CHUNKDIR record", ErrMalformed)
 	}
 	return v, nil
 }
@@ -775,7 +775,7 @@ func (r *Reader) candidates(lng, lat float64) (count, off uint32, grid bool, err
 		return 0, 0, true, nil
 	}
 	cell := uint64(cy)*uint64(r.grid.lngCells) + uint64(cx)
-	raw, err := r.readSmall(uint64(r.sections[sectionGrid].off)+12+cell*4, 4)
+	raw, err := r.readSmall(uint64(r.sections[sectionGrid].Off)+12+cell*4, 4)
 	if err != nil {
 		return 0, 0, true, err
 	}
@@ -799,23 +799,23 @@ func (r *Reader) candidateAt(off uint32) (uint32, error) {
 }
 
 func (r *Reader) timezoneContains(index uint32, x, y float64) (bool, error) {
-	t, err := r.tzAt(index)
-	if err != nil || !t.box.contains(x, y) {
+	t, err := r.TZAt(index)
+	if err != nil || !t.Box.Contains(x, y) {
 		return false, err
 	}
-	for i := uint32(0); i < uint32(t.count); i++ {
-		p, err := r.polyAt(t.first + i)
+	for i := uint32(0); i < uint32(t.Count); i++ {
+		p, err := r.PolyAt(t.First + i)
 		if err != nil {
 			return false, err
 		}
-		if !p.box.contains(x, y) {
+		if !p.Box.Contains(x, y) {
 			continue
 		}
 		// Exterior rings allow on-edge containment and hole rings do not,
 		// matching geom.PolygonOf.ContainsPointAllowOnEdge: a border query
 		// belongs to every polygon touching it, and a point on a hole's
 		// boundary stays inside the polygon.
-		inside, err := r.ringContains(p.first, x, y, true)
+		inside, err := r.ringContains(p.First, x, y, true)
 		if err != nil || !inside {
 			if err != nil {
 				return false, err
@@ -823,15 +823,15 @@ func (r *Reader) timezoneContains(index uint32, x, y float64) (bool, error) {
 			continue
 		}
 		excluded := false
-		for h := uint32(1); h < uint32(p.count); h++ {
-			hr, err := r.ringAt(p.first + h)
+		for h := uint32(1); h < uint32(p.Count); h++ {
+			hr, err := r.RingAt(p.First + h)
 			if err != nil {
 				return false, err
 			}
-			if !hr.box.contains(x, y) {
+			if !hr.Box.Contains(x, y) {
 				continue
 			}
-			inHole, err := r.ringContains(p.first+h, x, y, false)
+			inHole, err := r.ringContains(p.First+h, x, y, false)
 			if err != nil {
 				return false, err
 			}
@@ -850,31 +850,31 @@ func (r *Reader) timezoneContains(index uint32, x, y float64) (bool, error) {
 // ringContains reports whether the ring contains (x, y). A point on any ring
 // segment returns allowOnEdge, mirroring geom.ringContainsPoint.
 func (r *Reader) ringContains(index uint32, x, y float64, allowOnEdge bool) (bool, error) {
-	ring, err := r.ringAt(index)
-	if err != nil || !ring.box.contains(x, y) {
+	ring, err := r.RingAt(index)
+	if err != nil || !ring.Box.Contains(x, y) {
 		return false, err
 	}
 	p := geom.Point{X: x, Y: y}
 	inside := false
 	var firstEntry, previousExit geom.I32Point
 	var sum uint64
-	for i := uint32(0); i < uint32(ring.count); i++ {
-		word, err := r.opAt(ring.first + i)
+	for i := uint32(0); i < uint32(ring.Count); i++ {
+		word, err := r.OpAt(ring.First + i)
 		if err != nil {
 			return false, err
 		}
-		group, err := r.groupAt(word & 0x7fffffff)
+		group, err := r.GroupAt(word & 0x7fffffff)
 		if err != nil {
 			return false, err
 		}
-		sum += uint64(group.pointCount)
-		entry, exit := group.entry, group.exit
+		sum += uint64(group.PointCount)
+		entry, exit := group.Entry, group.Exit
 		if word>>31 != 0 {
 			entry, exit = exit, entry
 		}
 		if i == 0 {
 			firstEntry = entry
-		} else if !samePoint(previousExit, entry) {
+		} else if !SamePoint(previousExit, entry) {
 			cross, on := geom.RaycastSeg(toPoint(previousExit), toPoint(entry), p)
 			if on {
 				return allowOnEdge, nil
@@ -884,7 +884,7 @@ func (r *Reader) ringContains(index uint32, x, y float64, allowOnEdge bool) (boo
 			}
 		}
 		previousExit = exit
-		if group.box.rayRelevant(x, y) {
+		if group.Box.rayRelevant(x, y) {
 			on, err := r.scanGroup(group, p, &inside)
 			if err != nil {
 				return false, err
@@ -894,10 +894,10 @@ func (r *Reader) ringContains(index uint32, x, y float64, allowOnEdge bool) (boo
 			}
 		}
 	}
-	if sum < uint64(ring.count) || sum-uint64(ring.count) != uint64(ring.pointCount) {
+	if sum < uint64(ring.Count) || sum-uint64(ring.Count) != uint64(ring.PointCount) {
 		return false, fmt.Errorf("%w: ring point count", ErrMalformed)
 	}
-	if !samePoint(previousExit, firstEntry) {
+	if !SamePoint(previousExit, firstEntry) {
 		cross, on := geom.RaycastSeg(toPoint(previousExit), toPoint(firstEntry), p)
 		if on {
 			return allowOnEdge, nil
@@ -913,14 +913,14 @@ func toPoint(p geom.I32Point) geom.Point {
 	return geom.Point{X: float64(p.X), Y: float64(p.Y)}
 }
 
-func (r *Reader) scanGroup(group groupRecord, p geom.Point, inside *bool) (bool, error) {
-	for i := uint32(0); i < uint32(group.count); i++ {
-		chunkIndex := group.first + i
-		chunk, err := r.chunkAt(chunkIndex)
+func (r *Reader) scanGroup(group GroupRecord, p geom.Point, inside *bool) (bool, error) {
+	for i := uint32(0); i < uint32(group.Count); i++ {
+		chunkIndex := group.First + i
+		chunk, err := r.ChunkAt(chunkIndex)
 		if err != nil {
 			return false, err
 		}
-		if !chunk.box.rayRelevant(p.X, p.Y) {
+		if !chunk.Box.rayRelevant(p.X, p.Y) {
 			continue
 		}
 		last, err := r.scanChunk(chunkIndex, chunk, p, inside)
@@ -930,12 +930,12 @@ func (r *Reader) scanGroup(group groupRecord, p geom.Point, inside *bool) (bool,
 		if last.on {
 			return true, nil
 		}
-		if i+1 < uint32(group.count) {
-			next, err := r.chunkAt(chunkIndex + 1)
+		if i+1 < uint32(group.Count) {
+			next, err := r.ChunkAt(chunkIndex + 1)
 			if err != nil {
 				return false, err
 			}
-			first, err := r.firstChunkPoint(chunkIndex+1, next)
+			first, err := r.FirstChunkPoint(chunkIndex+1, next)
 			if err != nil {
 				return false, err
 			}
@@ -956,7 +956,7 @@ type scanResult struct {
 	on    bool
 }
 
-func (r *Reader) scanChunk(index uint32, chunk chunkRecord, p geom.Point, inside *bool) (scanResult, error) {
+func (r *Reader) scanChunk(index uint32, chunk ChunkRecord, p geom.Point, inside *bool) (scanResult, error) {
 	start, end, err := r.chunkRange(index, chunk)
 	if err != nil {
 		return scanResult{}, err
@@ -971,11 +971,11 @@ func (r *Reader) scanChunk(index uint32, chunk chunkRecord, p geom.Point, inside
 		return scanResult{}, err
 	}
 	prev := geom.I32Point{X: x, Y: y}
-	if !pointInDomain(prev) {
+	if !PointInDomain(prev) {
 		return scanResult{}, fmt.Errorf("%w: chunk coordinate domain", ErrMalformed)
 	}
 	onSegment := false
-	for i := uint16(1); i < chunk.count; i++ {
+	for i := uint16(1); i < chunk.Count; i++ {
 		dx, err := cursor.varint()
 		if err != nil {
 			return scanResult{}, err
@@ -993,7 +993,7 @@ func (r *Reader) scanChunk(index uint32, chunk chunkRecord, p geom.Point, inside
 			return scanResult{}, err
 		}
 		next := geom.I32Point{X: nx, Y: ny}
-		if !pointInDomain(next) {
+		if !PointInDomain(next) {
 			return scanResult{}, fmt.Errorf("%w: chunk coordinate domain", ErrMalformed)
 		}
 		if !onSegment {
@@ -1012,7 +1012,7 @@ func (r *Reader) scanChunk(index uint32, chunk chunkRecord, p geom.Point, inside
 	return scanResult{point: prev, on: onSegment}, nil
 }
 
-func (r *Reader) firstChunkPoint(index uint32, chunk chunkRecord) (geom.I32Point, error) {
+func (r *Reader) FirstChunkPoint(index uint32, chunk ChunkRecord) (geom.I32Point, error) {
 	start, end, err := r.chunkRange(index, chunk)
 	if err != nil {
 		return geom.I32Point{}, err
@@ -1027,21 +1027,21 @@ func (r *Reader) firstChunkPoint(index uint32, chunk chunkRecord) (geom.I32Point
 		return geom.I32Point{}, err
 	}
 	p := geom.I32Point{X: x, Y: y}
-	if !pointInDomain(p) {
+	if !PointInDomain(p) {
 		return geom.I32Point{}, fmt.Errorf("%w: chunk coordinate domain", ErrMalformed)
 	}
 	return p, nil
 }
 
-func (r *Reader) chunkRange(index uint32, chunk chunkRecord) (uint64, uint64, error) {
-	start := uint64(r.sections[sectionPoints].off) + uint64(chunk.off)
-	end := uint64(r.sections[sectionPoints].off) + uint64(r.sections[sectionPoints].len)
+func (r *Reader) chunkRange(index uint32, chunk ChunkRecord) (uint64, uint64, error) {
+	start := uint64(r.sections[sectionPoints].Off) + uint64(chunk.Off)
+	end := uint64(r.sections[sectionPoints].Off) + uint64(r.sections[sectionPoints].Len)
 	if index+1 < r.chunkCount {
-		next, err := r.chunkAt(index + 1)
+		next, err := r.ChunkAt(index + 1)
 		if err != nil {
 			return 0, 0, err
 		}
-		end = uint64(r.sections[sectionPoints].off) + uint64(next.off)
+		end = uint64(r.sections[sectionPoints].Off) + uint64(next.Off)
 	}
 	if start >= end {
 		return 0, 0, fmt.Errorf("%w: chunk byte range", ErrMalformed)
@@ -1107,13 +1107,13 @@ func (r *Reader) nameBounds(idx int32) (uint64, uint64, error) {
 		return 0, 0, ErrIndex
 	}
 	s := r.sections[sectionNames]
-	raw, err := r.readSmall(uint64(s.off)+4+uint64(idx)*4, 8)
+	raw, err := r.readSmall(uint64(s.Off)+4+uint64(idx)*4, 8)
 	if err != nil {
 		return 0, 0, err
 	}
 	a := binary.LittleEndian.Uint32(raw)
 	b := binary.LittleEndian.Uint32(raw[4:])
-	base := uint64(s.off) + 4 + uint64(r.tzCount+1)*4
+	base := uint64(s.Off) + 4 + uint64(r.tzCount+1)*4
 	return base + uint64(a), base + uint64(b), nil
 }
 
@@ -1193,4 +1193,66 @@ func (r *Reader) compareNames(a, b int32) (int, error) {
 		return 1, nil
 	}
 	return 0, nil
+}
+
+func (r *Reader) DecodeChunkPoints(index uint32, chunk ChunkRecord) ([]geom.I32Point, error) {
+	start, end, err := r.chunkRange(index, chunk)
+	if err != nil {
+		return nil, err
+	}
+	cursor := streamCursor{r: r, pos: start, end: end}
+	x, err := cursor.varint()
+	if err != nil {
+		return nil, err
+	}
+	y, err := cursor.varint()
+	if err != nil {
+		return nil, err
+	}
+	points := make([]geom.I32Point, 0, chunk.Count)
+	prev := geom.I32Point{X: x, Y: y}
+	points = append(points, prev)
+	for i := uint16(1); i < chunk.Count; i++ {
+		dx, err := cursor.varint()
+		if err != nil {
+			return nil, err
+		}
+		dy, err := cursor.varint()
+		if err != nil {
+			return nil, err
+		}
+		nx, err := addDelta(prev.X, dx)
+		if err != nil {
+			return nil, err
+		}
+		ny, err := addDelta(prev.Y, dy)
+		if err != nil {
+			return nil, err
+		}
+		prev = geom.I32Point{X: nx, Y: ny}
+		if !PointInDomain(prev) {
+			return nil, fmt.Errorf("%w: point domain", ErrMalformed)
+		}
+		points = append(points, prev)
+	}
+	if cursor.pos != end {
+		return nil, fmt.Errorf("%w: chunk termination", ErrMalformed)
+	}
+	return points, nil
+}
+
+func (r *Reader) NameBytesLocked(idx int32) ([]byte, error) {
+	start, end, err := r.nameBounds(idx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]byte, int(end-start))
+	if r.data != nil {
+		copy(out, r.data[start:end])
+		return out, nil
+	}
+	if err := r.readRaw(out, start); err != nil {
+		return nil, err
+	}
+	return out, nil
 }

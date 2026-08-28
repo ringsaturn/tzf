@@ -3,7 +3,7 @@ package topology
 import (
 	"testing"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 // makeSharedBorderInput returns two adjacent rectangles that share the
@@ -37,6 +37,7 @@ func TestBuildTopoTimezones_SharedEdgeStoredOnce(t *testing.T) {
 	topo := BuildTopoTimezones(input)
 	if topo == nil {
 		t.Fatal("BuildTopoTimezones returned nil")
+		return
 	}
 
 	// The shared vertical border at x=1 should appear exactly once in the
@@ -56,11 +57,13 @@ func TestDecodeTopoTimezones_RoundTrip(t *testing.T) {
 	topo := BuildTopoTimezones(input)
 	if topo == nil {
 		t.Fatal("BuildTopoTimezones returned nil")
+		return
 	}
 
 	decoded := DecodeTopoTimezones(topo)
 	if decoded == nil {
 		t.Fatal("DecodeTopoTimezones returned nil")
+		return
 	}
 	if len(decoded.Timezones) != len(input.Timezones) {
 		t.Fatalf("timezone count mismatch: want %d got %d", len(input.Timezones), len(decoded.Timezones))
@@ -78,6 +81,7 @@ func TestDecodeTopoTimezones_SharedBorderConsistent(t *testing.T) {
 	decoded := DecodeTopoTimezones(topo)
 	if decoded == nil {
 		t.Fatal("DecodeTopoTimezones returned nil")
+		return
 	}
 
 	left := decoded.Timezones[0].Polygons[0].Points
@@ -136,11 +140,13 @@ func TestDecodeTopoTimezones_HoleRoundTrip(t *testing.T) {
 	topo := BuildTopoTimezones(input)
 	if topo == nil {
 		t.Fatal("BuildTopoTimezones returned nil")
+		return
 	}
 
 	decoded := DecodeTopoTimezones(topo)
 	if decoded == nil {
 		t.Fatal("DecodeTopoTimezones returned nil")
+		return
 	}
 	if err := Validate(decoded); err != nil {
 		t.Fatalf("Validate returned error after hole round-trip: %v", err)
@@ -225,11 +231,13 @@ func TestDecodeTopoTimezones_ThreeAdjacentZones(t *testing.T) {
 	topo := BuildTopoTimezones(input)
 	if topo == nil {
 		t.Fatal("BuildTopoTimezones returned nil")
+		return
 	}
 
 	decoded := DecodeTopoTimezones(topo)
 	if decoded == nil {
 		t.Fatal("DecodeTopoTimezones returned nil")
+		return
 	}
 	if err := Validate(decoded); err != nil {
 		t.Fatalf("Validate returned error: %v", err)

@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	"github.com/ringsaturn/tzf/internal/polyf"
+	"github.com/ringsaturn/tzf/v2/internal/polyf"
 )
 
 var (

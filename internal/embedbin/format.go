@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
 
 const (
@@ -73,59 +73,59 @@ var (
 	ErrProfile        = errors.New("embedbin: operation not supported by the file's profile")
 )
 
-type bbox struct {
+type BBox struct {
 	minX int32
 	minY int32
 	maxX int32
 	maxY int32
 }
 
-func emptyBBox() bbox {
-	return bbox{minX: math.MaxInt32, minY: math.MaxInt32, maxX: math.MinInt32, maxY: math.MinInt32}
+func EmptyBBox() BBox {
+	return BBox{minX: math.MaxInt32, minY: math.MaxInt32, maxX: math.MinInt32, maxY: math.MinInt32}
 }
 
-func (b *bbox) add(p geom.I32Point) {
+func (b *BBox) Add(p geom.I32Point) {
 	b.minX = min(b.minX, p.X)
 	b.minY = min(b.minY, p.Y)
 	b.maxX = max(b.maxX, p.X)
 	b.maxY = max(b.maxY, p.Y)
 }
 
-func (b *bbox) union(o bbox) {
+func (b *BBox) Union(o BBox) {
 	b.minX = min(b.minX, o.minX)
 	b.minY = min(b.minY, o.minY)
 	b.maxX = max(b.maxX, o.maxX)
 	b.maxY = max(b.maxY, o.maxY)
 }
 
-func (b bbox) ordered() bool {
+func (b BBox) ordered() bool {
 	return b.minX <= b.maxX && b.minY <= b.maxY
 }
 
-func (b bbox) inDomain() bool {
+func (b BBox) inDomain() bool {
 	return b.ordered() &&
 		b.minX >= -18000000 && b.maxX <= 18000000 &&
 		b.minY >= -9000000 && b.maxY <= 9000000
 }
 
-func (b bbox) contains(x, y float64) bool {
+func (b BBox) Contains(x, y float64) bool {
 	return x >= float64(b.minX) && x <= float64(b.maxX) &&
 		y >= float64(b.minY) && y <= float64(b.maxY)
 }
 
-func (b bbox) rayRelevant(x, y float64) bool {
+func (b BBox) rayRelevant(x, y float64) bool {
 	return y >= float64(b.minY) && y <= float64(b.maxY) && float64(b.maxX) >= x
 }
 
-func (b bbox) containsBBox(o bbox) bool {
+func (b BBox) ContainsBBox(o BBox) bool {
 	return b.minX <= o.minX && b.minY <= o.minY && b.maxX >= o.maxX && b.maxY >= o.maxY
 }
 
-func pointInDomain(p geom.I32Point) bool {
+func PointInDomain(p geom.I32Point) bool {
 	return p.X >= -18000000 && p.X <= 18000000 && p.Y >= -9000000 && p.Y <= 9000000
 }
 
-func align4(n uint64) uint64 {
+func Align4(n uint64) uint64 {
 	return (n + 3) &^ 3
 }
 
@@ -133,20 +133,20 @@ func alignUp(n, align uint64) uint64 {
 	return (n + align - 1) &^ (align - 1)
 }
 
-func checkedU16(name string, n int) (uint16, error) {
+func CheckedU16(name string, n int) (uint16, error) {
 	if n < 0 || n > math.MaxUint16 {
 		return 0, fmt.Errorf("%s: %w: %d exceeds uint16", name, ErrMalformed, n)
 	}
 	return uint16(n), nil
 }
 
-func checkedU32(name string, n uint64) (uint32, error) {
+func CheckedU32(name string, n uint64) (uint32, error) {
 	if n > math.MaxUint32 {
 		return 0, fmt.Errorf("%s: %w: %d exceeds uint32", name, ErrMalformed, n)
 	}
 	return uint32(n), nil
 }
 
-func samePoint(a, b geom.I32Point) bool {
+func SamePoint(a, b geom.I32Point) bool {
 	return a.X == b.X && a.Y == b.Y
 }

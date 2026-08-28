@@ -9,9 +9,8 @@ import (
 	"os"
 	"strings"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/embedbin"
-	"google.golang.org/protobuf/proto"
+	"github.com/ringsaturn/tzf/v2/internal/embedenc"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 func main() {
@@ -31,17 +30,17 @@ func main() {
 		fail("read input", err)
 	}
 	var input pb.CompressedTopoTimezones
-	if err := proto.Unmarshal(raw, &input); err != nil {
+	if err := pb.Unmarshal(raw, &input); err != nil {
 		fail("decode CompressedTopoTimezones", err)
 	}
-	opts := embedbin.EncodeOptions{ChunkTarget: *chunk, AllowShortcut: *allowShortcut}
+	opts := embedenc.EncodeOptions{ChunkTarget: *chunk, AllowShortcut: *allowShortcut}
 	if *preindexPath != "" {
 		preRaw, err := os.ReadFile(*preindexPath)
 		if err != nil {
 			fail("read preindex", err)
 		}
 		preindex := &pb.PreindexTimezones{}
-		if err := proto.Unmarshal(preRaw, preindex); err != nil {
+		if err := pb.Unmarshal(preRaw, preindex); err != nil {
 			fail("decode PreindexTimezones", err)
 		}
 		opts.Preindex = preindex
@@ -50,10 +49,10 @@ func main() {
 	var err2 error
 	ext := ".tzb"
 	if *profile == "m" {
-		data, err2 = embedbin.EncodeM(&input, opts)
+		data, err2 = embedenc.EncodeM(&input, opts)
 		ext = ".tzm"
 	} else {
-		data, err2 = embedbin.Encode(&input, opts)
+		data, err2 = embedenc.Encode(&input, opts)
 	}
 	if err2 != nil {
 		fail("encode "+ext, err2)

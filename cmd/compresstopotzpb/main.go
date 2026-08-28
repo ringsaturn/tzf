@@ -2,7 +2,7 @@
 //
 // Usage:
 //
-//	compresstopotzpb [-o output.compress.topo.bin] input.topo.bin
+//	compresstopotzpb [-o output.compress.topo.gob] input.topo.gob
 package main
 
 import (
@@ -11,16 +11,15 @@ import (
 	"os"
 	"strings"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/reduce"
-	"google.golang.org/protobuf/proto"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/reduce"
 )
 
 func main() {
-	outputPath := flag.String("o", "", "output path (default: input with .topo.bin replaced by .compress.topo.bin)")
+	outputPath := flag.String("o", "", "output path (default: input with .topo.gob replaced by .compress.topo.gob)")
 	flag.Parse()
 	if flag.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "usage: compresstopotzpb [-o output.compress.topo.bin] input.topo.bin")
+		fmt.Fprintln(os.Stderr, "usage: compresstopotzpb [-o output.compress.topo.gob] input.topo.gob")
 		os.Exit(1)
 	}
 
@@ -31,7 +30,7 @@ func main() {
 		os.Exit(1)
 	}
 	input := &pb.TopoTimezones{}
-	if err := proto.Unmarshal(rawFile, input); err != nil {
+	if err := pb.Unmarshal(rawFile, input); err != nil {
 		fmt.Fprintf(os.Stderr, "error unmarshaling input: %v\n", err)
 		os.Exit(1)
 	}
@@ -40,13 +39,13 @@ func main() {
 
 	dest := *outputPath
 	if dest == "" {
-		dest = strings.Replace(inputPath, ".topo.bin", ".compress.topo.bin", 1)
+		dest = strings.Replace(inputPath, ".topo.gob", ".compress.topo.gob", 1)
 		if dest == inputPath {
-			dest = inputPath + ".compress.topo.bin"
+			dest = inputPath + ".compress.topo.gob"
 		}
 	}
 
-	outputBin, err := proto.Marshal(output)
+	outputBin, err := pb.Marshal(output)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error marshaling output: %v\n", err)
 		os.Exit(1)

@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/ringsaturn/tzf/internal/geom"
+	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
 
 // TranscodeM converts an E-profile (.tzb) file into the M-profile (.tzm)
@@ -37,7 +37,7 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 	var flatPoints []byte
 	var pairTotal uint64
 	for i := uint32(0); i < r.ringCount; i++ {
-		ring, err := r.ringAt(i)
+		ring, err := r.RingAt(i)
 		if err != nil {
 			return nil, err
 		}
@@ -45,14 +45,14 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		first, err := checkedU32("FLATRINGDIR point_first", pairTotal)
+		first, err := CheckedU32("FLATRINGDIR point_first", pairTotal)
 		if err != nil {
 			return nil, err
 		}
 		o := int(i) * int(flatRingRecordLen)
 		binary.LittleEndian.PutUint32(flatRingSec[o:], first)
 		binary.LittleEndian.PutUint32(flatRingSec[o+4:], uint32(len(pts)))
-		putBBox(flatRingSec, o+8, ring.box)
+		PutBBox(flatRingSec, o+8, ring.Box)
 		for _, p := range pts {
 			var pair [8]byte
 			binary.LittleEndian.PutUint32(pair[0:], uint32(p.X))
@@ -61,7 +61,7 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 		}
 		pairTotal += uint64(len(pts))
 	}
-	if _, err := checkedU32("FLATPOINTS pair count", pairTotal); err != nil {
+	if _, err := CheckedU32("FLATPOINTS pair count", pairTotal); err != nil {
 		return nil, err
 	}
 
@@ -70,7 +70,7 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		// sectionBytes aliases byte-backed readers; assembleFile only reads
+		// sectionBytes aliases byte-backed readers; AssembleFile only reads
 		// the slice, so no copy is needed here.
 		return b, nil
 	}
@@ -86,7 +86,7 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	sections := []outSection{
+	sections := []OutSection{
 		{sectionNames, nameSec, 4}, {sectionTZDir, tzSec, 4}, {sectionPolyDir, polySec, 4},
 		{sectionFlatRingDir, flatRingSec, 4},
 	}
@@ -96,7 +96,7 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		sections = append(sections, outSection{sectionGrid, gridSec, 4})
+		sections = append(sections, OutSection{sectionGrid, gridSec, 4})
 		flags |= flagGrid
 	}
 	if r.fuzzy.present {
@@ -104,8 +104,8 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		sections = append(sections, outSection{sectionFuzzy, fuzzySec, 8})
+		sections = append(sections, OutSection{sectionFuzzy, fuzzySec, 8})
 	}
-	sections = append(sections, outSection{sectionFlatPoints, flatPoints, 8})
-	return assembleFile(profileM, flags, 0, int(r.tzCount), r.version, sections)
+	sections = append(sections, OutSection{sectionFlatPoints, flatPoints, 8})
+	return AssembleFile(profileM, flags, 0, int(r.tzCount), r.version, sections)
 }

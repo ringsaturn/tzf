@@ -6,10 +6,10 @@
 package inplace
 
 import (
-	"github.com/ringsaturn/tzf/convert"
-	"github.com/ringsaturn/tzf/internal/embedbin"
-	"github.com/ringsaturn/tzf/internal/geom"
-	"github.com/ringsaturn/tzf/internal/tzerr"
+	"github.com/ringsaturn/tzf/v2/internal/convert"
+	"github.com/ringsaturn/tzf/v2/internal/embedbin"
+	"github.com/ringsaturn/tzf/v2/internal/geom"
+	"github.com/ringsaturn/tzf/v2/internal/tzerr"
 )
 
 // Finder answers queries directly over a validated embedbin.Reader. It
@@ -86,7 +86,7 @@ func (f *Finder) DataVersion() string {
 // Unlike the expanded finders, which export polygons they already hold, this
 // one decodes the timezone's rings from the file on each call — allocating,
 // but only for the requested timezone.
-func (f *Finder) GetTZGeoJSON(tzName string) (*convert.BoundaryFile, error) {
+func (f *Finder) GetTZGeoJSON(tzName string) ([]byte, error) {
 	var features []*convert.FeatureItem
 	for i, name := range f.names {
 		if name != tzName {
@@ -101,7 +101,7 @@ func (f *Finder) GetTZGeoJSON(tzName string) (*convert.BoundaryFile, error) {
 	if len(features) == 0 {
 		return nil, tzerr.ErrNoTimezoneFound
 	}
-	return &convert.BoundaryFile{Type: "FeatureCollection", Features: features}, nil
+	return convert.MustMarshal(&convert.BoundaryFile{Type: "FeatureCollection", Features: features}), nil
 }
 
 // GetGeoJSON returns a GeoJSON FeatureCollection covering all timezones,
@@ -111,7 +111,7 @@ func (f *Finder) GetTZGeoJSON(tzName string) (*convert.BoundaryFile, error) {
 // The signature cannot report a lazy structural read error, so a timezone
 // that fails to decode is omitted, the same way GetTimezoneName treats such
 // an error as no match. Use GetTZGeoJSON when the error matters.
-func (f *Finder) GetGeoJSON() *convert.BoundaryFile {
+func (f *Finder) GetGeoJSON() []byte {
 	output := &convert.BoundaryFile{Type: "FeatureCollection"}
 	for i := range f.names {
 		item, err := f.feature(int32(i))
@@ -120,7 +120,7 @@ func (f *Finder) GetGeoJSON() *convert.BoundaryFile {
 		}
 		output.Features = append(output.Features, item)
 	}
-	return output
+	return convert.MustMarshal(output)
 }
 
 // feature decodes one timezone's geometry into a GeoJSON Feature. Ring vertex

@@ -3,7 +3,7 @@ package preindexexclude_test
 import (
 	"testing"
 
-	"github.com/ringsaturn/tzf/internal/preindexexclude"
+	"github.com/ringsaturn/tzf/v2/internal/preindexexclude"
 )
 
 func TestExcludePreIndexIncludesAbkhazia(t *testing.T) {

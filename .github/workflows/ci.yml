@@ -11,21 +11,6 @@ permissions:
   deployments: write
 
 jobs:
-  doc:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: bufbuild/buf-action@v1
-        with:
-          token: ${{ secrets.BUF_TOKEN }}
-          pr_comment: true
-          breaking: true
-          breaking_against: "https://github.com/ringsaturn/tzf.git#branch=main"
-
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -36,31 +21,27 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # The committed go.work substitutes tmp/tzf-dist-dev for the
+      # not-yet-published tzf-dist artifact release; nothing in the workspace
+      # builds until the bootstrap has run. It builds everything from the
+      # upstream raw GeoJSON, so cache it on the dataset + pipeline sources.
+      - name: Cache tzf-dist dev stand-in
+        id: dev-cache
+        uses: actions/cache@v4
+        with:
+          path: tmp/tzf-dist-dev
+          key: tzf-dist-dev-2026c-${{ hashFiles('cmd/**', 'internal/**', 'convert/**', 'scripts/build-tzf-dist-dev.sh') }}
+
+      - name: Build tzf-dist dev stand-in
+        if: steps.dev-cache.outputs.cache-hit != 'true'
+        run: ./scripts/build-tzf-dist-dev.sh
+
       # A `replace` directive only applies when its module is the main module,
       # so a dependency graph that resolves here can still be broken for
       # consumers (see #217). Build tzf from a throwaway module where tzf is a
       # dependency, which is the only way that difference shows up.
-      - name: Test external module consumption
-        shell: bash
-        run: |
-          set -euo pipefail
-          repo_root="$PWD"
-          consumer_dir="$(mktemp -d)"
-          trap 'rm -rf "$consumer_dir"' EXIT
-          cd "$consumer_dir"
-          go mod init example.com/tzf-consumer
-          go mod edit -replace="github.com/ringsaturn/tzf=$repo_root"
-          printf '%s\n' \
-            'package main' \
-            '' \
-            'import _ "github.com/ringsaturn/tzf"' \
-            '' \
-            'func main() {}' \
-            > main.go
-          go mod tidy
-          go test ./...
-
-      - run: ls -al
+      # (Skipped until the tzf-dist artifact release exists: consumers cannot
+      # resolve the embedded data before then.)
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
@@ -69,17 +50,19 @@ jobs:
           args: --timeout=5m
           skip-cache: true
 
-      - name: Run coverage
-        run: go test -coverprofile=coverage.txt -covermode=atomic
+      - name: Test
+        run: |
+          TZF_PARITY_TOPO="$PWD/tmp/tzf-dist-dev/combined-with-oceans.topology.compress.topo.gob" \
+          TZF_PARITY_PREINDEX="$PWD/tmp/tzf-dist-dev/combined-with-oceans.topology.preindex.gob" \
+            go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Verify embedded binary format
         run: |
-          DIST_DIR="$(go list -m -f '{{.Dir}}' github.com/ringsaturn/tzf-dist)"
-          go run ./cmd/topo2embed -allow-shortcut -o /tmp/combined-with-oceans.lite.tzb \
-            "$DIST_DIR/combined-with-oceans.topology.compress.topo.bin"
           go run ./internal/cmd/embedcompare -dense-step 1 -boundary-samples 10000 \
-            "$DIST_DIR/combined-with-oceans.topology.compress.topo.bin" \
-            /tmp/combined-with-oceans.lite.tzb
+            -preindex tmp/tzf-dist-dev/combined-with-oceans.topology.preindex.gob \
+            -tzm tmp/tzf-dist-dev/lite.tzm \
+            tmp/tzf-dist-dev/combined-with-oceans.topology.compress.topo.gob \
+            tmp/tzf-dist-dev/lite.tzb
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
@@ -89,7 +72,6 @@ jobs:
 
       - name: Memory footprint
         run: make bench-memory
-
 
       - name: Write benchmark summary
         run: python3 scripts/bench2summary.py benchmark_result.txt memory_result.txt >> $GITHUB_STEP_SUMMARY
