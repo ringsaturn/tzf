@@ -112,11 +112,15 @@ func (r *Reader) decodeGroupAt(index uint32) ([]geom.I32Point, error) {
 	// header must not demand memory before decode proves the data exists.
 	points := make([]geom.I32Point, 0, min(g.PointCount, 1<<16))
 	for j := uint32(0); j < uint32(g.Count); j++ {
-		part, err := r.decodeChunkPointsAt(g.First + j)
+		idx := g.First + j
+		c, err := r.ChunkAt(idx)
 		if err != nil {
 			return nil, fmt.Errorf("expand group %d chunk %d: %w", index, j, err)
 		}
-		points = append(points, part...)
+		points, err = r.appendChunkPoints(points, idx, c)
+		if err != nil {
+			return nil, fmt.Errorf("expand group %d chunk %d: %w", index, j, err)
+		}
 	}
 	if uint32(len(points)) != g.PointCount ||
 		!SamePoint(points[0], g.Entry) || !SamePoint(points[len(points)-1], g.Exit) {
@@ -175,15 +179,6 @@ func (r *Reader) expandRing(index uint32, group groupSource) ([]geom.I32Point, e
 		return nil, fmt.Errorf("expand ring %d: %w: closing junction mismatch", index, ErrMalformed)
 	}
 	return pts[:len(pts)-1], nil
-}
-
-// decodeChunkPointsAt decodes one chunk's full point run.
-func (r *Reader) decodeChunkPointsAt(index uint32) ([]geom.I32Point, error) {
-	c, err := r.ChunkAt(index)
-	if err != nil {
-		return nil, err
-	}
-	return r.DecodeChunkPoints(index, c)
 }
 
 // ExpandTimezone decodes one timezone's polygons, with the same per-ring
@@ -254,25 +249,48 @@ func (r *Reader) gridToMap() (map[[2]int16][]int32, error) {
 	}
 	s := r.sections[sectionGrid]
 	m := make(map[[2]int16][]int32, r.grid.cellCount)
+	// The offsets below were bounds-checked when the GRID section was
+	// validated at open; byte-backed readers walk r.data directly, ReaderAt
+	// sources go through readSmall as before.
+	cellAt := func(cell uint64) (uint32, error) {
+		off := uint64(s.Off) + 12 + cell*4
+		if r.data != nil {
+			return binary.LittleEndian.Uint32(r.data[off:]), nil
+		}
+		raw, err := r.readSmall(off, 4)
+		if err != nil {
+			return 0, err
+		}
+		return binary.LittleEndian.Uint32(raw), nil
+	}
+	candidateAt := func(off uint32) (uint16, error) {
+		pos := r.grid.candidates + uint64(off)*2
+		if r.data != nil {
+			return binary.LittleEndian.Uint16(r.data[pos:]), nil
+		}
+		raw, err := r.readSmall(pos, 2)
+		if err != nil {
+			return 0, err
+		}
+		return binary.LittleEndian.Uint16(raw), nil
+	}
 	for cy := 0; cy < int(r.grid.latCells); cy++ {
 		for cx := 0; cx < int(r.grid.lngCells); cx++ {
-			cell := uint64(cy)*uint64(r.grid.lngCells) + uint64(cx)
-			raw, err := r.readSmall(uint64(s.Off)+12+cell*4, 4)
+			word, err := cellAt(uint64(cy)*uint64(r.grid.lngCells) + uint64(cx))
 			if err != nil {
 				return nil, err
 			}
-			word := binary.LittleEndian.Uint32(raw)
 			count, off := word>>28, word&0x0fffffff
 			if count == 0 {
 				continue
 			}
 			indices := make([]int32, count)
 			for j := uint32(0); j < count; j++ {
-				raw, err := r.readSmall(r.grid.candidates+uint64(off+j)*2, 2)
+				v, err := candidateAt(off + j)
 				if err != nil {
 					return nil, err
 				}
-				indices[j] = int32(binary.LittleEndian.Uint16(raw))
+				indices[j] = int32(v)
 			}
 			m[[2]int16{int16(int(r.grid.lngMin) + cx), int16(int(r.grid.latMin) + cy)}] = indices
 		}
