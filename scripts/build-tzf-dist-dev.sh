@@ -1,37 +1,37 @@
 #!/usr/bin/env bash
-# Builds tmp/tzf-dist-dev, the development stand-in for the tzf-dist release
-# that will carry the .tzb/.tzm artifact set (v2 plan W7). The committed
-# go.work replaces github.com/ringsaturn/tzf-dist with this directory, so run
-# this once after cloning (or when bumping TBB_VERSION) before building.
-# Drop the replace and this script once tzf-dist publishes the artifacts.
+# Builds the tzf-dist artifact set from the upstream raw GeoJSON and installs
+# it into the sibling tzf-dist checkout (go.mod replaces
+# github.com/ringsaturn/tzf-dist with ../tzf-dist during development, W7).
+# Gob intermediates stay in tmp/tzf-dist-dev — build-internal pipeline cache
+# and parity fixtures (TZF_PARITY_TOPO/PREINDEX); they are never distributed.
 #
-# The whole chain runs from the upstream raw GeoJSON — no protobuf, no
-# translation step. The gob intermediates it leaves behind are build-internal
-# products (pipeline cache + parity fixtures for TZF_PARITY_TOPO/PREINDEX);
-# they are never distributed.
+# Run once after cloning (needs ../tzf-dist checked out; CI checks out
+# ringsaturn/tzf-dist next to this repo). Drop the go.mod replace and this
+# script once tzf-dist publishes the artifact release.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 TBB_VERSION="${TBB_VERSION:-2026c}"
-DEV_DIR=tmp/tzf-dist-dev
+WORK_DIR=tmp/tzf-dist-dev
+DIST_DIR=../tzf-dist
 
-mkdir -p "$DEV_DIR"
+if [ ! -d "$DIST_DIR" ]; then
+  echo "error: $DIST_DIR not found — clone https://github.com/ringsaturn/tzf-dist next to this repo" >&2
+  exit 1
+fi
 
-# Step 1 (workspace-independent): the dev module needs to exist with
-# placeholder artifacts before any workspace go command can run.
-cat > "$DEV_DIR"/go.mod <<'EOF'
-module github.com/ringsaturn/tzf-dist
+mkdir -p "$WORK_DIR"
 
-go 1.25.0
-EOF
-touch "$DEV_DIR"/lite.tzb "$DEV_DIR"/lite.tzm "$DEV_DIR"/full.tzb
-cat > "$DEV_DIR"/embed.go <<'EOF'
+# The artifact embeds ship on tzf-dist's v2-artifacts branch; when building
+# against a checkout that predates them (e.g. main in CI), add the embed file
+# so the replace target compiles.
+if [ ! -f "$DIST_DIR"/embed_v2.go ]; then
+  cat > "$DIST_DIR"/embed_v2.go <<'EOF'
 package tzfdist
 
 import _ "embed"
 
 // The TZF embedded-binary artifact set backing the tzf/v2 finders.
-// All three files carry the same data_version.
 
 //go:embed lite.tzb
 var LiteTZB []byte
@@ -42,20 +42,22 @@ var LiteTZM []byte
 //go:embed full.tzb
 var FullTZB []byte
 EOF
+fi
+touch "$DIST_DIR"/lite.tzb "$DIST_DIR"/lite.tzm "$DIST_DIR"/full.tzb
 
-# Step 2: fetch the upstream boundary release (skipped when already present).
-GEOJSON="$DEV_DIR"/combined-with-oceans.json
+# Fetch the upstream boundary release (skipped when already present).
+GEOJSON="$WORK_DIR"/combined-with-oceans.json
 if [ ! -s "$GEOJSON" ]; then
-  ZIP="$DEV_DIR"/timezones-with-oceans.geojson.zip
+  ZIP="$WORK_DIR"/timezones-with-oceans.geojson.zip
   curl -fL -o "$ZIP" \
     "https://github.com/evansiroky/timezone-boundary-builder/releases/download/$TBB_VERSION/timezones-with-oceans.geojson.zip"
-  unzip -o -d "$DEV_DIR" "$ZIP"
+  unzip -o -d "$WORK_DIR" "$ZIP"
   rm -f "$ZIP"
 fi
 
-# Step 3: run the pipeline (same stage order as the v1 data build).
+# Run the pipeline (same stage order as the v1 data build).
 export TIMEZONE_BOUNDARY_VERSION="$TBB_VERSION"
-D="$DEV_DIR"/combined-with-oceans
+D="$WORK_DIR"/combined-with-oceans
 
 go run ./cmd/geojson2tzpb "$D".json
 
@@ -69,12 +71,12 @@ go run ./cmd/deduplicatetzpb -o "$D".topology.topo.gob "$D".topology.gob
 go run ./cmd/compresstopotzpb -o "$D".topology.compress.topo.gob "$D".topology.topo.gob
 go run ./cmd/preindextzpb "$D".topology.gob
 
-# artifacts
+# artifacts, installed over the placeholders in the tzf-dist checkout
 go run ./cmd/topo2embed -profile e -preindex "$D".topology.preindex.gob \
-  -o "$DEV_DIR"/lite.tzb "$D".topology.compress.topo.gob
+  -o "$DIST_DIR"/lite.tzb "$D".topology.compress.topo.gob
 go run ./cmd/topo2embed -profile e -preindex "$D".topology.preindex.gob \
-  -o "$DEV_DIR"/full.tzb "$D".compress.topo.gob
-go run ./cmd/tzb2tzm -o "$DEV_DIR"/lite.tzm "$DEV_DIR"/lite.tzb
+  -o "$DIST_DIR"/full.tzb "$D".compress.topo.gob
+go run ./cmd/tzb2tzm -o "$DIST_DIR"/lite.tzm "$DIST_DIR"/lite.tzb
 
-echo "tzf-dist-dev ready:"
-ls -l "$DEV_DIR"/lite.tzb "$DEV_DIR"/lite.tzm "$DEV_DIR"/full.tzb
+echo "tzf-dist artifacts installed:"
+ls -l "$DIST_DIR"/lite.tzb "$DIST_DIR"/lite.tzm "$DIST_DIR"/full.tzb

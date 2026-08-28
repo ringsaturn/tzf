@@ -11,3 +11,8 @@ require (
 )
 
 require github.com/tidwall/geoindex v1.7.0 // indirect
+
+// Development: the sibling checkout carries the v2 artifact embeds
+// (branch v2-artifacts) with locally built data. Drop this replace and
+// require the published release once the artifact set ships (W7).
+replace github.com/ringsaturn/tzf-dist => ../tzf-dist

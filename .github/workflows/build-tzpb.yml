@@ -8,6 +8,10 @@ on:
         required: false
         default: ""
 
+defaults:
+  run:
+    working-directory: tzf
+
 jobs:
   build-data-pipeline:
     runs-on: ubuntu-latest
@@ -15,13 +19,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          path: tzf
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ringsaturn/tzf-dist
+          path: tzf-dist
 
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: tzf/go.mod
 
-      - name: Fetch latest timezone-boundary-builder version
+      - name: Resolve timezone-boundary-builder version
         id: fetch-version
         run: |
           if [ -n "${{ inputs.timezone-boundary-version }}" ]; then
@@ -38,9 +49,8 @@ jobs:
           echo "TBB_VERSION=$VERSION" >> $GITHUB_ENV
 
       # The full chain from upstream raw GeoJSON to the .tzb/.tzm artifact
-      # set — no protobuf anywhere. The gob intermediates it produces are
-      # build-internal (pipeline cache + parity sources); only the artifacts
-      # leave this job.
+      # set — no protobuf anywhere. The gob intermediates are build-internal
+      # (pipeline cache + parity sources); only the artifacts leave this job.
       - name: Build artifacts from GeoJSON
         run: ./scripts/build-tzf-dist-dev.sh
 
@@ -48,16 +58,16 @@ jobs:
         run: |
           go run ./internal/cmd/embedcompare \
             -preindex tmp/tzf-dist-dev/combined-with-oceans.topology.preindex.gob \
-            -tzm tmp/tzf-dist-dev/lite.tzm \
+            -tzm ../tzf-dist/lite.tzm \
             tmp/tzf-dist-dev/combined-with-oceans.topology.compress.topo.gob \
-            tmp/tzf-dist-dev/lite.tzb
+            ../tzf-dist/lite.tzb
           go run ./internal/cmd/embedcompare -deep-only \
             tmp/tzf-dist-dev/combined-with-oceans.compress.topo.gob \
-            tmp/tzf-dist-dev/full.tzb
+            ../tzf-dist/full.tzb
 
       - name: Collect checksums
+        working-directory: tzf-dist
         run: |
-          cd tmp/tzf-dist-dev
           md5sum lite.tzb lite.tzm full.tzb > checksums.md5
           cat checksums.md5
           ls -alh lite.tzb lite.tzm full.tzb
@@ -66,7 +76,7 @@ jobs:
         with:
           name: tzf-data-${{ steps.fetch-version.outputs.TBB_VERSION }}
           path: |
-            tmp/tzf-dist-dev/lite.tzb
-            tmp/tzf-dist-dev/lite.tzm
-            tmp/tzf-dist-dev/full.tzb
-            tmp/tzf-dist-dev/checksums.md5
+            tzf-dist/lite.tzb
+            tzf-dist/lite.tzm
+            tzf-dist/full.tzb
+            tzf-dist/checksums.md5

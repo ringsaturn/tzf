@@ -33,11 +33,15 @@ are gob (`internal/model`, `TZFGOB1\n` magic) and **never distributed** —
 `internal/embedenc` seam is `internal/embedbin/encseam.go` (exported for the
 encoder package, still module-internal).
 
-**Bootstrap**: the committed `go.work` replaces `github.com/ringsaturn/tzf-dist`
-with `tmp/tzf-dist-dev` (gitignored). Run `./scripts/build-tzf-dist-dev.sh`
-once after cloning — it downloads the upstream raw GeoJSON and runs the full
-pipeline to produce the artifact set. Drop the replace when tzf-dist
-publishes the `.tzb`/`.tzm` set (W7).
+**Bootstrap**: `go.mod` replaces `github.com/ringsaturn/tzf-dist` with the
+sibling `../tzf-dist` checkout (its `v2-artifacts` branch carries the
+`LiteTZB`/`LiteTZM`/`FullTZB` embeds and the W2 alignment test). Run
+`./scripts/build-tzf-dist-dev.sh` once after cloning — it downloads the
+upstream raw GeoJSON, runs the full pipeline (gob intermediates stay in
+gitignored `tmp/tzf-dist-dev` as parity fixtures), and installs the three
+artifacts over the placeholders in `../tzf-dist`. CI checks both repos out
+side by side. Drop the replace when tzf-dist publishes the `.tzb`/`.tzm`
+release (W7).
 
 ## Development Commands
 

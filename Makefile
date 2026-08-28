@@ -1,9 +1,12 @@
 # Single module: github.com/ringsaturn/tzf/v2 (the v1 line lives on its own
-# branch/tags). First run after cloning: ./scripts/build-tzf-dist-dev.sh —
-# it fills tmp/tzf-dist-dev (the go.work stand-in for the tzf-dist artifact
-# release) by running the full pipeline from the upstream raw GeoJSON.
+# branch/tags). go.mod replaces tzf-dist with the sibling ../tzf-dist
+# checkout during development; first run after cloning:
+# ./scripts/build-tzf-dist-dev.sh — it runs the full pipeline from the
+# upstream raw GeoJSON and installs the artifacts into ../tzf-dist
+# (gob intermediates stay in tmp/tzf-dist-dev as parity fixtures).
 
 DEV_DIR := tmp/tzf-dist-dev
+DIST_DIR := ../tzf-dist
 PARITY_ENV := TZF_PARITY_TOPO=$(abspath $(DEV_DIR)/combined-with-oceans.topology.compress.topo.gob) \
 	TZF_PARITY_PREINDEX=$(abspath $(DEV_DIR)/combined-with-oceans.topology.preindex.gob)
 
@@ -27,7 +30,7 @@ bench-memory:
 parity:
 	go run ./internal/cmd/embedcompare \
 		-preindex $(DEV_DIR)/combined-with-oceans.topology.preindex.gob \
-		-tzm $(DEV_DIR)/lite.tzm \
-		$(DEV_DIR)/combined-with-oceans.topology.compress.topo.gob $(DEV_DIR)/lite.tzb
+		-tzm $(DIST_DIR)/lite.tzm \
+		$(DEV_DIR)/combined-with-oceans.topology.compress.topo.gob $(DIST_DIR)/lite.tzb
 
 .PHONY: fmt test cover bench bench-memory parity
