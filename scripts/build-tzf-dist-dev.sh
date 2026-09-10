@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the tzf-dist artifact set from the upstream raw GeoJSON and installs
-# it into the sibling tzf-dist checkout (go.mod replaces
-# github.com/ringsaturn/tzf-dist with ../tzf-dist during development, W7).
+# it into the sibling tzf-dist checkout for tzf-dist's own embed tests (the
+# tzf runtime itself embeds the published tzf-dist module).
 # Gob intermediates stay in tmp/tzf-dist-dev — build-internal pipeline cache
 # and parity fixtures (TZF_PARITY_TOPO/PREINDEX); they are never distributed.
 #
@@ -10,8 +10,6 @@
 # uncommitted worktree state over tzf-dist's committed placeholders — real
 # data is never committed on main; restore with
 #   git -C ../tzf-dist checkout -- lite.tzb lite.tzm full.tzb
-# Drop the go.mod replace and this script once tzf-dist publishes the
-# artifact release.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -50,7 +48,7 @@ fi
 
 # The artifact embeds ship on tzf-dist's v2-artifacts branch; when building
 # against a checkout that predates them (e.g. main before the branch merges),
-# add the embed file so the replace target compiles.
+# add the embed file so the checkout compiles.
 if ! grep -qs "var LiteTZB" "$DIST_DIR"/*.go; then
   cat > "$DIST_DIR"/embed_v2.go <<'EOF'
 package tzfdist

@@ -17,6 +17,5 @@ keywords:
   - timezone
   - point-in-polygon
 license: MIT
-commit: 145e13ed991d5d5fa505a19b4b89370e60c15945
-version: v1.2.3
-date-released: '2026-07-12'
+version: v2.0.0
+date-released: '2026-09-10'

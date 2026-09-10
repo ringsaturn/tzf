@@ -1,9 +1,9 @@
 # Single module: github.com/ringsaturn/tzf/v2 (the v1 line lives on its own
-# branch/tags). go.mod replaces tzf-dist with the sibling ../tzf-dist
-# checkout during development; first run after cloning:
-# ./scripts/build-tzf-dist-dev.sh — it runs the full pipeline from the
-# upstream raw GeoJSON and installs the artifacts into ../tzf-dist
-# (gob intermediates stay in tmp/tzf-dist-dev as parity fixtures).
+# branch/tags). The runtime embeds come from the published tzf-dist module;
+# the parity targets need ./scripts/build-tzf-dist-dev.sh once after cloning —
+# it runs the full pipeline from the upstream raw GeoJSON, keeps the gob
+# intermediates in tmp/tzf-dist-dev as parity fixtures, and installs the
+# artifacts into the sibling ../tzf-dist checkout for its embed tests.
 
 DEV_DIR := tmp/tzf-dist-dev
 DIST_DIR := ../tzf-dist

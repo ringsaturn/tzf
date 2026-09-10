@@ -20,12 +20,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # go.mod replaces github.com/ringsaturn/tzf-dist with ../tzf-dist, so
-      # the two repos are checked out side by side. Once the replace is
-      # dropped (tzf-dist ships the .tzb/.tzm release, W7) the module comes
-      # from the proxy instead; this checkout stays because the pipeline
-      # step below writes its artifacts there and because tzf-dist's own
-      # embed + alignment tests run in the same job.
+      # The runtime module comes from the proxy (tzf-dist v0.0.2026-c-tzb1
+      # and later). tzf-dist is still checked out side by side because the
+      # pipeline step below writes its artifacts there and because
+      # tzf-dist's own embed + alignment tests run in the same job.
       - uses: actions/checkout@v7
         with:
           path: tzf

@@ -33,19 +33,19 @@ are gob (`internal/model`, `TZFGOB1\n` magic) and **never distributed** —
 `internal/embedenc` seam is `internal/embedbin/encseam.go` (exported for the
 encoder package, still module-internal).
 
-**Bootstrap**: `go.mod` replaces `github.com/ringsaturn/tzf-dist` with the
-sibling `../tzf-dist` checkout (its `v2-artifacts` branch carries the
-`LiteTZB`/`LiteTZM`/`FullTZB` embeds and the W2 alignment test). Run
-`./scripts/build-tzf-dist-dev.sh` once after cloning — it downloads the
-upstream raw GeoJSON, runs the full pipeline (gob intermediates stay in
-gitignored `tmp/tzf-dist-dev` as parity fixtures), and installs the three
-artifacts over the placeholders in `../tzf-dist` — as uncommitted worktree
-state only: real data is never committed on tzf-dist main (it ships via
-tags on the data branch); restore the placeholders with
-`git -C ../tzf-dist checkout -- lite.tzb lite.tzm full.tzb` when done.
-Note the tzf tests embed whatever `../tzf-dist` holds, so run the script
-before testing. CI checks both repos out side by side. Drop the replace
-when tzf-dist publishes the `.tzb`/`.tzm` release (W7).
+**Bootstrap**: the runtime embeds come from the published
+`github.com/ringsaturn/tzf-dist` module (first v2 release
+`v0.0.2026-c-tzb1`), so `go test ./...` works from a plain clone. The
+pipeline and parity tooling still need the sibling `../tzf-dist` checkout:
+`./scripts/build-tzf-dist-dev.sh` downloads the upstream raw GeoJSON, runs
+the full pipeline (gob intermediates stay in gitignored `tmp/tzf-dist-dev`
+as parity fixtures for `make parity` and the env-gated parity tests), and
+installs the three artifacts over the placeholders in `../tzf-dist` for
+tzf-dist's own embed tests — as uncommitted worktree state only: real data
+is never committed on tzf-dist main (it ships via tags on the data
+branch); restore the placeholders with
+`git -C ../tzf-dist checkout -- lite.tzb lite.tzm full.tzb` when done. CI
+checks both repos out side by side for the same reason.
 
 ## Development Commands
 
