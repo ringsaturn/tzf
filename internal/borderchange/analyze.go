@@ -70,6 +70,13 @@ type Report struct {
 	LengthDistances         Distribution
 	AreaWidths              Distribution
 	PairAreas               []PairArea
+	// JunctionVertices counts candidate vertices that are absent from their own
+	// baseline ring but present elsewhere in the baseline: the shared-edge
+	// deduplication inserts a neighbour's vertex where two rings meet. They are
+	// dropped before arc matching; JunctionMaxOffsetM is the largest distance
+	// from such a vertex to its baseline ring.
+	JunctionVertices   int
+	JunctionMaxOffsetM float64
 
 	pairAreas map[pairKey]float64
 }
@@ -132,6 +139,8 @@ func Analyze(original, simplified *pb.Timezones, opts Options) (*Report, error) 
 	}
 
 	arcs := make(map[[sha256.Size]byte]*arc)
+	baseline := baselineVertexSet(original)
+	junction := &Report{}
 	for tzIdx, originalTZ := range original.Timezones {
 		simplifiedTZ := simplified.Timezones[tzIdx]
 		if originalTZ.Name != simplifiedTZ.Name {
@@ -142,14 +151,14 @@ func Analyze(original, simplified *pb.Timezones, opts Options) (*Report, error) 
 		}
 		for polygonIdx, originalPolygon := range originalTZ.Polygons {
 			simplifiedPolygon := simplifiedTZ.Polygons[polygonIdx]
-			if err := collectRingArcs(arcs, originalTZ.Name, originalPolygon.Points, simplifiedPolygon.Points); err != nil {
+			if err := collectRingArcs(arcs, baseline, junction, originalTZ.Name, originalPolygon.Points, simplifiedPolygon.Points); err != nil {
 				return nil, fmt.Errorf("%s polygon %d exterior: %w", originalTZ.Name, polygonIdx, err)
 			}
 			if len(originalPolygon.Holes) != len(simplifiedPolygon.Holes) {
 				return nil, fmt.Errorf("hole count differs for %q polygon %d", originalTZ.Name, polygonIdx)
 			}
 			for holeIdx, originalHole := range originalPolygon.Holes {
-				if err := collectRingArcs(arcs, originalTZ.Name, originalHole.Points, simplifiedPolygon.Holes[holeIdx].Points); err != nil {
+				if err := collectRingArcs(arcs, baseline, junction, originalTZ.Name, originalHole.Points, simplifiedPolygon.Holes[holeIdx].Points); err != nil {
 					return nil, fmt.Errorf("%s polygon %d hole %d: %w", originalTZ.Name, polygonIdx, holeIdx, err)
 				}
 			}
@@ -231,6 +240,7 @@ func Analyze(original, simplified *pb.Timezones, opts Options) (*Report, error) 
 	wg.Wait()
 
 	report := &Report{CertificationToleranceM: opts.CertificationToleranceM + maxChordSagittaM}
+	report.merge(junction)
 	for _, local := range locals {
 		report.merge(local)
 	}
@@ -250,7 +260,29 @@ func Analyze(original, simplified *pb.Timezones, opts Options) (*Report, error) 
 	return report, nil
 }
 
-func collectRingArcs(arcs map[[sha256.Size]byte]*arc, timezone string, originalPB, simplifiedPB []*pb.Point) error {
+// baselineVertexSet indexes every vertex of every baseline ring, exact and
+// after polyline quantization, so that a candidate vertex can be recognised
+// as belonging to some baseline ring even when it is absent from its own.
+func baselineVertexSet(input *pb.Timezones) map[point]struct{} {
+	set := make(map[point]struct{})
+	addRing := func(points []*pb.Point) {
+		for _, p := range uniquePoints(points) {
+			set[p] = struct{}{}
+			set[polylineCompressedPoint(p)] = struct{}{}
+		}
+	}
+	for _, tz := range input.Timezones {
+		for _, polygon := range tz.Polygons {
+			addRing(polygon.Points)
+			for _, hole := range polygon.Holes {
+				addRing(hole.Points)
+			}
+		}
+	}
+	return set
+}
+
+func collectRingArcs(arcs map[[sha256.Size]byte]*arc, baseline map[point]struct{}, junction *Report, timezone string, originalPB, simplifiedPB []*pb.Point) error {
 	original := uniquePoints(originalPB)
 	simplified := uniquePoints(simplifiedPB)
 	if len(original) < 3 || len(simplified) < 3 {
@@ -264,15 +296,38 @@ func collectRingArcs(arcs map[[sha256.Size]byte]*arc, timezone string, originalP
 		compressed := polylineCompressedPoint(p)
 		compressedPositions[compressed] = append(compressedPositions[compressed], idx)
 	}
+
+	// The shared-edge deduplication inserts a neighbouring ring's vertex into
+	// this ring where the two meet. Such a vertex exists in the baseline (in
+	// the neighbour's ring) but not in this ring; it is dropped from the arc
+	// sequence and its offset from this ring is recorded.
+	var closedOriginal []point
+	kept := simplified[:0:0]
+	for _, p := range simplified {
+		if len(positions[p]) > 0 || len(compressedPositions[p]) > 0 {
+			kept = append(kept, p)
+			continue
+		}
+		if _, ok := baseline[p]; !ok {
+			return fmt.Errorf("candidate vertex %.7f,%.7f is absent from baseline before and after polyline quantization", p.lng, p.lat)
+		}
+		if closedOriginal == nil {
+			closedOriginal = append(append(make([]point, 0, len(original)+1), original...), original[0])
+		}
+		junction.JunctionVertices++
+		junction.JunctionMaxOffsetM = math.Max(junction.JunctionMaxOffsetM, distancePointToPolyline(p, closedOriginal))
+	}
+	simplified = kept
+	if len(simplified) < 3 {
+		return errors.New("ring has fewer than three unique points after dropping junction vertices")
+	}
+
 	indices := make([]int, len(simplified))
 	previous := -1
 	for idx, p := range simplified {
 		candidates := positions[p]
 		if len(candidates) == 0 {
 			candidates = compressedPositions[p]
-		}
-		if len(candidates) == 0 {
-			return fmt.Errorf("candidate vertex %.7f,%.7f is absent from baseline before and after polyline quantization", p.lng, p.lat)
 		}
 		if idx == 0 {
 			indices[idx] = candidates[0]
@@ -502,6 +557,8 @@ func (r *Report) merge(o *Report) {
 	}
 	r.LengthDistances.merge(&o.LengthDistances)
 	r.AreaWidths.merge(&o.AreaWidths)
+	r.JunctionVertices += o.JunctionVertices
+	r.JunctionMaxOffsetM = math.Max(r.JunctionMaxOffsetM, o.JunctionMaxOffsetM)
 	for key, area := range o.pairAreas {
 		r.addPairArea(key.a, key.b, area)
 	}

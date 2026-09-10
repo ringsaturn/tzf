@@ -97,7 +97,7 @@ func loadDataset(path string) (*pb.Timezones, error) {
 			return nil, err
 		}
 		return loadGeoJSON(raw)
-	case strings.HasSuffix(lower, ".compress.topo.bin"):
+	case strings.HasSuffix(lower, ".compress.topo.gob"):
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
@@ -107,7 +107,7 @@ func loadDataset(path string) (*pb.Timezones, error) {
 			return nil, fmt.Errorf("decode compressed topology %q: %w", path, err)
 		}
 		return topology.DecodeTopoTimezones(reduce.DecompressTopoTimezones(compressed)), nil
-	case strings.HasSuffix(lower, ".topo.bin"):
+	case strings.HasSuffix(lower, ".topo.gob"):
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
@@ -205,6 +205,7 @@ func printMarkdown(report *border.Report, details comparisonDetails, topPairs in
 	fmt.Printf("- Changed boundary length: `%.3f km`\n", report.ChangedLengthKM)
 	fmt.Printf("- Error strip area: `%.6f km2`\n", report.ErrorAreaKM2)
 	fmt.Printf("- Maximum single strip area: `%.6f km2`\n", report.MaxStripAreaKM2)
+	fmt.Printf("- Junction vertices inserted by shared-edge deduplication (dropped before arc matching): `%d`, maximum offset from the baseline ring: `%.3f m`\n", report.JunctionVertices, report.JunctionMaxOffsetM)
 	fmt.Printf("- Runtime: `%s`\n", elapsed.Round(time.Millisecond))
 	fmt.Println()
 

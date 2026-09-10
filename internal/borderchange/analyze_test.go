@@ -50,6 +50,42 @@ func TestSharedArcIsDeduplicated(t *testing.T) {
 	}
 }
 
+func TestJunctionVertexInsertedFromNeighbour(t *testing.T) {
+	// B's ring carries a vertex on the shared edge x=1 that A's ring lacks.
+	// The shared-edge deduplication inserts it into A's candidate ring.
+	left := [][2]float32{{0, 0}, {1, 0}, {1, 1}, {0, 1}, {0, 0}}
+	right := [][2]float32{{1, 1}, {1, 0.5}, {1, 0}, {2, 0}, {2, 1}, {1, 1}}
+	original := &pb.Timezones{Timezones: []*pb.Timezone{
+		{Name: "A", Polygons: []*pb.Polygon{{Points: pbPoints(left)}}},
+		{Name: "B", Polygons: []*pb.Polygon{{Points: pbPoints(right)}}},
+	}}
+	leftCandidate := [][2]float32{{0, 0}, {1, 0}, {1, 0.5}, {1, 1}, {0, 1}, {0, 0}}
+	simplified := &pb.Timezones{Timezones: []*pb.Timezone{
+		{Name: "A", Polygons: []*pb.Polygon{{Points: pbPoints(leftCandidate)}}},
+		{Name: "B", Polygons: []*pb.Polygon{{Points: pbPoints(right)}}},
+	}}
+	report, err := Analyze(original, simplified, Options{CertificationToleranceM: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.JunctionVertices != 1 {
+		t.Fatalf("junction vertices: got %d want 1", report.JunctionVertices)
+	}
+	if report.JunctionMaxOffsetM > 0.5 {
+		t.Fatalf("junction offset: got %.3f m want on the edge", report.JunctionMaxOffsetM)
+	}
+	if report.ChangedArcs != 0 {
+		t.Fatalf("changed arcs: got %d want 0", report.ChangedArcs)
+	}
+
+	// A vertex that exists in no baseline ring is still an error.
+	stray := [][2]float32{{0, 0}, {1, 0}, {1.01, 0.5}, {1, 1}, {0, 1}, {0, 0}}
+	simplified.Timezones[0].Polygons[0].Points = pbPoints(stray)
+	if _, err := Analyze(original, simplified, Options{CertificationToleranceM: 1}); err == nil {
+		t.Fatal("expected an error for a vertex absent from every baseline ring")
+	}
+}
+
 func TestDensifyPreservesLongLatitudeEdge(t *testing.T) {
 	line := densifyGeographicPolyline([]point{{lng: 90, lat: -86}, {lng: 180, lat: -86}})
 	distance := distancePointToPolyline(point{lng: 135, lat: -86}, line)

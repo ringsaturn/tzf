@@ -346,10 +346,10 @@ model, certified via Lipschitz interval subdivision):
 
 | Metric                                             |                          Result |
 | -------------------------------------------------- | ------------------------------: |
-| Certified maximum boundary displacement            | 111.2 m (+1.0 m tolerance)      |
+| Certified maximum boundary displacement            | 111.7 m (+1.0 m tolerance)      |
 | Boundary length displaced more than 100 m          | 0.41%                           |
 | Boundary length displaced more than 500 m          | 0%                              |
-| Total mis-assigned area                            | 16,828 km² (~0.003% of Earth)   |
+| Total mis-assigned area                            | 16,962 km² (~0.003% of Earth)   |
 | Mis-assigned area within 100 m of the true border  | 92.8%                           |
 
 In other words, only queries that land within ~111 m of a timezone border can
