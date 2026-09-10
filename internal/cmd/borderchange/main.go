@@ -40,7 +40,7 @@ func main() {
 	if flag.NArg() < 1 || flag.NArg() > 2 {
 		fmt.Fprintln(os.Stderr, "usage: borderchange [flags] SOURCE [CANDIDATE]")
 		fmt.Fprintln(os.Stderr, "  one input: generate the candidate with -epsilon")
-		fmt.Fprintln(os.Stderr, "  two inputs: compare source GeoJSON or protobuf with a supplied candidate")
+		fmt.Fprintln(os.Stderr, "  two inputs: compare source GeoJSON or pipeline .gob with a supplied candidate")
 		os.Exit(2)
 	}
 

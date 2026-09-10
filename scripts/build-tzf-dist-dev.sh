@@ -15,6 +15,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# --shim-only reconciles the tzf-dist embed shim and exits, skipping the
+# minutes-long pipeline. CI calls it on every run (the shim is workspace
+# state, never cached) before deciding whether the artifacts need rebuilding.
+SHIM_ONLY=false
+if [ "${1:-}" = "--shim-only" ]; then
+  SHIM_ONLY=true
+fi
+
 TBB_VERSION="${TBB_VERSION:-2026c}"
 WORK_DIR=tmp/tzf-dist-dev
 DIST_DIR=../tzf-dist
@@ -25,6 +33,20 @@ if [ ! -d "$DIST_DIR" ]; then
 fi
 
 mkdir -p "$WORK_DIR"
+
+# A previous run against a pre-embed checkout may have left the shim behind
+# (a restored CI cache does the same). Once the checkout itself declares the
+# embeds, the shim would be a duplicate declaration — drop it first.
+if [ -f "$DIST_DIR"/embed_v2.go ]; then
+  for f in "$DIST_DIR"/*.go; do
+    case "$f" in */embed_v2.go) continue ;; esac
+    if grep -qs "var LiteTZB" "$f"; then
+      echo "removing stale $DIST_DIR/embed_v2.go shim ($f declares the embeds)" >&2
+      rm -f "$DIST_DIR"/embed_v2.go
+      break
+    fi
+  done
+fi
 
 # The artifact embeds ship on tzf-dist's v2-artifacts branch; when building
 # against a checkout that predates them (e.g. main before the branch merges),
@@ -47,6 +69,10 @@ var LiteTZM []byte
 var FullTZB []byte
 EOF
   touch "$DIST_DIR"/lite.tzb "$DIST_DIR"/lite.tzm "$DIST_DIR"/full.tzb
+fi
+
+if [ "$SHIM_ONLY" = true ]; then
+  exit 0
 fi
 
 # Fetch the upstream boundary release (skipped when already present).

@@ -8,7 +8,7 @@ import (
 )
 
 // TranscodeM converts an E-profile (.tzb) file into the M-profile (.tzm)
-// layout without touching protobuf: ring geometry is materialized by the
+// layout without any pipeline dependency: ring geometry is materialized by the
 // §5.1 expansion and written as FLATRINGDIR/FLATPOINTS, while the
 // profile-shared sections (NAMES, TZDIR, POLYDIR, GRID, FUZZY) are copied
 // byte-for-byte. The output is identical to EncodeM over the E file's source

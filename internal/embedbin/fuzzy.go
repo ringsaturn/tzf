@@ -248,7 +248,7 @@ func (r *Reader) fuzzyProbe(lng, lat float64) (uint16, bool, error) {
 
 // FuzzyLookup returns the FUZZY tile match for (lng, lat), if any. Multi-name
 // tiles resolve to the group's first entry (first-listed wins), matching
-// FuzzyFinder.GetTimezoneName.
+// the FUZZY fast path inside the composed finders.
 func (r *Reader) FuzzyLookup(lng, lat float64) (int32, bool, error) {
 	if r.data == nil {
 		r.mu.Lock()

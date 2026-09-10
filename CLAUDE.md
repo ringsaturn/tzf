@@ -297,12 +297,19 @@ Used by `reduce/compress.go` and `reduce/compress_topo.go`.
 
 | Tool | Input | Output | Purpose |
 |------|-------|--------|---------|
-| `geojson2tzpb` | GeoJSON | `.bin` (Timezones) | GeoJSON → protobuf |
-| `reducetzpb` | `.bin` (Timezones) | `.topology.bin` | Topology-aware D-P simplification |
-| `deduplicatetzpb` | `.bin` (Timezones) | `.topo.bin` (TopoTimezones) | Shared-edge deduplication |
-| `compresstopotzpb` | `.topo.bin` | `.compress.topo.bin` (CompressedTopoTimezones) | Polyline compress topo format |
-| `compresstzpb` | `.bin` | `.compress.bin` (CompressedTimezones) | Polyline compress flat format |
-| `preindextzpb` | `.topology.bin` | `.preindex.bin` | Tile pre-indexing |
+| `geojson2tzpb` | GeoJSON | `.gob` (Timezones) | GeoJSON → pipeline model |
+| `reducetzpb` | `.gob` (Timezones) | `.topology.gob` | Topology-aware D-P simplification |
+| `deduplicatetzpb` | `.gob` (Timezones) | `.topo.gob` (TopoTimezones) | Shared-edge deduplication |
+| `compresstopotzpb` | `.topo.gob` | `.compress.topo.gob` (CompressedTopoTimezones) | Polyline compress topo format |
+| `compresstzpb` | `.gob` | `.compress.gob` (CompressedTimezones) | Polyline compress flat format |
+| `preindextzpb` | `.topology.gob` | `.preindex.gob` | Tile pre-indexing |
+| `topo2embed` | `.compress.topo.gob` (+`-preindex .preindex.gob`) | `.tzb` / `.tzm` | Embedded binary encoder (`-profile e\|m`) |
+| `tzb2tzm` | `.tzb` | `.tzm` | pb-free transcode to the memory profile |
+| `tzf` | — | — | CLI lookup over `NewDefaultFinder` |
+
+The `*tzpb` command names are a v1-era holdover (there is no protobuf in the
+pipeline any more); they are kept because the data-build workflow and
+tzf-dist's `build.yml` invoke them by name.
 
 ## Known Data Quirks
 

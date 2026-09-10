@@ -1,7 +1,3 @@
-// Package tzf converts (lng, lat) coordinates to timezone names.
-//
-// Inspired by timezonefinder https://github.com/jannikmi/timezonefinder,
-// fast python package for finding the timezone of any point on earth (coordinates) offline.
 package tzf
 
 import (

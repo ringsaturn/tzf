@@ -3,7 +3,7 @@ NOTICE
 This product includes software developed by [github.com/ringsaturn/tzf].
 ------------------------------------------------------------------------
 
-github.com/paulmach/orb
+github.com/ringsaturn/orb
 License: MIT
 Copyright (c) 2017 Paul Mach
 
@@ -34,13 +34,6 @@ github.com/tidwall/rtree
 License: MIT
 Copyright (c) 2021 Josh Baker
 
-go.mongodb.org/mongo-driver/v2
-License: Apache-2.0
-
 golang.org/x/sync/errgroup
 License: BSD-3-Clause
 Copyright 2009 The Go Authors.
-
-google.golang.org/protobuf
-License: BSD-3-Clause
-Copyright (c) 2018 The Go Authors. All rights reserved.

@@ -1,4 +1,4 @@
-// Command topo2embed converts CompressedTopoTimezones protobuf data to the
+// Command topo2embed converts CompressedTopoTimezones pipeline data to the
 // embedded binary container: profile e emits the chunked .tzb layout, profile
 // m emits the flat memory-image .tzm layout.
 package main

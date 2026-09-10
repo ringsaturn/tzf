@@ -71,7 +71,7 @@ type edgeGroup struct {
 	empty bool
 }
 
-// Encode converts a compressed topology protobuf into the v1 embedded layout.
+// Encode converts a compressed topology message into the E-profile embedded layout.
 func Encode(input *pb.CompressedTopoTimezones, opts EncodeOptions) ([]byte, error) {
 	e, names, gridBytes, fuzzyBytes, target, err := build(input, opts)
 	if err != nil {
@@ -80,7 +80,7 @@ func Encode(input *pb.CompressedTopoTimezones, opts EncodeOptions) ([]byte, erro
 	return e.serialize(names, input.Version, target, opts.AllowShortcut, gridBytes, fuzzyBytes)
 }
 
-// EncodeM converts a compressed topology protobuf into an M-profile (.tzm)
+// EncodeM converts a compressed topology message into an M-profile (.tzm)
 // file whose sections are the query-time structures (spec rev 1 §6): every
 // ring stored as an open flat point run in FLATPOINTS, junction duplicates
 // removed by the §5.1 expansion, directories identical to the E profile.

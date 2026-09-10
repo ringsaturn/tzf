@@ -2,6 +2,7 @@ package x_test
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"slices"
 	"testing"
@@ -101,4 +102,20 @@ func TestReaderAtGeoJSON(t *testing.T) {
 			t.Fatalf("%s: GeoJSON differs between ReaderAt and byte-backed finders", name)
 		}
 	}
+}
+
+// ExampleNewFinderFromTZBReaderAt shows the in-place route over
+// caller-owned bytes: v2 has no InPlace option on the root constructors, so
+// wrap the bytes in a bytes.Reader and open them here.
+func ExampleNewFinderFromTZBReaderAt() {
+	// Any io.ReaderAt works: an *os.File, an mmap'd region, or — as here —
+	// bytes already in memory.
+	data := tzfdist.LiteTZB
+
+	finder, err := x.NewFinderFromTZBReaderAt(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(finder.GetTimezoneName(116.3883, 39.9289)) // longitude, latitude
+	// Output: Asia/Shanghai
 }

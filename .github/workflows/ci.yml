@@ -2,9 +2,11 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    # `embedded` is the v2 line until it merges into main; without it the
+    # pre-tag pushes run no CI at all.
+    branches: [main, embedded]
   pull_request:
-    branches: [main]
+    branches: [main, embedded]
 
 permissions:
   contents: write
@@ -19,7 +21,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # go.mod replaces github.com/ringsaturn/tzf-dist with ../tzf-dist, so
-      # the two repos are checked out side by side.
+      # the two repos are checked out side by side. Once the replace is
+      # dropped (tzf-dist ships the .tzb/.tzm release, W7) the module comes
+      # from the proxy instead; this checkout stays because the pipeline
+      # step below writes its artifacts there and because tzf-dist's own
+      # embed + alignment tests run in the same job.
       - uses: actions/checkout@v7
         with:
           path: tzf
@@ -37,6 +43,13 @@ jobs:
       # The artifact set is built from the upstream raw GeoJSON — a
       # minutes-long pipeline — so cache both the gob intermediates (parity
       # fixtures) and the installed artifacts on the dataset + pipeline hash.
+      #
+      # tzf-dist/embed_v2.go is deliberately NOT cached: it is a shim the
+      # bootstrap script writes only while the tzf-dist checkout predates the
+      # v2 embeds. Restoring it next to a checkout that already declares
+      # LiteTZB (once v2-artifacts merges into tzf-dist main) would duplicate
+      # the declarations and break the build. The key is versioned (v2-) so
+      # entries written by the old path cannot be restored either.
       - name: Cache pipeline outputs
         id: data-cache
         uses: actions/cache@v4
@@ -46,8 +59,13 @@ jobs:
             tzf-dist/lite.tzb
             tzf-dist/lite.tzm
             tzf-dist/full.tzb
-            tzf-dist/embed_v2.go
-          key: tzf-data-2026c-${{ hashFiles('tzf/cmd/**', 'tzf/internal/**', 'tzf/scripts/build-tzf-dist-dev.sh') }}
+          key: tzf-data-v2-2026c-${{ hashFiles('tzf/cmd/**', 'tzf/internal/**', 'tzf/scripts/build-tzf-dist-dev.sh') }}
+
+      # Runs on every job, cache hit or not: writes the shim while tzf-dist
+      # still predates the v2 embeds, and removes it once the checkout
+      # declares them itself. Seconds, not minutes.
+      - name: Reconcile tzf-dist embed shim
+        run: ./scripts/build-tzf-dist-dev.sh --shim-only
 
       - name: Build artifact set from GeoJSON
         if: steps.data-cache.outputs.cache-hit != 'true'

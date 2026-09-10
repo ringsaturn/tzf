@@ -90,9 +90,9 @@ func Build(bboxes [][4]float64, version string) *pb.GridIndex {
 	return &pb.GridIndex{Cells: cells, Version: version}
 }
 
-// BuildFromTimezones constructs a GridIndex from a Timezones protobuf.
+// BuildFromTimezones constructs a GridIndex from a Timezones message.
 // The tz_indices in each cell are 0-based positions into input.Timezones,
-// matching the item order produced by tzf.NewFinderFromPB.
+// matching the item order the pipeline assigns.
 func BuildFromTimezones(input *pb.Timezones) *pb.GridIndex {
 	bboxes := make([][4]float64, len(input.Timezones))
 	for i, tz := range input.Timezones {
@@ -178,7 +178,7 @@ func expandFromCompressedPoly(poly *pb.CompressedTopoPolygon, edgeBBox map[int32
 	}
 }
 
-// DecodeToMap converts a GridIndex protobuf into the runtime map used by Finder.
+// DecodeToMap converts a GridIndex message into the runtime map used by the finder.
 // Keys are (floor(lng), floor(lat)); values are slices of item indices (int32).
 func DecodeToMap(gi *pb.GridIndex) map[[2]int16][]int32 {
 	m := make(map[[2]int16][]int32, len(gi.Cells))

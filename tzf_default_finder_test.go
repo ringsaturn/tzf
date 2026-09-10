@@ -1,6 +1,7 @@
 package tzf_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -43,6 +44,37 @@ func ExampleNewDefaultFinder_timezoneNames() {
 		panic(err)
 	}
 	fmt.Println(finder.TimezoneNames())
+}
+
+// ExampleGeoJSONer shows how to reach the geometry export: constructors
+// return tzf.F, so the behavior is asserted rather than a concrete type.
+func ExampleGeoJSONer() {
+	finder, err := tzf.NewDefaultFinder()
+	if err != nil {
+		panic(err)
+	}
+
+	exporter, ok := finder.(tzf.GeoJSONer)
+	fmt.Println("exports geometry:", ok)
+
+	boundary, err := exporter.GetTZGeoJSON("Asia/Tokyo")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("FeatureCollection:", bytes.HasPrefix(boundary, []byte(`{"type":"FeatureCollection"`)))
+
+	// The tiles GetTimezoneName answers from without exact
+	// point-in-polygon work are exportable too.
+	tiles, err := exporter.GetTZPreindexGeoJSON("Asia/Tokyo")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("preindex tiles:", bytes.HasPrefix(tiles, []byte(`{"type":"FeatureCollection"`)))
+
+	// Output:
+	// exports geometry: true
+	// FeatureCollection: true
+	// preindex tiles: true
 }
 
 func BenchmarkDefaultFinder_GetTimezoneNameAtEdge(b *testing.B) {
