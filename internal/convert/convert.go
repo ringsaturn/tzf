@@ -1,0 +1,112 @@
+package convert
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+)
+
+func Do(input *BoundaryFile) (*pb.Timezones, error) {
+	version := os.Getenv("TIMEZONE_BOUNDARY_VERSION")
+	if version == "" {
+		return nil, errors.New("tzf/convert: please specific version")
+	}
+	return DoWithVersion(input, version)
+}
+
+// DoWithVersion converts a boundary file and sets the supplied dataset
+// version. An empty version is allowed for source formats, such as GeoJSON,
+// that do not encode release metadata.
+func DoWithVersion(input *BoundaryFile, version string) (*pb.Timezones, error) {
+	output := make([]*pb.Timezone, 0)
+
+	for _, item := range input.Features {
+		pbtzItem := &pb.Timezone{
+			Name: item.Properties.Tzid,
+		}
+
+		var coordinates MultiPolygonCoordinates
+
+		MultiPolygonTypeHandler := func() error {
+			return json.Unmarshal(item.Geometry.Coordinates, &coordinates)
+		}
+		PolygonTypeHandler := func() error {
+			var polygonCoordinates PolygonCoordinates
+			if err := json.Unmarshal(item.Geometry.Coordinates, &polygonCoordinates); err != nil {
+				return err
+			}
+			coordinates = append(coordinates, polygonCoordinates)
+			return nil
+		}
+
+		switch item.Type {
+		case MultiPolygonType:
+			if err := MultiPolygonTypeHandler(); err != nil {
+				return nil, err
+			}
+		case PolygonType:
+			if err := PolygonTypeHandler(); err != nil {
+				return nil, err
+			}
+		case FeatureType:
+			switch item.Geometry.Type {
+			case MultiPolygonType:
+				if err := MultiPolygonTypeHandler(); err != nil {
+					return nil, err
+				}
+			case PolygonType:
+				if err := PolygonTypeHandler(); err != nil {
+					return nil, err
+				}
+			default:
+				return nil, fmt.Errorf("unknown type %v", item.Type)
+			}
+		default:
+			return nil, fmt.Errorf("unknown type %v", item.Type)
+		}
+
+		polygons := make([]*pb.Polygon, 0)
+
+		for _, subcoordinates := range coordinates {
+			newpbPoly := &pb.Polygon{
+				Points: make([]*pb.Point, 0),
+				Holes:  make([]*pb.Polygon, 0),
+			}
+			for index, geoPoly := range subcoordinates {
+				if index == 0 {
+					for _, rawCoords := range geoPoly {
+						newpbPoly.Points = append(newpbPoly.Points, &pb.Point{
+							Lng: float32(rawCoords[0]),
+							Lat: float32(rawCoords[1]),
+						})
+					}
+					continue
+				}
+
+				holePoly := &pb.Polygon{
+					Points: make([]*pb.Point, 0),
+				}
+				for _, rawCoords := range geoPoly {
+					holePoly.Points = append(holePoly.Points, &pb.Point{
+						Lng: float32(rawCoords[0]),
+						Lat: float32(rawCoords[1]),
+					})
+				}
+				newpbPoly.Holes = append(newpbPoly.Holes, holePoly)
+
+			}
+			polygons = append(polygons, newpbPoly)
+		}
+
+		pbtzItem.Polygons = polygons
+		output = append(output, pbtzItem)
+	}
+
+	return &pb.Timezones{
+		Timezones: output,
+		Version:   version,
+	}, nil
+}

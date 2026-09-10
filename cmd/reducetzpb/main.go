@@ -8,10 +8,9 @@ import (
 	"os"
 	"strings"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/topology"
-	"github.com/ringsaturn/tzf/reduce"
-	"google.golang.org/protobuf/proto"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/reduce"
+	"github.com/ringsaturn/tzf/v2/internal/topology"
 )
 
 const (
@@ -19,6 +18,14 @@ const (
 	PRECISE     float64 = 10000 // round float precise
 	MINDISTENCE float64 = 10    // min dist to previous point, except begin&end point
 )
+
+func encodedSize(v *pb.Timezones) int {
+	raw, err := pb.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return len(raw)
+}
 
 func main() {
 	topologyAware := flag.Bool("topology", true, "use topology-aware simplification")
@@ -36,7 +43,7 @@ func main() {
 		panic(err)
 	}
 	input := &pb.Timezones{}
-	if err := proto.Unmarshal(rawFile, input); err != nil {
+	if err := pb.Unmarshal(rawFile, input); err != nil {
 		panic(err)
 	}
 
@@ -60,7 +67,7 @@ func main() {
 	if dest == "" {
 		dest = strings.Replace(originalProbufPath, ".bin", ".reduce.bin", 1)
 	}
-	outputBin, _ := proto.Marshal(output)
+	outputBin, _ := pb.Marshal(output)
 	f, err := os.Create(dest)
 	if err != nil {
 		panic(err)
@@ -93,8 +100,8 @@ func printReport(
 		mode = "topology"
 	}
 
-	bytesBefore := proto.Size(&pb.Timezones{Timezones: input.Timezones})
-	bytesAfter := proto.Size(&pb.Timezones{Timezones: output.Timezones})
+	bytesBefore := encodedSize(&pb.Timezones{Timezones: input.Timezones})
+	bytesAfter := encodedSize(&pb.Timezones{Timezones: output.Timezones})
 
 	pointRatio := 0.0
 	if before.Points > 0 {

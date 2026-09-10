@@ -1,0 +1,82 @@
+name: build-data
+
+on:
+  workflow_dispatch:
+    inputs:
+      timezone-boundary-version:
+        description: "Timezone boundary version to use (leave empty to fetch latest)"
+        required: false
+        default: ""
+
+defaults:
+  run:
+    working-directory: tzf
+
+jobs:
+  build-data-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: tzf
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ringsaturn/tzf-dist
+          path: tzf-dist
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: tzf/go.mod
+
+      - name: Resolve timezone-boundary-builder version
+        id: fetch-version
+        run: |
+          if [ -n "${{ inputs.timezone-boundary-version }}" ]; then
+            VERSION="${{ inputs.timezone-boundary-version }}"
+          else
+            VERSION=$(curl -sf "https://api.github.com/repos/evansiroky/timezone-boundary-builder/tags" \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['name'] if d else '')")
+            if [ -z "$VERSION" ]; then
+              echo "Failed to fetch latest TBB version"
+              exit 1
+            fi
+          fi
+          echo "TBB_VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TBB_VERSION=$VERSION" >> $GITHUB_ENV
+
+      # The full chain from upstream raw GeoJSON to the .tzb/.tzm artifact
+      # set — no protobuf anywhere. The gob intermediates are build-internal
+      # (pipeline cache + parity sources); only the artifacts leave this job.
+      - name: Build artifacts from GeoJSON
+        run: ./scripts/build-tzf-dist-dev.sh
+
+      - name: Verify (deep + dense + boundary parity)
+        run: |
+          go run ./internal/cmd/embedcompare \
+            -preindex tmp/tzf-dist-dev/combined-with-oceans.topology.preindex.gob \
+            -tzm ../tzf-dist/lite.tzm \
+            tmp/tzf-dist-dev/combined-with-oceans.topology.compress.topo.gob \
+            ../tzf-dist/lite.tzb
+          go run ./internal/cmd/embedcompare -deep-only \
+            tmp/tzf-dist-dev/combined-with-oceans.compress.topo.gob \
+            ../tzf-dist/full.tzb
+
+      - name: Collect checksums
+        working-directory: tzf-dist
+        run: |
+          md5sum lite.tzb lite.tzm full.tzb > checksums.md5
+          cat checksums.md5
+          ls -alh lite.tzb lite.tzm full.tzb
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: tzf-data-${{ steps.fetch-version.outputs.TBB_VERSION }}
+          path: |
+            tzf-dist/lite.tzb
+            tzf-dist/lite.tzm
+            tzf-dist/full.tzb
+            tzf-dist/checksums.md5

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/topology"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/topology"
 )
 
 func TestCollectStats(t *testing.T) {

@@ -37,7 +37,3 @@ Copyright (c) 2021 Josh Baker
 golang.org/x/sync/errgroup
 License: BSD-3-Clause
 Copyright 2009 The Go Authors.
-
-google.golang.org/protobuf
-License: BSD-3-Clause
-Copyright (c) 2018 The Go Authors. All rights reserved.

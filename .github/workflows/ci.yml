@@ -2,65 +2,72 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    # `embedded` is the v2 line until it merges into main; without it the
+    # pre-tag pushes run no CI at all.
+    branches: [main, embedded]
   pull_request:
-    branches: [main]
+    branches: [main, embedded]
 
 permissions:
   contents: write
   deployments: write
 
+defaults:
+  run:
+    working-directory: tzf
+
 jobs:
-  doc:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: bufbuild/buf-action@v1
-        with:
-          token: ${{ secrets.BUF_TOKEN }}
-          pr_comment: true
-          breaking: true
-          breaking_against: "https://github.com/ringsaturn/tzf.git#branch=main"
-
-
   build:
     runs-on: ubuntu-latest
     steps:
+      # The runtime module comes from the proxy (tzf-dist v0.0.2026-c-tzb1
+      # and later). tzf-dist is still checked out side by side because the
+      # pipeline step below writes its artifacts there and because
+      # tzf-dist's own embed + alignment tests run in the same job.
       - uses: actions/checkout@v7
+        with:
+          path: tzf
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ringsaturn/tzf-dist
+          path: tzf-dist
 
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version-file: tzf/go.mod
 
-      # A `replace` directive only applies when its module is the main module,
-      # so a dependency graph that resolves here can still be broken for
-      # consumers (see #217). Build tzf from a throwaway module where tzf is a
-      # dependency, which is the only way that difference shows up.
-      - name: Test external module consumption
-        shell: bash
-        run: |
-          set -euo pipefail
-          repo_root="$PWD"
-          consumer_dir="$(mktemp -d)"
-          trap 'rm -rf "$consumer_dir"' EXIT
-          cd "$consumer_dir"
-          go mod init example.com/tzf-consumer
-          go mod edit -replace="github.com/ringsaturn/tzf=$repo_root"
-          printf '%s\n' \
-            'package main' \
-            '' \
-            'import _ "github.com/ringsaturn/tzf"' \
-            '' \
-            'func main() {}' \
-            > main.go
-          go mod tidy
-          go test ./...
+      # The artifact set is built from the upstream raw GeoJSON — a
+      # minutes-long pipeline — so cache both the gob intermediates (parity
+      # fixtures) and the installed artifacts on the dataset + pipeline hash.
+      #
+      # tzf-dist/embed_v2.go is deliberately NOT cached: it is a shim the
+      # bootstrap script writes only while the tzf-dist checkout predates the
+      # v2 embeds. Restoring it next to a checkout that already declares
+      # LiteTZB (once v2-artifacts merges into tzf-dist main) would duplicate
+      # the declarations and break the build. The key is versioned (v2-) so
+      # entries written by the old path cannot be restored either.
+      - name: Cache pipeline outputs
+        id: data-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            tzf/tmp/tzf-dist-dev
+            tzf-dist/lite.tzb
+            tzf-dist/lite.tzm
+            tzf-dist/full.tzb
+          key: tzf-data-v2-2026c-${{ hashFiles('tzf/cmd/**', 'tzf/internal/**', 'tzf/scripts/build-tzf-dist-dev.sh') }}
 
-      - run: ls -al
+      # Runs on every job, cache hit or not: writes the shim while tzf-dist
+      # still predates the v2 embeds, and removes it once the checkout
+      # declares them itself. Seconds, not minutes.
+      - name: Reconcile tzf-dist embed shim
+        run: ./scripts/build-tzf-dist-dev.sh --shim-only
+
+      - name: Build artifact set from GeoJSON
+        if: steps.data-cache.outputs.cache-hit != 'true'
+        run: ./scripts/build-tzf-dist-dev.sh
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
@@ -68,19 +75,36 @@ jobs:
           version: latest
           args: --timeout=5m
           skip-cache: true
+          working-directory: tzf
 
-      - name: Run coverage
-        run: go test -coverprofile=coverage.txt -covermode=atomic
+      - name: Test
+        run: |
+          TZF_PARITY_TOPO="$PWD/tmp/tzf-dist-dev/combined-with-oceans.topology.compress.topo.gob" \
+          TZF_PARITY_PREINDEX="$PWD/tmp/tzf-dist-dev/combined-with-oceans.topology.preindex.gob" \
+            go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Test tzf-dist (embed + alignment)
+        working-directory: tzf-dist
+        run: go test ./...
+
+      - name: Verify embedded binary format
+        run: |
+          go run ./internal/cmd/embedcompare -dense-step 1 -boundary-samples 10000 \
+            -preindex tmp/tzf-dist-dev/combined-with-oceans.topology.preindex.gob \
+            -tzm ../tzf-dist/lite.tzm \
+            tmp/tzf-dist-dev/combined-with-oceans.topology.compress.topo.gob \
+            ../tzf-dist/lite.tzb
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
+        with:
+          working-directory: tzf
 
       - name: Bench
         run: make bench
 
       - name: Memory footprint
         run: make bench-memory
-
 
       - name: Write benchmark summary
         run: python3 scripts/bench2summary.py benchmark_result.txt memory_result.txt >> $GITHUB_STEP_SUMMARY

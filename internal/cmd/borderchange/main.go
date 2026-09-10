@@ -13,12 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ringsaturn/tzf/convert"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	border "github.com/ringsaturn/tzf/internal/borderchange"
-	"github.com/ringsaturn/tzf/internal/topology"
-	"github.com/ringsaturn/tzf/reduce"
-	"google.golang.org/protobuf/proto"
+	border "github.com/ringsaturn/tzf/v2/internal/borderchange"
+	"github.com/ringsaturn/tzf/v2/internal/convert"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/reduce"
+	"github.com/ringsaturn/tzf/v2/internal/topology"
 )
 
 type comparisonDetails struct {
@@ -41,7 +40,7 @@ func main() {
 	if flag.NArg() < 1 || flag.NArg() > 2 {
 		fmt.Fprintln(os.Stderr, "usage: borderchange [flags] SOURCE [CANDIDATE]")
 		fmt.Fprintln(os.Stderr, "  one input: generate the candidate with -epsilon")
-		fmt.Fprintln(os.Stderr, "  two inputs: compare source GeoJSON or protobuf with a supplied candidate")
+		fmt.Fprintln(os.Stderr, "  two inputs: compare source GeoJSON or pipeline .gob with a supplied candidate")
 		os.Exit(2)
 	}
 
@@ -98,23 +97,23 @@ func loadDataset(path string) (*pb.Timezones, error) {
 			return nil, err
 		}
 		return loadGeoJSON(raw)
-	case strings.HasSuffix(lower, ".compress.topo.bin"):
+	case strings.HasSuffix(lower, ".compress.topo.gob"):
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
 		compressed := &pb.CompressedTopoTimezones{}
-		if err := proto.Unmarshal(raw, compressed); err != nil {
+		if err := pb.Unmarshal(raw, compressed); err != nil {
 			return nil, fmt.Errorf("decode compressed topology %q: %w", path, err)
 		}
 		return topology.DecodeTopoTimezones(reduce.DecompressTopoTimezones(compressed)), nil
-	case strings.HasSuffix(lower, ".topo.bin"):
+	case strings.HasSuffix(lower, ".topo.gob"):
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
 		topo := &pb.TopoTimezones{}
-		if err := proto.Unmarshal(raw, topo); err != nil {
+		if err := pb.Unmarshal(raw, topo); err != nil {
 			return nil, fmt.Errorf("decode topology %q: %w", path, err)
 		}
 		return topology.DecodeTopoTimezones(topo), nil
@@ -124,7 +123,7 @@ func loadDataset(path string) (*pb.Timezones, error) {
 			return nil, err
 		}
 		flat := &pb.Timezones{}
-		if err := proto.Unmarshal(raw, flat); err != nil {
+		if err := pb.Unmarshal(raw, flat); err != nil {
 			return nil, fmt.Errorf("decode timezones %q: %w", path, err)
 		}
 		return flat, nil
@@ -206,6 +205,7 @@ func printMarkdown(report *border.Report, details comparisonDetails, topPairs in
 	fmt.Printf("- Changed boundary length: `%.3f km`\n", report.ChangedLengthKM)
 	fmt.Printf("- Error strip area: `%.6f km2`\n", report.ErrorAreaKM2)
 	fmt.Printf("- Maximum single strip area: `%.6f km2`\n", report.MaxStripAreaKM2)
+	fmt.Printf("- Junction vertices inserted by shared-edge deduplication (dropped before arc matching): `%d`, maximum offset from the baseline ring: `%.3f m`\n", report.JunctionVertices, report.JunctionMaxOffsetM)
 	fmt.Printf("- Runtime: `%s`\n", elapsed.Round(time.Millisecond))
 	fmt.Println()
 

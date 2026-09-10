@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 const minRingArea = 1e-12

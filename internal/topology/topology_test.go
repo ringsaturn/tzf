@@ -3,7 +3,7 @@ package topology
 import (
 	"testing"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 func TestDo_SharedBorderStaysIdentical(t *testing.T) {

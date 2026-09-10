@@ -3,9 +3,9 @@
 //
 // Usage:
 //
-//	deduplicatetzpb [-o output.topo.bin] [-report] input.bin
+//	deduplicatetzpb [-o output.topo.gob] [-report] input.gob
 //
-// The output format uses the TopoTimezones protobuf schema with a global
+// The output uses the TopoTimezones intermediate format with a global
 // shared-edge library. Adjacent timezone boundaries that appear in multiple
 // polygons are stored exactly once and referenced by ID, reducing the ~96 MB
 // full dataset by approximately 30–35 MB while preserving full geometric
@@ -19,17 +19,16 @@ import (
 	"os"
 	"strings"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/topology"
-	"google.golang.org/protobuf/proto"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
+	"github.com/ringsaturn/tzf/v2/internal/topology"
 )
 
 func main() {
-	outputPath := flag.String("o", "", "output path (default: input with .bin replaced by .topo.bin)")
+	outputPath := flag.String("o", "", "output path (default: input with .gob replaced by .topo.gob)")
 	report := flag.Bool("report", true, "print deduplication report to stderr")
 	flag.Parse()
 	if flag.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "usage: deduplicatetzpb [-o output.topo.bin] [-report] input.bin")
+		fmt.Fprintln(os.Stderr, "usage: deduplicatetzpb [-o output.topo.gob] [-report] input.gob")
 		os.Exit(1)
 	}
 
@@ -40,7 +39,7 @@ func main() {
 		os.Exit(1)
 	}
 	input := &pb.Timezones{}
-	if err := proto.Unmarshal(rawFile, input); err != nil {
+	if err := pb.Unmarshal(rawFile, input); err != nil {
 		fmt.Fprintf(os.Stderr, "error unmarshaling input: %v\n", err)
 		os.Exit(1)
 	}
@@ -53,13 +52,13 @@ func main() {
 
 	dest := *outputPath
 	if dest == "" {
-		dest = strings.Replace(inputPath, ".bin", ".topo.bin", 1)
+		dest = strings.Replace(inputPath, ".gob", ".topo.gob", 1)
 		if dest == inputPath {
-			dest = inputPath + ".topo.bin"
+			dest = inputPath + ".topo.gob"
 		}
 	}
 
-	outputBin, err := proto.Marshal(output)
+	outputBin, err := pb.Marshal(output)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error marshaling output: %v\n", err)
 		os.Exit(1)
@@ -109,7 +108,11 @@ func printReport(w io.Writer, input *pb.Timezones, output *pb.TopoTimezones, inp
 		}
 	}
 
-	outputBytes := proto.Size(output)
+	outputRaw, err := pb.Marshal(output)
+	if err != nil {
+		panic(err)
+	}
+	outputBytes := len(outputRaw)
 	byteReduction := 0.0
 	if inputFileBytes > 0 {
 		byteReduction = 100 * (1 - float64(outputBytes)/float64(inputFileBytes))

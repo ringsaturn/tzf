@@ -63,37 +63,39 @@ def bench_meta(bench_name):
     name = re.sub(r"^Benchmark", "", bench_name)
 
     # --- Target ---
-    if name.startswith("DefaultFinder"):
+    # v2 surface: five constructors, all returning tzf.F. Memory keys match
+    # the labels internal/cmd/bench-memory reports.
+    if name.startswith("NewFinderFromTZBReaderAt") or name.startswith("TZBFinderReaderAt"):
+        target = "TZBFinder ReaderAt"
+        dataset = "lite .tzb via io.ReaderAt (x)"
+        mem_key = "TZBFinderReaderAt"
+    elif name.startswith("EmbeddedFinder"):
+        target = "EmbeddedFinder"
+        dataset = "lite .tzb, queried in place"
+        mem_key = "EmbeddedFinder"
+    elif name.startswith("DefaultFinder"):
         target = "DefaultFinder"
-        dataset = "topology-simplified + preindex"
+        dataset = "lite .tzm memory image"
         mem_key = "DefaultFinder"
-    elif name.startswith("FuzzyFinder"):
-        target = "FuzzyFinder"
-        dataset = "preindex"
-        mem_key = "FuzzyFinder"
-    elif "FullFinderWithoutPreindex" in name:
-        target = "Finder"
-        dataset = "full-precision"
-        mem_key = "FullFinderWithoutPreindex"
     elif "FullFinder" in name:
         target = "FullFinder"
-        dataset = "full-precision + preindex"
+        dataset = "full .tzb, expanded at load"
         mem_key = "FullFinder"
-    elif "GridIndex_WithGrid" in name:
-        target = "Finder"
-        dataset = "topology-simplified + GridIndex"
-        mem_key = "Finder"
-    elif "GridIndex_NoGrid" in name:
-        target = "Finder"
-        dataset = "topology-simplified (no GridIndex)"
-        mem_key = "FinderNoGrid"
+    elif name.startswith("NewFinderFromTZM") or name.startswith("FinderFromTZM"):
+        target = "FinderFromTZM"
+        dataset = "lite .tzm memory image"
+        mem_key = "DefaultFinder"
+    elif name.startswith("NewFinderFromTZB") or name.startswith("FinderFromTZB"):
+        target = "FinderFromTZB"
+        dataset = "lite .tzb, expanded at load"
+        mem_key = "FinderFromTZB"
     else:
-        # Plain GetTimezoneName* — basic Finder
-        target = "Finder"
-        dataset = "topology-simplified"
-        mem_key = "Finder"
+        return None
 
     # --- Scenario ---
+    if name.startswith("New"):
+        return target, dataset, mem_key, "construction"
+
     if "GetTimezoneNames" in name:
         method = "GetTimezoneNames"
     else:
@@ -174,7 +176,7 @@ def main():
         print("No benchmark data found.")
         return
 
-    rows.sort(key=lambda r: r["scenario"])
+    rows.sort(key=lambda r: (r["scenario"], r["target"]))
 
     lines = ["# Benchmark Summary\n"]
     lines.append("| Target | Dataset | Scenario | Median (ns) | p99 (ns) | Approx throughput (ops/s) | Memory (MiB) |")

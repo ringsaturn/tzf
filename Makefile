@@ -1,50 +1,36 @@
-fmt:
-	go fmt ./...
-	buf format -w .
+# Single module: github.com/ringsaturn/tzf/v2 (the v1 line lives on its own
+# branch/tags). The runtime embeds come from the published tzf-dist module;
+# the parity targets need ./scripts/build-tzf-dist-dev.sh once after cloning —
+# it runs the full pipeline from the upstream raw GeoJSON, keeps the gob
+# intermediates in tmp/tzf-dist-dev as parity fixtures, and installs the
+# artifacts into the sibling ../tzf-dist checkout for its embed tests.
 
-.PHONY:pb
-pb:
-	buf generate
+DEV_DIR := tmp/tzf-dist-dev
+DIST_DIR := ../tzf-dist
+PARITY_ENV := TZF_PARITY_TOPO=$(abspath $(DEV_DIR)/combined-with-oceans.topology.compress.topo.gob) \
+	TZF_PARITY_PREINDEX=$(abspath $(DEV_DIR)/combined-with-oceans.topology.preindex.gob)
+
+fmt:
+	gofmt -w -l .
 
 test:
 	golangci-lint run ./...
-	go test -v -coverprofile=coverage.out ./...
+	$(PARITY_ENV) go test -race ./...
 
-cover: test
-	go tool cover -html=coverage.out -o=coverage.html
+cover:
+	$(PARITY_ENV) go test -coverprofile=coverage.out -covermode=atomic ./...
+	go tool cover -html=coverage.out -o coverage.html
 
 bench:
-	go test -bench=. -benchmem -count=1 -timeout=600s .  | tee benchmark_result.txt
+	go test -bench=. -benchmem -run=NoTests . | tee benchmark_result.txt
 
 bench-memory:
-	go run ./internal/cmd/bench-memory/... | tee memory_result.txt
+	go run ./internal/cmd/bench-memory | tee memory_result.txt
 
-bench-summary: bench bench-memory
-	python3 scripts/bench2summary.py benchmark_result.txt memory_result.txt | tee bench_summary.txt
+parity:
+	go run ./internal/cmd/embedcompare \
+		-preindex $(DEV_DIR)/combined-with-oceans.topology.preindex.gob \
+		-tzm $(DIST_DIR)/lite.tzm \
+		$(DEV_DIR)/combined-with-oceans.topology.compress.topo.gob $(DIST_DIR)/lite.tzb
 
-dep-licenses:
-	rm -rf THIRD_PARTY_LICENSES
-	go run github.com/google/go-licenses/v2@latest save ./... --save_path=THIRD_PARTY_LICENSES
-	cp $$(go env GOPATH)/pkg/mod/github.com/ringsaturn/tzf-dist@$$(go list -m github.com/ringsaturn/tzf-dist | awk '{print $$2}')/LICENSE_DATA \
-		THIRD_PARTY_LICENSES/github.com/ringsaturn/tzf-dist/LICENSE_DATA
-	bash build_notice.sh
-
-.PHONY: update-citation
-update-citation:
-	@set -eu; \
-	tag="$$(git describe --tags --abbrev=0 HEAD)"; \
-	commit="$$(git rev-list -n 1 "$$tag")"; \
-	date="$$(git show -s --format=%cs "$$tag^{commit}")"; \
-	tmp="$$(mktemp CITATION.cff.XXXXXX)"; \
-	trap 'rm -f "$$tmp"' EXIT; \
-	awk -v tag="$$tag" -v commit="$$commit" -v date="$$date" ' \
-		BEGIN { updated = 0 } \
-		/^commit:[[:space:]]*/ { print "commit: " commit; updated++; next } \
-		/^version:[[:space:]]*/ { print "version: " tag; updated++; next } \
-		/^date-released:[[:space:]]*/ { print "date-released: '\''" date "'\''"; updated++; next } \
-		{ print } \
-		END { if (updated != 3) exit 1 } \
-	' CITATION.cff > "$$tmp"; \
-	mv "$$tmp" CITATION.cff; \
-	trap - EXIT; \
-	printf 'Updated CITATION.cff to %s (%s, %s)\n' "$$tag" "$$commit" "$$date"
+.PHONY: fmt test cover bench bench-memory parity

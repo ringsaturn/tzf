@@ -10,21 +10,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ringsaturn/tzf"
-	tzfdist "github.com/ringsaturn/tzf-dist"
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"google.golang.org/protobuf/proto"
+	tzf "github.com/ringsaturn/tzf/v2"
 )
 
 var finder tzf.F
 
 func init() {
-	input := &pb.CompressedTopoTimezones{}
-	err := proto.Unmarshal(tzfdist.TopologyCompressTopoData, input)
-	if err != nil {
-		panic(err)
-	}
-	finder, err = tzf.NewFinderFromCompressedTopo(input)
+	var err error
+	finder, err = tzf.NewDefaultFinder()
 	if err != nil {
 		panic(err)
 	}

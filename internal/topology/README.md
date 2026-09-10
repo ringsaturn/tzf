@@ -14,7 +14,7 @@ simplification and ensuring both sides use the same simplified result.
 
 ### 1. Coordinate normalisation
 
-All coordinates are cast to `float32` to match the protobuf storage format.
+All coordinates are cast to `float32` to match the pipeline model storage format.
 Longitude −180° and +180° represent the same antimeridian line; the
 `newPointKey` / `newEdgeKey` functions unify them for topology matching **only**
 — the actual ring coordinates are never modified, which prevents antimeridian-

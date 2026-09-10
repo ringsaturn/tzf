@@ -1,5 +1,5 @@
 // CLI tool to embed a 1°×1° grid candidate-reduction index into an existing
-// CompressedTopoTimezones protobuf file.
+// CompressedTopoTimezones intermediate file.
 //
 // Usage:
 //
@@ -7,7 +7,7 @@
 //
 // The tool reads a CompressedTopoTimezones, builds the GridIndex from the
 // embedded timezone bboxes, sets the grid_index field, and writes the updated
-// protobuf. When -o is omitted the input file is overwritten in place.
+// pipeline intermediate. When -o is omitted the input file is overwritten in place.
 package main
 
 import (
@@ -15,9 +15,8 @@ import (
 	"fmt"
 	"os"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
-	"github.com/ringsaturn/tzf/internal/gridindex"
-	"google.golang.org/protobuf/proto"
+	"github.com/ringsaturn/tzf/v2/internal/gridindex"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
 func main() {
@@ -36,7 +35,7 @@ func main() {
 	}
 
 	compTopo := &pb.CompressedTopoTimezones{}
-	if err := proto.Unmarshal(rawFile, compTopo); err != nil || len(compTopo.Timezones) == 0 {
+	if err := pb.Unmarshal(rawFile, compTopo); err != nil || len(compTopo.Timezones) == 0 {
 		fmt.Fprintf(os.Stderr, "error: input is not a valid CompressedTopoTimezones: %v\n", err)
 		os.Exit(1)
 	}
@@ -47,7 +46,7 @@ func main() {
 	compTopo.GridIndex = gridindex.BuildFromCompressedTopoTimezones(compTopo)
 	fmt.Fprintf(os.Stderr, "grid: cells=%d\n", len(compTopo.GridIndex.Cells))
 
-	outputBin, err := proto.Marshal(compTopo)
+	outputBin, err := pb.Marshal(compTopo)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error marshaling output: %v\n", err)
 		os.Exit(1)

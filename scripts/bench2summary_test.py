@@ -1,0 +1,71 @@
+import unittest
+
+from scripts import bench2summary
+
+
+class Bench2SummaryTest(unittest.TestCase):
+    def test_parse_tzb_benchmarks(self):
+        text = """
+BenchmarkEmbeddedFinder_GetTimezoneName_Random_WorldCities-16  100  6000 ns/op  4800 ns/p50  12000 ns/p90  24000 ns/p99  0 B/op  0 allocs/op
+BenchmarkNewFinderFromTZBReaderAt-16  10  2000000 ns/op  67000 B/op  1394 allocs/op
+"""
+        rows = bench2summary.parse_bench(text)
+        self.assertEqual(2, len(rows))
+        self.assertEqual("BenchmarkEmbeddedFinder_GetTimezoneName_Random_WorldCities", rows[0]["name"])
+        self.assertEqual(4800, rows[0]["ns_p50"])
+        self.assertEqual(1394, rows[1]["allocs_op"])
+
+    def test_embedded_lookup_metadata(self):
+        self.assertEqual(
+            (
+                "EmbeddedFinder",
+                "lite .tzb, queried in place",
+                "EmbeddedFinder",
+                "random world cities · GetTimezoneName",
+            ),
+            bench2summary.bench_meta(
+                "BenchmarkEmbeddedFinder_GetTimezoneName_Random_WorldCities"
+            ),
+        )
+
+    def test_default_finder_metadata(self):
+        self.assertEqual(
+            (
+                "DefaultFinder",
+                "lite .tzm memory image",
+                "DefaultFinder",
+                "edge case · GetTimezoneName",
+            ),
+            bench2summary.bench_meta("BenchmarkDefaultFinder_GetTimezoneNameAtEdge"),
+        )
+
+    def test_unknown_benchmark_is_skipped(self):
+        self.assertIsNone(bench2summary.bench_meta("BenchmarkSomethingElse"))
+
+    def test_tzb_reader_at_metadata(self):
+        self.assertEqual(
+            (
+                "TZBFinder ReaderAt",
+                "lite .tzb via io.ReaderAt (x)",
+                "TZBFinderReaderAt",
+                "random world cities · GetTimezoneName",
+            ),
+            bench2summary.bench_meta(
+                "BenchmarkTZBFinderReaderAt_GetTimezoneName_Random_WorldCities"
+            ),
+        )
+
+    def test_tzb_construction_metadata(self):
+        self.assertEqual(
+            (
+                "TZBFinder ReaderAt",
+                "lite .tzb via io.ReaderAt (x)",
+                "TZBFinderReaderAt",
+                "construction",
+            ),
+            bench2summary.bench_meta("BenchmarkNewFinderFromTZBReaderAt"),
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

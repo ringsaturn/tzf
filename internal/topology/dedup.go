@@ -3,10 +3,10 @@ package topology
 import (
 	"slices"
 
-	pb "github.com/ringsaturn/tzf/gen/go/tzf/v1"
+	pb "github.com/ringsaturn/tzf/v2/internal/model"
 )
 
-// BuildTopoTimezones converts a Timezones protobuf into the topology-aware
+// BuildTopoTimezones converts a Timezones message into the topology-aware
 // distribution format where shared boundary edges are stored only once in a
 // global edge library. Rings are decomposed into segments that reference
 // shared edges by ID instead of repeating the point sequences.
@@ -60,7 +60,7 @@ func BuildTopoTimezones(input *pb.Timezones) *pb.TopoTimezones {
 }
 
 // DecodeTopoTimezones converts a TopoTimezones back to a flat Timezones
-// protobuf by expanding all edge references into their point sequences.
+// message by expanding all edge references into their point sequences.
 func DecodeTopoTimezones(input *pb.TopoTimezones) *pb.Timezones {
 	if input == nil {
 		return nil
