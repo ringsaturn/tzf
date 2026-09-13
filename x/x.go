@@ -25,10 +25,11 @@ import (
 //
 // The file is validated when opened, so an os.File source is read through
 // once at open; afterwards only the bytes a query touches are read. Queries
-// are allocation-free and safe for concurrent callers: each decodes through
-// a pooled fixed-size workspace, so throughput scales with cores like the
-// byte-backed and expanded finders, subject to the source's own ReadAt
-// concurrency (an os.File uses pread and needs no locking).
+// are safe for concurrent callers and allocation-free in steady state: each
+// decodes through a pooled fixed-size workspace (a sync.Pool, so a GC cycle
+// may cost one small allocation to refill), and throughput scales with
+// cores like the byte-backed and expanded finders, subject to the source's
+// own ReadAt concurrency (an os.File uses pread and needs no locking).
 //
 // Semantics match [tzf.NewFinderFromTZB], including the FUZZY fast path when
 // the file carries a FUZZY section, and the returned value also satisfies

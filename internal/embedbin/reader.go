@@ -126,11 +126,19 @@ func OpenReaderAt(source io.ReaderAt, size int64) (*Reader, error) {
 		return nil, err
 	}
 	r.views = &sync.Pool{New: func() any {
-		v := *r
-		v.work = new(readWorkspace)
-		return &v
+		pv := &pooledView{r: *r}
+		pv.r.work = &pv.ws
+		return &pv.r
 	}}
 	return r, nil
+}
+
+// pooledView is one allocation per pool miss: the view and the workspace it
+// decodes through. The pool holds the interior *Reader; the workspace stays
+// live with it.
+type pooledView struct {
+	r  Reader
+	ws readWorkspace
 }
 
 // view returns the reader a query should decode through: r itself when

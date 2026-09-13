@@ -28,6 +28,13 @@ func TestNewFinderFromTZBReaderAt(t *testing.T) {
 	if got := finder.GetTimezoneName(151.2093, -33.8688); got != "Australia/Sydney" {
 		t.Fatalf("Sydney lookup = %q", got)
 	}
+	if raceEnabled {
+		// sync.Pool.Put drops one item in four under the race detector, so
+		// the pooled decode views are refilled at random and the steady
+		// state is not allocation-free there.
+		t.Log("skipping allocation check under -race")
+		return
+	}
 	if allocs := testing.AllocsPerRun(100, func() {
 		_ = finder.GetTimezoneName(151.2093, -33.8688)
 	}); allocs != 0 {

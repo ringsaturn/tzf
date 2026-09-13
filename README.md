@@ -239,10 +239,11 @@ finder, err := x.NewFinderFromTZBReaderAt(file, info.Size())
 ```
 
 Semantics match `NewEmbeddedFinder`, including the FUZZY fast path, and the
-result satisfies `tzf.GeoJSONer`. Queries stay allocation-free and scale with
-core count: each decodes through a pooled fixed-size workspace, so the only
-serialization is whatever the `io.ReaderAt` source itself imposes (an
-`os.File` uses `pread` and needs none).
+result satisfies `tzf.GeoJSONer`. Queries are allocation-free in steady
+state and scale with core count: each decodes through a pooled fixed-size
+workspace (a `sync.Pool`, refilled with one small allocation after a GC
+cycle), so the only serialization is whatever the `io.ReaderAt` source itself
+imposes (an `os.File` uses `pread` and needs none).
 
 ## CLI Tool
 
