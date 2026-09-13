@@ -15,13 +15,13 @@ import (
 
 func main() {
 	output := flag.String("o", "", "output path (default: input name with .tzb/.tzm)")
-	chunk := flag.Int("chunk", 0, "target points per chunk (default 256; E profile only)")
+	chunk := flag.Int("chunk", 0, "target points per chunk (default 64; E profile only)")
 	allowShortcut := flag.Bool("allow-shortcut", false, "enable the single-candidate GRID shortcut (E profile only)")
 	preindexPath := flag.String("preindex", "", "PreindexTimezones .bin to embed as the FUZZY section")
 	profile := flag.String("profile", "e", "output profile: e (.tzb, embedded) or m (.tzm, memory image)")
 	flag.Parse()
 	if flag.NArg() != 1 || (*profile != "e" && *profile != "m") {
-		fmt.Fprintln(os.Stderr, "usage: topo2embed [-o output] [-profile e|m] [-chunk 256] [-allow-shortcut] [-preindex preindex.bin] input.compress.topo.bin")
+		fmt.Fprintln(os.Stderr, "usage: topo2embed [-o output] [-profile e|m] [-chunk 64] [-allow-shortcut] [-preindex preindex.bin] input.compress.topo.bin")
 		os.Exit(2)
 	}
 	inputPath := flag.Arg(0)
@@ -76,7 +76,7 @@ func main() {
 
 func effectiveChunk(chunk int) int {
 	if chunk == 0 {
-		return 256
+		return 64
 	}
 	return chunk
 }
