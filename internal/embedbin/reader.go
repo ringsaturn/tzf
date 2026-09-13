@@ -976,6 +976,17 @@ func (r *Reader) ringContains(index uint32, x, y float64, allowOnEdge bool) (boo
 		}
 		previousExit = exit
 		if group.Box.rayRelevant(x, y) {
+			if float64(group.Box.minX) > x {
+				// Endpoint-parity skip: the whole group lies strictly right of
+				// p, so every crossing of its polyline with the ray is counted
+				// and none of its segments can contain p. Its parity is then
+				// decided by the two stored endpoints alone (endpointParity):
+				// no CHUNKDIR read, no decode.
+				if endpointParity(group.Entry, group.Exit, y) {
+					inside = !inside
+				}
+				continue
+			}
 			on, err := r.scanGroup(group, p, &inside)
 			if err != nil {
 				return false, err
@@ -1000,6 +1011,18 @@ func (r *Reader) ringContains(index uint32, x, y float64, allowOnEdge bool) (boo
 	return inside, nil
 }
 
+// endpointParity is the crossing parity of a polyline from a to b that lies
+// entirely strictly right of the query point, against the horizontal ray at
+// latitude py. Every crossing of such a polyline is counted by the ray
+// (RaycastSeg counts crossings at x >= p.X) and no segment can contain p, so
+// the crossing count has the parity of "exactly one endpoint is above py".
+// "Above" is y > py: RaycastSeg nudges py upward off any vertex it equals, so
+// a vertex exactly at py counts as below — the same half-open rule applied
+// per segment, which telescopes over the polyline.
+func endpointParity(a, b geom.I32Point, py float64) bool {
+	return (float64(a.Y) > py) != (float64(b.Y) > py)
+}
+
 func toPoint(p geom.I32Point) geom.Point {
 	return geom.Point{X: float64(p.X), Y: float64(p.Y)}
 }
@@ -1011,12 +1034,24 @@ func toPoint(p geom.I32Point) geom.Point {
 // skipped without reading their records; a block's bbox covers every chunk
 // in it, joints included (spec §6.7), so no relevant chunk is lost, and the
 // clamp to the group end keeps a block shared with the next group sound.
+//
+// A ray-relevant chunk whose bbox lies strictly right of p is not decoded:
+// its polyline (own segments plus the joint to the next chunk, all inside
+// its bbox per spec §6.7) contributes the parity of its two endpoints — the
+// chunk's first point and the next chunk's first point, or the group's
+// stored last point for the final chunk. Only chunks whose bbox straddles
+// p.X are decoded.
 func (r *Reader) scanGroup(group GroupRecord, p geom.Point, inside *bool) (bool, error) {
 	count := uint32(group.Count)
 	chunk, err := r.ChunkAt(group.First)
 	if err != nil {
 		return false, err
 	}
+	// chunkFirst holds the first point of chunk when the previous iteration
+	// already read it as the far end of its own polyline, so a run of
+	// skipped chunks costs one first-point read per chunk rather than two.
+	var chunkFirst *geom.I32Point
+	var firstBuf geom.I32Point
 	for i := uint32(0); i < count; {
 		chunkIndex := group.First + i
 		if chunkIndex%chunkBlock == 0 && !r.chunkBlocks[chunkIndex/chunkBlock].rayRelevant(p.X, p.Y) {
@@ -1026,6 +1061,7 @@ func (r *Reader) scanGroup(group GroupRecord, p geom.Point, inside *bool) (bool,
 					return false, err
 				}
 			}
+			chunkFirst = nil
 			continue
 		}
 		var next *ChunkRecord
@@ -1036,40 +1072,68 @@ func (r *Reader) scanGroup(group GroupRecord, p geom.Point, inside *bool) (bool,
 			}
 			next = &n
 		}
+		var nextFirst *geom.I32Point
 		if chunk.Box.rayRelevant(p.X, p.Y) {
 			start, end, err := r.chunkRange(chunkIndex, chunk, next)
 			if err != nil {
 				return false, err
 			}
-			last, err := r.scanChunk(start, end, chunk.Count, p, inside)
-			if err != nil {
-				return false, err
-			}
-			if last.on {
-				return true, nil
-			}
-			if next != nil {
-				// Joint segment to the next chunk's first point.
-				nstart, nend, err := r.chunkRange(chunkIndex+1, *next, nil)
+			if float64(chunk.Box.minX) > p.X {
+				var a geom.I32Point
+				if chunkFirst != nil {
+					a = *chunkFirst
+				} else if a, err = r.firstPoint(start, end); err != nil {
+					return false, err
+				}
+				b := group.Exit
+				if next != nil {
+					nstart, nend, err := r.chunkRange(chunkIndex+1, *next, nil)
+					if err != nil {
+						return false, err
+					}
+					if b, err = r.firstPoint(nstart, nend); err != nil {
+						return false, err
+					}
+					firstBuf = b
+					nextFirst = &firstBuf
+				}
+				if endpointParity(a, b, p.Y) {
+					*inside = !*inside
+				}
+			} else {
+				last, err := r.scanChunk(start, end, chunk.Count, p, inside)
 				if err != nil {
 					return false, err
 				}
-				first, err := r.firstPoint(nstart, nend)
-				if err != nil {
-					return false, err
-				}
-				cross, on := geom.RaycastSeg(toPoint(last.point), toPoint(first), p)
-				if on {
+				if last.on {
 					return true, nil
 				}
-				if cross {
-					*inside = !*inside
+				if next != nil {
+					// Joint segment to the next chunk's first point.
+					nstart, nend, err := r.chunkRange(chunkIndex+1, *next, nil)
+					if err != nil {
+						return false, err
+					}
+					first, err := r.firstPoint(nstart, nend)
+					if err != nil {
+						return false, err
+					}
+					cross, on := geom.RaycastSeg(toPoint(last.point), toPoint(first), p)
+					if on {
+						return true, nil
+					}
+					if cross {
+						*inside = !*inside
+					}
+					firstBuf = first
+					nextFirst = &firstBuf
 				}
 			}
 		}
 		if next != nil {
 			chunk = *next
 		}
+		chunkFirst = nextFirst
 		i++
 	}
 	return false, nil
