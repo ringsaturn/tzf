@@ -37,9 +37,9 @@ func (r *Reader) Expand() (*Expanded, error) {
 	if r.profile != profileE {
 		return nil, ErrProfile
 	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.work.cacheValid = false
+	v := r.view()
+	defer r.release(v)
+	r = v
 
 	groups := make([][]geom.I32Point, r.groupCount)
 	for i := uint32(0); i < r.groupCount; i++ {
@@ -63,7 +63,7 @@ func (r *Reader) Expand() (*Expanded, error) {
 	names := make([]string, r.tzCount)
 	polygons := make([][]ExpandedPolygon, r.tzCount)
 	for i := uint32(0); i < r.tzCount; i++ {
-		name, err := r.NameBytesLocked(int32(i))
+		name, err := r.NameCopy(int32(i))
 		if err != nil {
 			return nil, err
 		}
@@ -193,9 +193,9 @@ func (r *Reader) ExpandTimezone(index int32) ([]ExpandedPolygon, error) {
 	if index < 0 || uint32(index) >= r.tzCount {
 		return nil, ErrIndex
 	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.work.cacheValid = false
+	v := r.view()
+	defer r.release(v)
+	r = v
 
 	decoded := make(map[uint32][]geom.I32Point)
 	group := func(i uint32) ([]geom.I32Point, error) {

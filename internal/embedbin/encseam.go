@@ -47,18 +47,6 @@ const (
 	FuzzyMaxNames  = fuzzyMaxNames
 )
 
-// LockDecode takes the reader's decode lock and invalidates the chunk cache,
-// giving white-box callers exclusive use of the shared decode workspace.
-func (r *Reader) LockDecode() {
-	r.mu.Lock()
-	r.work.cacheValid = false
-}
-
-// UnlockDecode releases the decode lock taken by LockDecode.
-func (r *Reader) UnlockDecode() {
-	r.mu.Unlock()
-}
-
 // Profile returns the file's profile byte (ProfileE or ProfileM).
 func (r *Reader) Profile() byte { return r.profile }
 

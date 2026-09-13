@@ -132,9 +132,12 @@ Load paths (all protobuf-free at runtime):
   `GetTimezoneName` probes it first in place (p50 ~0.5µs);
   `GetTimezoneNames` stays polygon-only. Both build
   `internal/inplace.Finder`; they differ only in how the `embedbin.Reader`
-  was opened. The byte-backed FUZZY probe is lock-free and zero-alloc; the
-  ReaderAt backend routes those reads through the locked decode workspace
-  (still zero-alloc — stack buffers would escape through the interface).
+  was opened. Neither backend holds a lock on the query path: the byte-backed
+  reader decodes straight off the slice with no per-query state, and the
+  ReaderAt backend decodes through a `sync.Pool` of reader views, each
+  bound to a private fixed-size workspace (stack buffers would escape
+  through the interface). Throughput scales with cores on both
+  (`Benchmark*_Parallel_*` in `tzf_test.go`, compare `-cpu 1` vs `-cpu N`).
 - `NewFinderFromTZB` — one-pass expansion into `finderImpl[int32]` plus the
   FUZZY hash maps when present (fuzzy-first composition), junction-duplicate
   vertices dropped. Item assembly is parallelized (shared `assembleI32Items`

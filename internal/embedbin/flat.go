@@ -35,9 +35,9 @@ func (r *Reader) Flat() (*FlatView, error) {
 	if r.profile != profileM {
 		return nil, ErrProfile
 	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.work.cacheValid = false
+	v := r.view()
+	defer r.release(v)
+	r = v
 
 	points, err := r.FlatPointsSlice()
 	if err != nil {
@@ -46,7 +46,7 @@ func (r *Reader) Flat() (*FlatView, error) {
 	names := make([]string, r.tzCount)
 	polygons := make([][]ExpandedPolygon, r.tzCount)
 	for i := uint32(0); i < r.tzCount; i++ {
-		name, err := r.NameBytesLocked(int32(i))
+		name, err := r.NameCopy(int32(i))
 		if err != nil {
 			return nil, err
 		}

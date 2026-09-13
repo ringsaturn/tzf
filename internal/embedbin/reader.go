@@ -17,6 +17,11 @@ type section struct {
 	Len uint32
 }
 
+// readWorkspace holds the fixed buffers the io.ReaderAt backend decodes
+// through: a scratch record and a small read-ahead cache for the varint point
+// streams. A stack buffer handed to ReadAt would escape through the interface
+// and allocate on every read; a workspace owned by one decode view does not.
+// Byte-backed readers decode straight off the slice and carry none.
 type readWorkspace struct {
 	record     [64]byte
 	cache      [512]byte
@@ -47,8 +52,14 @@ type Reader struct {
 	chunkCount    uint32
 	grid          gridInfo
 	fuzzy         fuzzyInfo
-	mu            sync.Mutex
-	work          readWorkspace
+	// work is the workspace this value decodes through. Nil on byte-backed
+	// readers, which never need one. On the ReaderAt backend the reader
+	// returned by OpenReaderAt owns one for open-time validation and every
+	// pooled view owns its own, so concurrent queries never share buffers.
+	work *readWorkspace
+	// views pools decode views on the ReaderAt backend: shallow copies of
+	// this reader, each bound to a private workspace. Nil when byte-backed.
+	views *sync.Pool
 }
 
 type gridInfo struct {
@@ -110,11 +121,36 @@ func OpenReaderAt(source io.ReaderAt, size int64) (*Reader, error) {
 	if source == nil || size < 0 {
 		return nil, fmt.Errorf("%w: invalid ReaderAt source", ErrMalformed)
 	}
-	r := &Reader{readerAt: source, size: uint64(size)}
+	r := &Reader{readerAt: source, size: uint64(size), work: new(readWorkspace)}
 	if err := r.open(); err != nil {
 		return nil, err
 	}
+	r.views = &sync.Pool{New: func() any {
+		v := *r
+		v.work = new(readWorkspace)
+		return &v
+	}}
 	return r, nil
+}
+
+// view returns the reader a query should decode through: r itself when
+// byte-backed, or a pooled view with a private workspace on the ReaderAt
+// backend, so concurrent queries never serialize on shared buffers. Every
+// view must be handed back through release.
+func (r *Reader) view() *Reader {
+	if r.views == nil {
+		return r
+	}
+	v := r.views.Get().(*Reader)
+	v.work.cacheValid = false
+	return v
+}
+
+// release returns a view obtained from view to the pool.
+func (r *Reader) release(v *Reader) {
+	if v != r {
+		r.views.Put(v)
+	}
 }
 
 func (r *Reader) open() error {
@@ -399,7 +435,16 @@ func (r *Reader) readRaw(dst []byte, off uint64) error {
 	return nil
 }
 
+// readSmall returns n bytes at off for immediate decoding. Byte-backed
+// readers return a zero-copy slice of the source; the ReaderAt backend reads
+// into the workspace record, valid until the next readSmall on the same view.
 func (r *Reader) readSmall(off uint64, n int) ([]byte, error) {
+	if off > r.size || uint64(n) > r.size-off {
+		return nil, fmt.Errorf("%w: read bounds", ErrMalformed)
+	}
+	if r.data != nil {
+		return r.data[off : off+uint64(n)], nil
+	}
 	if n > len(r.work.record) {
 		return nil, fmt.Errorf("%w: internal record size", ErrMalformed)
 	}
@@ -665,15 +710,15 @@ func (r *Reader) ShortcutEnabled() bool { return r.flags&flagNoShortcut == 0 }
 func (r *Reader) ProfileM() bool { return r.profile == profileM }
 
 // Lookup returns the first containing timezone index in source order.
-// E profile only; M files are queried through Flat.
+// E profile only; M files are queried through Flat. Safe for concurrent use
+// on either backend.
 func (r *Reader) Lookup(lng, lat float64) (int32, bool, error) {
 	if r.profile != profileE {
 		return 0, false, ErrProfile
 	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.work.cacheValid = false
-	return r.lookup(lng, lat)
+	v := r.view()
+	defer r.release(v)
+	return v.lookup(lng, lat)
 }
 
 func (r *Reader) lookup(lng, lat float64) (int32, bool, error) {
@@ -714,9 +759,12 @@ func (r *Reader) LookupInto(lng, lat float64, dst []int32) ([]int32, error) {
 	if r.profile != profileE {
 		return dst[:0], ErrProfile
 	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.work.cacheValid = false
+	v := r.view()
+	defer r.release(v)
+	return v.lookupInto(lng, lat, dst)
+}
+
+func (r *Reader) lookupInto(lng, lat float64, dst []int32) ([]int32, error) {
 	count, off, grid, err := r.candidates(lng, lat)
 	if err != nil {
 		return dst[:0], err
@@ -1087,7 +1135,7 @@ func (r *Reader) byteAt(off uint64) (byte, error) {
 	if r.data != nil {
 		return r.data[off], nil
 	}
-	w := &r.work
+	w := r.work
 	if !w.cacheValid || off < w.cacheOff || off >= w.cacheOff+uint64(w.cacheLen) {
 		w.cacheOff = off
 		w.cacheLen = int(min(uint64(len(w.cache)), r.size-off))
@@ -1119,9 +1167,9 @@ func (r *Reader) nameBounds(idx int32) (uint64, uint64, error) {
 
 // Name returns a timezone name. Byte-backed readers return a zero-copy slice.
 func (r *Reader) Name(idx int32) ([]byte, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	start, end, err := r.nameBounds(idx)
+	v := r.view()
+	defer r.release(v)
+	start, end, err := v.nameBounds(idx)
 	if err != nil {
 		return nil, err
 	}
@@ -1137,9 +1185,9 @@ func (r *Reader) Name(idx int32) ([]byte, error) {
 
 // AppendName appends a timezone name into caller-provided storage.
 func (r *Reader) AppendName(dst []byte, idx int32) ([]byte, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	start, end, err := r.nameBounds(idx)
+	v := r.view()
+	defer r.release(v)
+	start, end, err := v.nameBounds(idx)
 	if err != nil {
 		return dst, err
 	}
@@ -1241,7 +1289,9 @@ func (r *Reader) DecodeChunkPoints(index uint32, chunk ChunkRecord) ([]geom.I32P
 	return points, nil
 }
 
-func (r *Reader) NameBytesLocked(idx int32) ([]byte, error) {
+// NameCopy returns a timezone name in freshly allocated storage on either
+// backend. Bulk decoders use it while already holding a view.
+func (r *Reader) NameCopy(idx int32) ([]byte, error) {
 	start, end, err := r.nameBounds(idx)
 	if err != nil {
 		return nil, err

@@ -20,8 +20,6 @@ func VerifyM(input *pb.CompressedTopoTimezones, r *embedbin.Reader) error {
 	if r.Profile() != embedbin.ProfileM {
 		return fmt.Errorf("verify: %w", embedbin.ErrProfile)
 	}
-	r.LockDecode()
-	defer r.UnlockDecode()
 	if len(input.Timezones) != int(r.TZCount()) || input.Version != r.DataVersion() {
 		return fmt.Errorf("verify: %w: header/source mismatch", embedbin.ErrMalformed)
 	}
@@ -45,7 +43,7 @@ func VerifyM(input *pb.CompressedTopoTimezones, r *embedbin.Reader) error {
 	ringIndex := uint32(0)
 	polyIndex := uint32(0)
 	for ti, tz := range input.Timezones {
-		name, err := r.NameBytesLocked(int32(ti))
+		name, err := r.NameCopy(int32(ti))
 		if err != nil {
 			return err
 		}

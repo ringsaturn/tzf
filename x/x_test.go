@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"slices"
+	"sync"
 	"testing"
 
 	tzfdist "github.com/ringsaturn/tzf-dist"
@@ -32,6 +33,42 @@ func TestNewFinderFromTZBReaderAt(t *testing.T) {
 	}); allocs != 0 {
 		t.Fatalf("ReaderAt GetTimezoneName allocations = %v", allocs)
 	}
+}
+
+// TestReaderAtConcurrentQueries runs polygon-path queries from many
+// goroutines. Each query decodes through a pooled view with its own
+// workspace; under -race this catches any buffer the views still share.
+func TestReaderAtConcurrentQueries(t *testing.T) {
+	data := loadTZB(t)
+	finder, err := x.NewFinderFromTZBReaderAt(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, err := tzf.NewFinderFromTZB(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wg sync.WaitGroup
+	for g := 0; g < 8; g++ {
+		wg.Add(1)
+		go func(seed int64) {
+			defer wg.Done()
+			rng := rand.New(rand.NewSource(seed))
+			for i := 0; i < 500; i++ {
+				lng := rng.Float64()*360 - 180
+				lat := rng.Float64()*180 - 90
+				if a, b := finder.GetTimezoneName(lng, lat), want.GetTimezoneName(lng, lat); a != b {
+					t.Errorf("(%f,%f): got %q want %q", lng, lat, a, b)
+					return
+				}
+				if _, err := finder.GetTimezoneNames(lng, lat); err != nil {
+					t.Error(err)
+					return
+				}
+			}
+		}(int64(g))
+	}
+	wg.Wait()
 }
 
 // TestReaderAtMatchesByteBacked checks that reading through an io.ReaderAt

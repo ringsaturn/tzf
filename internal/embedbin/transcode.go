@@ -19,9 +19,9 @@ func (r *Reader) TranscodeM() ([]byte, error) {
 	if r.profile != profileE {
 		return nil, ErrProfile
 	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.work.cacheValid = false
+	v := r.view()
+	defer r.release(v)
+	r = v
 
 	groups := make([][]geom.I32Point, r.groupCount)
 	for i := uint32(0); i < r.groupCount; i++ {

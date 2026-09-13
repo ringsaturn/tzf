@@ -143,10 +143,9 @@ func (r *Reader) validateFuzzy() error {
 // were bounds-checked against the section at open time, so that path stays
 // lock-free and allocation-free. On the io.ReaderAt backend a stack buffer
 // passed through the interface would escape and allocate on every access, so
-// those reads go through the shared decode workspace instead — callers must
-// hold r.mu (the exported Fuzzy* entry points take it; open-time validation
-// runs single-threaded), which matches the backend's documented
-// queries-serialize-internally behavior.
+// those reads go through the view's decode workspace instead — the exported
+// Fuzzy* entry points run on a pooled view; open-time validation runs
+// single-threaded on the opening reader's own workspace.
 
 func (r *Reader) fuzzyKeyAt(i uint32) (uint64, error) {
 	off := r.fuzzy.keysOff + 8*uint64(i)
@@ -222,7 +221,7 @@ func (r *Reader) FuzzyLookupBufferSize() int { return int(r.fuzzy.maxGroupLen) }
 // fuzzyProbe walks zoom levels coarsest-first and returns the first hit's
 // value position: the tile-map lookup loop with the two hash maps replaced by
 // one sorted array. Byte-backed probes are lock-free; on the ReaderAt backend
-// the caller must hold r.mu (see the accessor note above).
+// the receiver must be a decode view (see the accessor note above).
 func (r *Reader) fuzzyProbe(lng, lat float64) (uint16, bool, error) {
 	if !r.fuzzy.present {
 		return 0, false, ErrNoFuzzy
@@ -250,10 +249,9 @@ func (r *Reader) fuzzyProbe(lng, lat float64) (uint16, bool, error) {
 // tiles resolve to the group's first entry (first-listed wins), matching
 // the FUZZY fast path inside the composed finders.
 func (r *Reader) FuzzyLookup(lng, lat float64) (int32, bool, error) {
-	if r.data == nil {
-		r.mu.Lock()
-		defer r.mu.Unlock()
-	}
+	view := r.view()
+	defer r.release(view)
+	r = view
 	value, ok, err := r.fuzzyProbe(lng, lat)
 	if err != nil || !ok {
 		return 0, false, err
@@ -276,10 +274,9 @@ func (r *Reader) FuzzyLookup(lng, lat float64) (int32, bool, error) {
 // stored order (the source preindex key order) and returns the extended
 // slice; dst is returned unchanged when no tile matches.
 func (r *Reader) FuzzyLookupAppend(dst []int32, lng, lat float64) ([]int32, error) {
-	if r.data == nil {
-		r.mu.Lock()
-		defer r.mu.Unlock()
-	}
+	view := r.view()
+	defer r.release(view)
+	r = view
 	value, ok, err := r.fuzzyProbe(lng, lat)
 	if err != nil || !ok {
 		return dst, err
@@ -315,10 +312,9 @@ func (r *Reader) FuzzyMaps() (single map[geom.TileID]uint16, multi map[geom.Tile
 	if !r.fuzzy.present {
 		return nil, nil, ErrNoFuzzy
 	}
-	if r.data == nil {
-		r.mu.Lock()
-		defer r.mu.Unlock()
-	}
+	view := r.view()
+	defer r.release(view)
+	r = view
 	single = make(map[geom.TileID]uint16, r.fuzzy.tileCount)
 	multi = make(map[geom.TileID][]uint16)
 	for i := uint32(0); i < r.fuzzy.tileCount; i++ {

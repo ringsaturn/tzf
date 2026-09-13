@@ -21,8 +21,6 @@ func Verify(input *pb.CompressedTopoTimezones, r *embedbin.Reader) error {
 	if input == nil || r == nil {
 		return fmt.Errorf("verify: %w: nil input", embedbin.ErrMalformed)
 	}
-	r.LockDecode()
-	defer r.UnlockDecode()
 	if len(input.Timezones) != int(r.TZCount()) || input.Version != r.DataVersion() {
 		return fmt.Errorf("verify: %w: header/source mismatch", embedbin.ErrMalformed)
 	}
@@ -93,7 +91,7 @@ func Verify(input *pb.CompressedTopoTimezones, r *embedbin.Reader) error {
 	ringIndex := uint32(0)
 	polyIndex := uint32(0)
 	for ti, tz := range input.Timezones {
-		name, err := r.NameBytesLocked(int32(ti))
+		name, err := r.NameCopy(int32(ti))
 		if err != nil {
 			return err
 		}

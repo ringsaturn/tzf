@@ -3,6 +3,8 @@ package tzf_test
 import (
 	"fmt"
 	"slices"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -191,6 +193,24 @@ func reportPercentiles(b *testing.B, ns []int64) {
 	b.ReportMetric(float64(ns[min(n*99/100, n-1)]), "ns/p99")
 }
 
+// benchParallel measures throughput with GOMAXPROCS goroutines querying one
+// finder (compare -cpu 1 against -cpu N). The in-place finder's polygon
+// fallback used to serialize on a decode mutex, capping process-wide
+// throughput regardless of core count; this is the guard against regressing
+// that. Per-call timing is omitted: percentiles under contention would
+// measure the scheduler, not the finder.
+func benchParallel(b *testing.B, f tzf.F, pool []*gocitiesjson.City) {
+	b.Helper()
+	var next atomic.Int64
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			p := pool[int(next.Add(1))%len(pool)]
+			_ = f.GetTimezoneName(p.Lng, p.Lat)
+		}
+	})
+}
+
 func BenchmarkEmbeddedFinder_GetTimezoneNameAtEdge(b *testing.B) {
 	b.ReportAllocs()
 	benchEdge(b, embeddedFinder)
@@ -224,6 +244,52 @@ func BenchmarkFullFinder_GetTimezoneNames_Random_WorldCities(b *testing.B) {
 func BenchmarkFinderFromTZB_GetTimezoneName_Random_WorldCities(b *testing.B) {
 	b.ReportAllocs()
 	benchRandom(b, tzbFinder)
+}
+
+func BenchmarkEmbeddedFinder_GetTimezoneName_Parallel_WorldCities(b *testing.B) {
+	benchParallel(b, embeddedFinder, makePool(benchPoolSize))
+}
+
+func BenchmarkEmbeddedFinder_GetTimezoneName_Parallel_AtEdge(b *testing.B) {
+	benchParallel(b, embeddedFinder, makeEdgePool(edgeCasePoolSize))
+}
+
+func BenchmarkDefaultFinder_GetTimezoneName_Parallel_WorldCities(b *testing.B) {
+	benchParallel(b, defaultFinder, makePool(benchPoolSize))
+}
+
+func BenchmarkDefaultFinder_GetTimezoneName_Parallel_AtEdge(b *testing.B) {
+	benchParallel(b, defaultFinder, makeEdgePool(edgeCasePoolSize))
+}
+
+func BenchmarkFullFinder_GetTimezoneName_Parallel_WorldCities(b *testing.B) {
+	benchParallel(b, fullFinder, makePool(benchPoolSize))
+}
+
+// TestEmbeddedFinderConcurrentQueries drives the in-place finder's polygon
+// path from many goroutines at once. It is meaningful under -race: the
+// byte-backed reader keeps no per-query state, so nothing may be shared.
+func TestEmbeddedFinderConcurrentQueries(t *testing.T) {
+	pool := makeEdgePool(edgeCasePoolSize)
+	want := make([]string, len(pool))
+	for i, p := range pool {
+		want[i] = embeddedFinder.GetTimezoneName(p.Lng, p.Lat)
+	}
+	var wg sync.WaitGroup
+	for g := 0; g < 8; g++ {
+		wg.Add(1)
+		go func(offset int) {
+			defer wg.Done()
+			for i := range pool {
+				j := (i + offset) % len(pool)
+				if got := embeddedFinder.GetTimezoneName(pool[j].Lng, pool[j].Lat); got != want[j] {
+					t.Errorf("(%f,%f): got %q want %q", pool[j].Lng, pool[j].Lat, got, want[j])
+					return
+				}
+			}
+		}(g * len(pool) / 8)
+	}
+	wg.Wait()
 }
 
 func ExampleNewEmbeddedFinder() {
