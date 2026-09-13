@@ -38,6 +38,11 @@ type fuzzyInfo struct {
 	multiDirOff     uint64
 	multiValuesOff  uint64
 	maxGroupLen     uint32
+	// zoomRanges holds each zoom level's [start, end) key-array range
+	// (index = zoom), taken from the sorted keys at open. The probe searches
+	// only zooms that carry keys, each within its own range, instead of
+	// every zoom in aggZoom..=idxZoom over the whole array.
+	zoomRanges [29][2]uint32
 }
 
 // validateFuzzy checks the FUZZY section's structure at open time: exact
@@ -97,8 +102,14 @@ func (r *Reader) validateFuzzy() error {
 			return fmt.Errorf("%w: FUZZY keys not strictly ascending", ErrMalformed)
 		}
 		prev = key
-		if z := uint8(key >> 56); z < f.aggZoom || z > f.idxZoom {
+		z := uint8(key >> 56)
+		if z < f.aggZoom || z > f.idxZoom {
 			return fmt.Errorf("%w: FUZZY key zoom", ErrMalformed)
+		}
+		if zr := &f.zoomRanges[z]; zr[1] == 0 {
+			*zr = [2]uint32{i, i + 1}
+		} else {
+			zr[1] = i + 1
 		}
 		value, err := r.fuzzyU16At(f.valuesOff + 2*uint64(i))
 		if err != nil {
@@ -186,7 +197,11 @@ func (r *Reader) fuzzyGroupAt(g uint32) (first, count uint16, err error) {
 // position. Because zoom occupies the key's high bits, a per-zoom probe is a
 // single search.
 func (r *Reader) fuzzySearch(target uint64) (uint32, bool, error) {
-	lo, hi := uint32(0), r.fuzzy.tileCount
+	zr := r.fuzzy.zoomRanges[target>>56]
+	lo, hi := zr[0], zr[1]
+	if lo == hi {
+		return 0, false, nil
+	}
 	for lo < hi {
 		mid := lo + (hi-lo)/2
 		key, err := r.fuzzyKeyAt(mid)
@@ -199,7 +214,7 @@ func (r *Reader) fuzzySearch(target uint64) (uint32, bool, error) {
 			hi = mid
 		}
 	}
-	if lo < r.fuzzy.tileCount {
+	if lo < zr[1] {
 		key, err := r.fuzzyKeyAt(lo)
 		if err != nil {
 			return 0, false, err
