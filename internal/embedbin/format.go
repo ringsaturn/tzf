@@ -16,7 +16,7 @@ const (
 	formatMajor     = 1
 	formatMinor     = 1
 	coordScale      = uint32(100000)
-	defaultChunk    = 256
+	defaultChunk    = 64
 
 	// profileOffset is the header byte assigned as `profile` in format
 	// revision 1.1 (previously reserved-zero, so all v1.0 files are valid

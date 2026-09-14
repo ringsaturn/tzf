@@ -52,6 +52,11 @@ type Reader struct {
 	chunkCount    uint32
 	grid          gridInfo
 	fuzzy         fuzzyInfo
+	// chunkBlocks holds the union bbox of every run of chunkBlock consecutive
+	// CHUNKDIR records (global chunk index / chunkBlock), built from the
+	// open-time chunk validation pass. The query walk tests it to skip a whole
+	// block of chunk records at once inside groups with hundreds of chunks.
+	chunkBlocks []BBox
 	// work is the workspace this value decodes through. Nil on byte-backed
 	// readers, which never need one. On the ReaderAt backend the reader
 	// returned by OpenReaderAt owns one for open-time validation and every
@@ -61,6 +66,9 @@ type Reader struct {
 	// this reader, each bound to a private workspace. Nil when byte-backed.
 	views *sync.Pool
 }
+
+// chunkBlock is the number of CHUNKDIR records per chunkBlocks entry.
+const chunkBlock = 16
 
 type gridInfo struct {
 	present    bool
@@ -311,6 +319,9 @@ func (r *Reader) open() error {
 	}
 	if r.profile == profileE {
 		if err := r.validateChunkOffsets(); err != nil {
+			return err
+		}
+		if err := r.validateGroups(); err != nil {
 			return err
 		}
 	}
@@ -583,6 +594,7 @@ func (r *Reader) validateGrid() error {
 
 func (r *Reader) validateChunkOffsets() error {
 	var prev uint32
+	blocks := make([]BBox, 0, (r.chunkCount+chunkBlock-1)/chunkBlock)
 	for i := uint32(0); i < r.chunkCount; i++ {
 		c, err := r.ChunkAt(i)
 		if err != nil {
@@ -592,6 +604,40 @@ func (r *Reader) validateChunkOffsets() error {
 			return fmt.Errorf("%w: chunk offset or count", ErrMalformed)
 		}
 		prev = c.Off
+		if i%chunkBlock == 0 {
+			blocks = append(blocks, c.Box)
+		} else {
+			b := &blocks[len(blocks)-1]
+			b.minX = min(b.minX, c.Box.minX)
+			b.minY = min(b.minY, c.Box.minY)
+			b.maxX = max(b.maxX, c.Box.maxX)
+			b.maxY = max(b.maxY, c.Box.maxY)
+		}
+	}
+	r.chunkBlocks = blocks
+	return nil
+}
+
+// validateGroups checks once at open that every GROUPDIR record's chunk run
+// exists and that its chunk point counts sum to PointCount, so the query
+// walk can read a group record without re-walking its chunks.
+func (r *Reader) validateGroups() error {
+	for i := uint32(0); i < r.groupCount; i++ {
+		g, err := r.GroupAt(i)
+		if err != nil {
+			return err
+		}
+		var total uint64
+		for c := uint32(0); c < uint32(g.Count); c++ {
+			chunk, err := r.ChunkAt(g.First + c)
+			if err != nil {
+				return err
+			}
+			total += uint64(chunk.Count)
+		}
+		if total != uint64(g.PointCount) {
+			return fmt.Errorf("%w: group point count", ErrMalformed)
+		}
 	}
 	return nil
 }
@@ -670,17 +716,6 @@ func (r *Reader) GroupAt(index uint32) (GroupRecord, error) {
 	if v.Count == 0 || v.PointCount < 2 || uint64(v.First)+uint64(v.Count) > uint64(r.chunkCount) ||
 		!v.Box.inDomain() || !PointInDomain(v.Entry) || !PointInDomain(v.Exit) {
 		return GroupRecord{}, fmt.Errorf("%w: GROUPDIR record", ErrMalformed)
-	}
-	var total uint64
-	for i := uint32(0); i < uint32(v.Count); i++ {
-		c, err := r.ChunkAt(v.First + i)
-		if err != nil {
-			return GroupRecord{}, err
-		}
-		total += uint64(c.Count)
-	}
-	if total != uint64(v.PointCount) {
-		return GroupRecord{}, fmt.Errorf("%w: group point count", ErrMalformed)
 	}
 	return v, nil
 }
@@ -941,6 +976,17 @@ func (r *Reader) ringContains(index uint32, x, y float64, allowOnEdge bool) (boo
 		}
 		previousExit = exit
 		if group.Box.rayRelevant(x, y) {
+			if float64(group.Box.minX) > x {
+				// Endpoint-parity skip: the whole group lies strictly right of
+				// p, so every crossing of its polyline with the ray is counted
+				// and none of its segments can contain p. Its parity is then
+				// decided by the two stored endpoints alone (endpointParity):
+				// no CHUNKDIR read, no decode.
+				if endpointParity(group.Entry, group.Exit, y) {
+					inside = !inside
+				}
+				continue
+			}
 			on, err := r.scanGroup(group, p, &inside)
 			if err != nil {
 				return false, err
@@ -965,44 +1011,130 @@ func (r *Reader) ringContains(index uint32, x, y float64, allowOnEdge bool) (boo
 	return inside, nil
 }
 
+// endpointParity is the crossing parity of a polyline from a to b that lies
+// entirely strictly right of the query point, against the horizontal ray at
+// latitude py. Every crossing of such a polyline is counted by the ray
+// (RaycastSeg counts crossings at x >= p.X) and no segment can contain p, so
+// the crossing count has the parity of "exactly one endpoint is above py".
+// "Above" is y > py: RaycastSeg nudges py upward off any vertex it equals, so
+// a vertex exactly at py counts as below — the same half-open rule applied
+// per segment, which telescopes over the polyline.
+func endpointParity(a, b geom.I32Point, py float64) bool {
+	return (float64(a.Y) > py) != (float64(b.Y) > py)
+}
+
 func toPoint(p geom.I32Point) geom.Point {
 	return geom.Point{X: float64(p.X), Y: float64(p.Y)}
 }
 
+// scanGroup scans one group's chunks and reports whether p lies on a
+// segment. Each CHUNKDIR record is read once: the record that bounds chunk
+// k's byte range is chunk k+1's, which becomes the next iteration's chunk.
+// Blocks of chunkBlock records whose union bbox is not ray-relevant are
+// skipped without reading their records; a block's bbox covers every chunk
+// in it, joints included (spec §6.7), so no relevant chunk is lost, and the
+// clamp to the group end keeps a block shared with the next group sound.
+//
+// A ray-relevant chunk whose bbox lies strictly right of p is not decoded:
+// its polyline (own segments plus the joint to the next chunk, all inside
+// its bbox per spec §6.7) contributes the parity of its two endpoints — the
+// chunk's first point and the next chunk's first point, or the group's
+// stored last point for the final chunk. Only chunks whose bbox straddles
+// p.X are decoded.
 func (r *Reader) scanGroup(group GroupRecord, p geom.Point, inside *bool) (bool, error) {
-	for i := uint32(0); i < uint32(group.Count); i++ {
+	count := uint32(group.Count)
+	chunk, err := r.ChunkAt(group.First)
+	if err != nil {
+		return false, err
+	}
+	// chunkFirst holds the first point of chunk when the previous iteration
+	// already read it as the far end of its own polyline, so a run of
+	// skipped chunks costs one first-point read per chunk rather than two.
+	var chunkFirst *geom.I32Point
+	var firstBuf geom.I32Point
+	for i := uint32(0); i < count; {
 		chunkIndex := group.First + i
-		chunk, err := r.ChunkAt(chunkIndex)
-		if err != nil {
-			return false, err
-		}
-		if !chunk.Box.rayRelevant(p.X, p.Y) {
+		if chunkIndex%chunkBlock == 0 && !r.chunkBlocks[chunkIndex/chunkBlock].rayRelevant(p.X, p.Y) {
+			i = min(i+chunkBlock, count)
+			if i < count {
+				if chunk, err = r.ChunkAt(group.First + i); err != nil {
+					return false, err
+				}
+			}
+			chunkFirst = nil
 			continue
 		}
-		last, err := r.scanChunk(chunkIndex, chunk, p, inside)
-		if err != nil {
-			return false, err
-		}
-		if last.on {
-			return true, nil
-		}
-		if i+1 < uint32(group.Count) {
-			next, err := r.ChunkAt(chunkIndex + 1)
+		var next *ChunkRecord
+		if i+1 < count {
+			n, err := r.ChunkAt(chunkIndex + 1)
 			if err != nil {
 				return false, err
 			}
-			first, err := r.FirstChunkPoint(chunkIndex+1, next)
+			next = &n
+		}
+		var nextFirst *geom.I32Point
+		if chunk.Box.rayRelevant(p.X, p.Y) {
+			start, end, err := r.chunkRange(chunkIndex, chunk, next)
 			if err != nil {
 				return false, err
 			}
-			cross, on := geom.RaycastSeg(toPoint(last.point), toPoint(first), p)
-			if on {
-				return true, nil
-			}
-			if cross {
-				*inside = !*inside
+			if float64(chunk.Box.minX) > p.X {
+				var a geom.I32Point
+				if chunkFirst != nil {
+					a = *chunkFirst
+				} else if a, err = r.firstPoint(start, end); err != nil {
+					return false, err
+				}
+				b := group.Exit
+				if next != nil {
+					nstart, nend, err := r.chunkRange(chunkIndex+1, *next, nil)
+					if err != nil {
+						return false, err
+					}
+					if b, err = r.firstPoint(nstart, nend); err != nil {
+						return false, err
+					}
+					firstBuf = b
+					nextFirst = &firstBuf
+				}
+				if endpointParity(a, b, p.Y) {
+					*inside = !*inside
+				}
+			} else {
+				last, err := r.scanChunk(start, end, chunk.Count, p, inside)
+				if err != nil {
+					return false, err
+				}
+				if last.on {
+					return true, nil
+				}
+				if next != nil {
+					// Joint segment to the next chunk's first point.
+					nstart, nend, err := r.chunkRange(chunkIndex+1, *next, nil)
+					if err != nil {
+						return false, err
+					}
+					first, err := r.firstPoint(nstart, nend)
+					if err != nil {
+						return false, err
+					}
+					cross, on := geom.RaycastSeg(toPoint(last.point), toPoint(first), p)
+					if on {
+						return true, nil
+					}
+					if cross {
+						*inside = !*inside
+					}
+					firstBuf = first
+					nextFirst = &firstBuf
+				}
 			}
 		}
+		if next != nil {
+			chunk = *next
+		}
+		chunkFirst = nextFirst
+		i++
 	}
 	return false, nil
 }
@@ -1012,10 +1144,22 @@ type scanResult struct {
 	on    bool
 }
 
-func (r *Reader) scanChunk(index uint32, chunk ChunkRecord, p geom.Point, inside *bool) (scanResult, error) {
-	start, end, err := r.chunkRange(index, chunk)
-	if err != nil {
-		return scanResult{}, err
+// segmentSkip returns the integer pre-filter bounds for query p: a segment
+// with both endpoints strictly above or below the query latitude, or
+// entirely left of the query longitude, can neither be crossed by the
+// leftward ray nor contain p. The rounding is conservative, so the filter
+// never rejects a segment RaycastSeg would keep.
+func segmentSkip(p geom.Point) (yLo, yHi, xLo int32) {
+	return int32(math.Floor(p.Y)), int32(math.Ceil(p.Y)), int32(math.Floor(p.X))
+}
+
+// scanChunk evaluates one chunk's internal segments over the byte range
+// [start, end) and returns the chunk's last point and whether p lay on any
+// segment. Byte-backed readers decode by direct slice indexing; io.ReaderAt
+// sources go through the cursor. Validation is identical on both paths.
+func (r *Reader) scanChunk(start, end uint64, count uint16, p geom.Point, inside *bool) (scanResult, error) {
+	if r.data != nil {
+		return r.scanChunkSlice(r.data[start:end], count, p, inside)
 	}
 	cursor := streamCursor{r: r, pos: start, end: end}
 	x, err := cursor.varint()
@@ -1030,8 +1174,9 @@ func (r *Reader) scanChunk(index uint32, chunk ChunkRecord, p geom.Point, inside
 	if !PointInDomain(prev) {
 		return scanResult{}, fmt.Errorf("%w: chunk coordinate domain", ErrMalformed)
 	}
+	yLo, yHi, xLo := segmentSkip(p)
 	onSegment := false
-	for i := uint16(1); i < chunk.Count; i++ {
+	for i := uint16(1); i < count; i++ {
 		dx, err := cursor.varint()
 		if err != nil {
 			return scanResult{}, err
@@ -1052,7 +1197,8 @@ func (r *Reader) scanChunk(index uint32, chunk ChunkRecord, p geom.Point, inside
 		if !PointInDomain(next) {
 			return scanResult{}, fmt.Errorf("%w: chunk coordinate domain", ErrMalformed)
 		}
-		if !onSegment {
+		skip := (prev.Y < yLo && next.Y < yLo) || (prev.Y > yHi && next.Y > yHi) || (prev.X < xLo && next.X < xLo)
+		if !onSegment && !skip {
 			cross, on := geom.RaycastSeg(toPoint(prev), toPoint(next), p)
 			if on {
 				onSegment = true
@@ -1068,10 +1214,87 @@ func (r *Reader) scanChunk(index uint32, chunk ChunkRecord, p geom.Point, inside
 	return scanResult{point: prev, on: onSegment}, nil
 }
 
+// scanChunkSlice is scanChunk over a byte-backed chunk stream.
+func (r *Reader) scanChunkSlice(buf []byte, count uint16, p geom.Point, inside *bool) (scanResult, error) {
+	x, i, err := sliceVarint(buf, 0)
+	if err != nil {
+		return scanResult{}, err
+	}
+	y, i, err := sliceVarint(buf, i)
+	if err != nil {
+		return scanResult{}, err
+	}
+	prev := geom.I32Point{X: x, Y: y}
+	if !PointInDomain(prev) {
+		return scanResult{}, fmt.Errorf("%w: chunk coordinate domain", ErrMalformed)
+	}
+	yLo, yHi, xLo := segmentSkip(p)
+	onSegment := false
+	for k := uint16(1); k < count; k++ {
+		var dx, dy int32
+		dx, i, err = sliceVarint(buf, i)
+		if err != nil {
+			return scanResult{}, err
+		}
+		dy, i, err = sliceVarint(buf, i)
+		if err != nil {
+			return scanResult{}, err
+		}
+		nx, err := addDelta(prev.X, dx)
+		if err != nil {
+			return scanResult{}, err
+		}
+		ny, err := addDelta(prev.Y, dy)
+		if err != nil {
+			return scanResult{}, err
+		}
+		next := geom.I32Point{X: nx, Y: ny}
+		if !PointInDomain(next) {
+			return scanResult{}, fmt.Errorf("%w: chunk coordinate domain", ErrMalformed)
+		}
+		skip := (prev.Y < yLo && next.Y < yLo) || (prev.Y > yHi && next.Y > yHi) || (prev.X < xLo && next.X < xLo)
+		if !onSegment && !skip {
+			cross, on := geom.RaycastSeg(toPoint(prev), toPoint(next), p)
+			if on {
+				onSegment = true
+			} else if cross {
+				*inside = !*inside
+			}
+		}
+		prev = next
+	}
+	if i != len(buf) {
+		return scanResult{}, fmt.Errorf("%w: trailing chunk bytes", ErrMalformed)
+	}
+	return scanResult{point: prev, on: onSegment}, nil
+}
+
 func (r *Reader) FirstChunkPoint(index uint32, chunk ChunkRecord) (geom.I32Point, error) {
-	start, end, err := r.chunkRange(index, chunk)
+	start, end, err := r.chunkRange(index, chunk, nil)
 	if err != nil {
 		return geom.I32Point{}, err
+	}
+	return r.firstPoint(start, end)
+}
+
+// firstPoint decodes the absolute first point of the chunk stream at
+// [start, end): two varints, O(1), no full decode.
+func (r *Reader) firstPoint(start, end uint64) (geom.I32Point, error) {
+	if r.data != nil {
+		buf := r.data[start:end]
+		x, i, err := sliceVarint(buf, 0)
+		if err != nil {
+			return geom.I32Point{}, err
+		}
+		y, _, err := sliceVarint(buf, i)
+		if err != nil {
+			return geom.I32Point{}, err
+		}
+		p := geom.I32Point{X: x, Y: y}
+		if !PointInDomain(p) {
+			return geom.I32Point{}, fmt.Errorf("%w: chunk coordinate domain", ErrMalformed)
+		}
+		return p, nil
 	}
 	cursor := streamCursor{r: r, pos: start, end: end}
 	x, err := cursor.varint()
@@ -1089,13 +1312,19 @@ func (r *Reader) FirstChunkPoint(index uint32, chunk ChunkRecord) (geom.I32Point
 	return p, nil
 }
 
-func (r *Reader) chunkRange(index uint32, chunk ChunkRecord) (uint64, uint64, error) {
+// chunkRange returns the absolute byte range of chunk index's stream:
+// [point_off_k, point_off_{k+1}), the last chunk ending at the POINTS section
+// end. next is chunk k+1's record when the caller already holds it.
+func (r *Reader) chunkRange(index uint32, chunk ChunkRecord, next *ChunkRecord) (uint64, uint64, error) {
 	start := uint64(r.sections[sectionPoints].Off) + uint64(chunk.Off)
 	end := uint64(r.sections[sectionPoints].Off) + uint64(r.sections[sectionPoints].Len)
 	if index+1 < r.chunkCount {
-		next, err := r.ChunkAt(index + 1)
-		if err != nil {
-			return 0, 0, err
+		if next == nil {
+			n, err := r.ChunkAt(index + 1)
+			if err != nil {
+				return 0, 0, err
+			}
+			next = &n
 		}
 		end = uint64(r.sections[sectionPoints].Off) + uint64(next.Off)
 	}
@@ -1252,7 +1481,7 @@ func (r *Reader) compareNames(a, b int32) (int, error) {
 }
 
 func (r *Reader) DecodeChunkPoints(index uint32, chunk ChunkRecord) ([]geom.I32Point, error) {
-	start, end, err := r.chunkRange(index, chunk)
+	start, end, err := r.chunkRange(index, chunk, nil)
 	if err != nil {
 		return nil, err
 	}

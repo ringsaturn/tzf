@@ -15,14 +15,20 @@ import (
 // overflow checks.
 
 // sliceVarint decodes one zigzag-LEB128 varint from buf at offset i and
-// returns the value and the next offset. The single-byte case — the vast
-// majority of stored deltas — is kept small enough for the inliner; longer
-// encodings and every error case take the slow path.
+// returns the value and the next offset. The one- and two-byte cases — ~98%
+// of stored deltas (measured 66%/32% on full, 26%/72% on lite) — are kept
+// small enough for the inliner; longer encodings and every error case take
+// the slow path.
 func sliceVarint(buf []byte, i int) (int32, int, error) {
 	if i < len(buf) {
 		if b := buf[i]; b < 0x80 {
 			u := uint32(b)
 			return int32((u >> 1) ^ uint32(-int32(u&1))), i + 1, nil
+		} else if i+1 < len(buf) {
+			if b1 := buf[i+1]; b1 < 0x80 && b1 != 0 {
+				u := uint32(b&0x7f) | uint32(b1)<<7
+				return int32((u >> 1) ^ uint32(-int32(u&1))), i + 2, nil
+			}
 		}
 	}
 	return sliceVarintSlow(buf, i)
@@ -61,7 +67,7 @@ func (r *Reader) appendChunkPoints(dst []geom.I32Point, index uint32, chunk Chun
 		}
 		return append(dst, part...), nil
 	}
-	start, end, err := r.chunkRange(index, chunk)
+	start, end, err := r.chunkRange(index, chunk, nil)
 	if err != nil {
 		return dst, err
 	}
