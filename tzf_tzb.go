@@ -20,7 +20,7 @@ import (
 // identical, but ring vertex lists exported via [GeoJSONer] may omit those
 // duplicates.
 //
-// For in-place queries over caller-owned bytes (no expansion, ~1 KB heap),
+// For in-place queries over caller-owned bytes (no expansion, ~30 KB heap),
 // wrap the data in a [bytes.Reader] and use
 // [github.com/ringsaturn/tzf/v2/x.NewFinderFromTZBReaderAt]; note the x
 // package's stability caveat.

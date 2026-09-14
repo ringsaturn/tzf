@@ -35,7 +35,8 @@ encoder package, still module-internal).
 
 **Bootstrap**: the runtime embeds come from the published
 `github.com/ringsaturn/tzf-dist` module (first v2 release
-`v0.0.2026-c-tzb1`), so `go test ./...` works from a plain clone. The
+`v0.0.2026-c-tzb1`; v2.1.0 requires `v0.0.2026-c-tzb2`, the same 2026c data
+at 64-point chunks), so `go test ./...` works from a plain clone. The
 pipeline and parity tooling still need the sibling `../tzf-dist` checkout:
 `./scripts/build-tzf-dist-dev.sh` downloads the upstream raw GeoJSON, runs
 the full pipeline (gob intermediates stay in gitignored `tmp/tzf-dist-dev`
@@ -73,7 +74,7 @@ concrete finder types (spec §2):
 | Constructor | Mechanism | Memory | Query |
 |---|---|---|---|
 | `NewDefaultFinder()` | lite `.tzm` memory image: FUZZY fast path + in-place polygon view aliasing the embedded bytes | ~10MB heap + rodata | ~300ns |
-| `NewEmbeddedFinder()` | lite `.tzb` queried in place | <1KB heap | p50 ~0.5µs, ~6µs PIP |
+| `NewEmbeddedFinder()` | lite `.tzb` queried in place | ~30KB heap | p50 ~0.33µs, ~1.2µs PIP |
 | `NewFullFinder()` | full `.tzb` expanded + FUZZY fast path | ~145MB | ~300ns |
 | `NewFinderFromTZB(data)` | always expanded (+FUZZY fast path when present); data released | | |
 | `NewFinderFromTZM(data)` | always aliases in place (+FUZZY when present); data retained | | |
@@ -119,8 +120,8 @@ container: **E** (`.tzb`, profile 0) is the chunked varint layout above;
 *is* the query-time structure; `YSTRIPES` (type 14) is assigned but not
 emitted. Mandatory sections are per-profile and cross-profile section types
 are rejected. Built by `cmd/topo2embed` (`-profile e|m`, `-preindex`
-embeds FUZZY); parity harness `internal/cmd/embedcompare` (`-tzm`
-adds the M leg; requires `-preindex` on FUZZY-carrying files so the composed
+embeds FUZZY, `-chunk` defaults to 64 points since v2.1.0); parity harness
+`internal/cmd/embedcompare` (`-tzm` adds the M leg; requires `-preindex` on FUZZY-carrying files so the composed
 finders can be checked; `embedenc.VerifyM` derives expected flat rings from
 the source pb independently of the encoder; `pbref` is the pb-composed query
 reference).
@@ -128,8 +129,9 @@ reference).
 Load paths (all protobuf-free at runtime):
 
 - `NewEmbeddedFinder` / `x.NewFinderFromTZBReaderAt` — in-place queries over
-  the compressed file, <1KB heap, ~6µs/query PIP. When the file carries FUZZY,
-  `GetTimezoneName` probes it first in place (p50 ~0.5µs);
+  the compressed file, ~30KB heap (chunk block table + FUZZY zoom ranges),
+  ~1.2µs/query PIP on 64-point-chunk data. When the file carries FUZZY,
+  `GetTimezoneName` probes it first in place (p50 ~0.33µs);
   `GetTimezoneNames` stays polygon-only. Both build
   `internal/inplace.Finder`; they differ only in how the `embedbin.Reader`
   was opened. Neither backend holds a lock on the query path: the byte-backed

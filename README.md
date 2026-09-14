@@ -70,8 +70,8 @@ mechanism and the precision differ between them.
 | Constructor              | Mechanism                                                                  | Memory                            | Query (p50, random city / border) |
 | ------------------------ | -------------------------------------------------------------------------- | --------------------------------- | --------------------------------: |
 | `NewDefaultFinder()`     | lite `.tzm` memory image: preindex fast path + polygon view aliasing rodata | 12.8 MiB heap + ~10 MB rodata     |                  208 ns / 542 ns |
-| `NewEmbeddedFinder()`    | lite `.tzb` queried in place, no geometry expansion                         | <1 KB heap + ~4 MB rodata         |                583 ns / 6.9 µs |
-| `NewFullFinder()`        | full-precision `.tzb` expanded at load                                      | 146.7 MiB heap                    |                  208 ns / 666 ns |
+| `NewEmbeddedFinder()`    | lite `.tzb` queried in place, no geometry expansion                         | ~30 KB heap + ~4 MB rodata        |                333 ns / 1.2 µs |
+| `NewFullFinder()`        | full-precision `.tzb` expanded at load                                      | 146.7 MiB heap                    |                  208 ns / 625 ns |
 | `NewFinderFromTZB(data)` | any `.tzb`, always expanded; `data` released after load                     | 27.5 MiB heap (lite dataset)      |                          208 ns |
 | `NewFinderFromTZM(data)` | any `.tzm`, always aliased in place; `data` retained                        | as `NewDefaultFinder`             |                          208 ns |
 
@@ -130,7 +130,7 @@ boundary length the simplification displaces by more than 100 m (see
 | ---------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | Long-lived service, memory is not constrained              | `NewDefaultFinder()`                                            | Geometry stays in read-only data; retained heap 12.8 MiB                                    |
 | Answers must match the source boundaries exactly           | `NewFullFinder()`                                               | Full-precision geometry; retained heap 146.7 MiB                                            |
-| Container with a tight memory limit, CLI, FaaS, IoT        | `NewEmbeddedFinder()`                                           | Total footprint is the 3.97 MB file plus under 1 KB of heap; opens in 1.7 ms                |
+| Container with a tight memory limit, CLI, FaaS, IoT        | `NewEmbeddedFinder()`                                           | Total footprint is the 4.18 MB file plus ~30 KB of heap (block table + preindex zoom ranges); opens in ~2.4 ms |
 | No filesystem at runtime (scratch/distroless image, Wasm)  | any pre-defined constructor                                     | The artifacts are `go:embed`ed by `tzf-dist`, so nothing is read from disk                   |
 | Data delivered out-of-band (object store, config map, own `go:embed`) | `NewFinderFromTZB(data)`                             | One expansion pass, after which `data` can be collected                                     |
 | mmap'd artifact shared between processes on one host       | `NewFinderFromTZM(mapped)`                                      | Ring storage aliases the mapping, which the page cache shares; the mapping must stay live   |
@@ -143,7 +143,7 @@ single-core figure modelling a cgroup-quota pod):
 
 | Mechanism                       | Open 16c | Open 1c |
 | ------------------------------- | -------: | ------: |
-| lite `.tzb` in place (embedded) |   1.7 ms |  1.7 ms |
+| lite `.tzb` in place (embedded) |   2.4 ms |  2.4 ms |
 | lite `.tzm` (default)           |   7.7 ms |   28 ms |
 | lite `.tzb` expanded            |  18.6 ms |  ~41 ms |
 | full `.tzb` expanded (full)     |  78.5 ms |  214 ms |
@@ -282,9 +282,9 @@ artifact set is:
 
 | Artifact   | Size     | Backs                                       |
 | ---------- | -------: | ------------------------------------------- |
-| `lite.tzb` |  3.97 MB | `NewEmbeddedFinder`, `x`, generic TZB use   |
+| `lite.tzb` |  4.18 MB | `NewEmbeddedFinder`, `x`, generic TZB use   |
 | `lite.tzm` | 10.18 MB | `NewDefaultFinder`                          |
-| `full.tzb` | 13.77 MB | `NewFullFinder`                             |
+| `full.tzb` | 15.26 MB | `NewFullFinder`                             |
 
 All three carry the same `data_version`, and every file bundles its FUZZY
 preindex section, so there is no separate preindex artifact to keep in sync.
@@ -409,16 +409,16 @@ in-place finders report 0.00: their storage is the embedded read-only data.
 
 | Target         | Dataset                     | Scenario                               | Median (ns) | p99 (ns) | Approx throughput (ops/s) | Memory (MiB) |
 | -------------- | --------------------------- | -------------------------------------- | ----------: | -------: | ------------------------: | -----------: |
-| DefaultFinder  | lite .tzm memory image      | edge case · GetTimezoneName            |       542.0 |   1709.0 |                   1497.5K |        12.80 |
-| EmbeddedFinder | lite .tzb, queried in place | edge case · GetTimezoneName            |      6917.0 |  30250.0 |                    109.7K |         0.00 |
-| FullFinder     | full .tzb, expanded at load | edge case · GetTimezoneName            |       666.0 |   2417.0 |                   1244.2K |       146.70 |
-| DefaultFinder  | lite .tzm memory image      | random world cities · GetTimezoneName  |       208.0 |   1083.0 |                   3254.1K |        12.80 |
-| EmbeddedFinder | lite .tzb, queried in place | random world cities · GetTimezoneName  |       583.0 |  21917.0 |                    431.4K |         0.00 |
-| FinderFromTZB  | lite .tzb, expanded at load | random world cities · GetTimezoneName  |       208.0 |   1083.0 |                   3196.9K |        27.50 |
-| FullFinder     | full .tzb, expanded at load | random world cities · GetTimezoneName  |       208.0 |   1041.0 |                   3311.3K |       146.70 |
-| DefaultFinder  | lite .tzm memory image      | random world cities · GetTimezoneNames |       500.0 |   2292.0 |                   1497.7K |        12.80 |
-| EmbeddedFinder | lite .tzb, queried in place | random world cities · GetTimezoneNames |      8750.0 |  35625.0 |                     99.7K |         0.00 |
-| FullFinder     | full .tzb, expanded at load | random world cities · GetTimezoneNames |       542.0 |   2250.0 |                   1402.7K |       146.70 |
+| DefaultFinder  | lite .tzm memory image      | edge case · GetTimezoneName            |       542.0 |   1625.0 |                   1523.2K |        12.80 |
+| EmbeddedFinder | lite .tzb, queried in place | edge case · GetTimezoneName            |      1167.0 |   2875.0 |                    765.1K |         0.00 |
+| FullFinder     | full .tzb, expanded at load | edge case · GetTimezoneName            |       625.0 |   2083.0 |                   1344.1K |       146.70 |
+| DefaultFinder  | lite .tzm memory image      | random world cities · GetTimezoneName  |       208.0 |   1000.0 |                   3396.7K |        12.80 |
+| EmbeddedFinder | lite .tzb, queried in place | random world cities · GetTimezoneName  |       333.0 |   2375.0 |                   1929.4K |         0.00 |
+| FinderFromTZB  | lite .tzb, expanded at load | random world cities · GetTimezoneName  |       208.0 |   1084.0 |                   3193.9K |        27.50 |
+| FullFinder     | full .tzb, expanded at load | random world cities · GetTimezoneName  |       208.0 |   1000.0 |                   3325.6K |       146.70 |
+| DefaultFinder  | lite .tzm memory image      | random world cities · GetTimezoneNames |       458.0 |   1708.0 |                   1721.5K |        12.80 |
+| EmbeddedFinder | lite .tzb, queried in place | random world cities · GetTimezoneNames |      1208.0 |   3708.0 |                    713.3K |         0.00 |
+| FullFinder     | full .tzb, expanded at load | random world cities · GetTimezoneNames |       500.0 |   2000.0 |                   1530.5K |       146.70 |
 
 - <https://ringsaturn.github.io/tz-benchmark/> displays a continuous benchmark
   comparison with other packages.
