@@ -90,6 +90,7 @@ type Stats struct {
 	RingsMultiFixed         int
 	RingsFallbackOriginal   int
 	RingsFallbackPoints     int
+	RingsFallbackHoleEscape int
 	Segments                int
 	SharedSegments          int
 	SharedCacheHits         int
@@ -110,7 +111,7 @@ func (s Stats) String() string {
 	cacheHitPct := percent(s.SharedCacheHits, s.SharedCacheHits+s.SharedCacheMisses)
 	segmentReduction := percent(s.SegmentInputPoints-s.SegmentOutputPoints, s.SegmentInputPoints)
 	return fmt.Sprintf(
-		"topology_rings: total=%d no_fixed=%d one_fixed=%d multi_fixed=%d fallback=%d\n"+
+		"topology_rings: total=%d no_fixed=%d one_fixed=%d multi_fixed=%d fallback=%d hole_escape=%d\n"+
 			"topology_points: input=%d snapped_inserted=%d fallback_points=%d fixed_vertices=%d\n"+
 			"topology_segments: total=%d shared=%d(%.2f%%) skipped_short=%d(%.2f%%) cache_hits=%d cache_misses=%d cache_hit_rate=%.2f%%\n"+
 			"topology_segment_points: input=%d output=%d reduction=%.2f%%\n"+
@@ -120,6 +121,7 @@ func (s Stats) String() string {
 		s.RingsOneFixed,
 		s.RingsMultiFixed,
 		s.RingsFallbackOriginal,
+		s.RingsFallbackHoleEscape,
 		s.InputPoints,
 		s.SnappedInsertedVertices,
 		s.RingsFallbackPoints,
@@ -214,9 +216,74 @@ func DoWithStatsAndBaseline(input *pb.Timezones, epsilon float64) (*pb.Timezones
 		}
 		assignRing(output, ref, result)
 	}
+	restoreEscapedHoles(input, output, &stats)
 	normalizeWindings(output)
 
 	return output, baseline, stats
+}
+
+// restoreEscapedHoles re-establishes the invariant that per-ring
+// simplification cannot see: an exterior's bounding box must contain every
+// hole. With epsilon large relative to the polygon, the exterior collapses to
+// a few vertices while its tiny holes (fallen back to source) keep their
+// shape and stick out of it; the embed encoder rejects such a polygon
+// because a polygon's bbox is its exterior's. The check is bbox-based, not
+// point-in-ring, on purpose: hole vertices on a simplified shared chain sit
+// a hair outside the exterior by construction, and restoring a continent
+// sized exterior for that would undo most of the reduction. The exterior is
+// restored from the source, then any hole still outside its box; the source
+// geometry is valid, so this always converges.
+func restoreEscapedHoles(input, output *pb.Timezones, stats *Stats) {
+	for tzIdx, tz := range output.Timezones {
+		for polyIdx, poly := range tz.Polygons {
+			if len(poly.Holes) == 0 {
+				continue
+			}
+			ext := ringBound(poly.Points)
+			escaped := false
+			for _, hole := range poly.Holes {
+				if !boundContains(ext, ringBound(hole.Points)) {
+					escaped = true
+					break
+				}
+			}
+			if !escaped {
+				continue
+			}
+			ref := ringRef{TimezoneIdx: tzIdx, PolygonIdx: polyIdx, HoleIdx: -1}
+			restoreRing(input, output, ref, stats)
+			stats.RingsFallbackHoleEscape++
+			ext = ringBound(poly.Points)
+			for holeIdx, hole := range poly.Holes {
+				if boundContains(ext, ringBound(hole.Points)) {
+					continue
+				}
+				ref.HoleIdx = holeIdx
+				restoreRing(input, output, ref, stats)
+				stats.RingsFallbackHoleEscape++
+			}
+		}
+	}
+}
+
+func restoreRing(input, output *pb.Timezones, ref ringRef, stats *Stats) {
+	original := getOriginalRing(input, ref)
+	stats.RingsFallbackOriginal++
+	stats.RingsFallbackPoints += len(original)
+	assignRing(output, ref, cleanRingRemoveZeroEdges(cleanRing(original)))
+}
+
+func ringBound(points []*pb.Point) orb.Bound {
+	b := orb.Bound{Min: orb.Point{math.Inf(1), math.Inf(1)}, Max: orb.Point{math.Inf(-1), math.Inf(-1)}}
+	for _, point := range points {
+		b = b.Extend(orb.Point{float64(point.Lng), float64(point.Lat)})
+	}
+	return b
+}
+
+func boundContains(outer, inner orb.Bound) bool {
+	return outer.Min[0] <= inner.Min[0] && outer.Min[1] <= inner.Min[1] &&
+		outer.Max[0] >= inner.Max[0] && outer.Max[1] >= inner.Max[1]
 }
 
 func prepareBaseline(input *pb.Timezones, stats *Stats) *pb.Timezones {

@@ -364,3 +364,48 @@ func subdividedSquareRing(minLng, minLat, size float32, stepsPerEdge int) []*pb.
 	coords = append(coords, coords[0])
 	return lineToRing(coords)
 }
+
+func TestDo_RestoresExteriorWhenHoleEscapes(t *testing.T) {
+	// The exterior's bump at (1, 1.4) is within epsilon of the (2,1)-(0,1)
+	// edge, so Douglas-Peucker drops it; the tiny hole living in that bump
+	// falls back to its source shape and would end up outside the exterior.
+	input := &pb.Timezones{
+		Version: "test",
+		Timezones: []*pb.Timezone{
+			{
+				Name: "Bumped",
+				Polygons: []*pb.Polygon{
+					{
+						Points: lineToRing([][2]float32{
+							{0, 0}, {2, 0}, {2, 1}, {1, 1.4}, {0, 1}, {0, 0},
+						}),
+						Holes: []*pb.Polygon{
+							{Points: lineToRing([][2]float32{
+								{0.9, 1.1}, {0.9, 1.3}, {1.1, 1.3}, {1.1, 1.1}, {0.9, 1.1},
+							})},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	output, stats := DoWithStats(input, 0.5)
+	if err := Validate(output); err != nil {
+		t.Fatalf("Validate returned error: %v", err)
+	}
+	if stats.RingsFallbackHoleEscape != 1 {
+		t.Fatalf("RingsFallbackHoleEscape = %d, want 1 (exterior only)", stats.RingsFallbackHoleEscape)
+	}
+
+	poly := output.Timezones[0].Polygons[0]
+	ext := ringBound(poly.Points)
+	for _, hole := range poly.Holes {
+		if !boundContains(ext, ringBound(hole.Points)) {
+			t.Fatalf("hole %v escapes exterior %v", hole.Points, poly.Points)
+		}
+	}
+	if len(ringUniquePoints(poly.Points)) != 5 {
+		t.Fatalf("exterior not restored from source: %v", poly.Points)
+	}
+}
