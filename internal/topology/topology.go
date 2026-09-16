@@ -30,6 +30,19 @@ const selfIntersectionMaxPoints = 100
 // Kept deliberately low so that correctly-merged shared chains get simplified.
 const minSimplifyPoints = 4
 
+// belowResolutionFactor sets the extent guard on open paths: a segment whose
+// bounding box is at most this many epsilons wide and tall is passed through
+// unchanged. Such a feature is below the resolution the simplifier targets —
+// Douglas-Peucker would legitimately fold it onto its chord, and a ring made
+// of such segments collapses to a few vertices while the tiny holes inside
+// it fall back to source and escape (TBB 2026d: a 230 m Asia/Hong_Kong
+// polygon with 22 building holes). Passing the source through instead keeps
+// the ring valid and, because the guard is per segment, both sides of a
+// shared border see the same vertices. Swept on 2026c/2026d: fallbacks and
+// re-simplified partners bottom out between 3 and 4, and beyond 4 retained
+// points and file size grow again for no further gain.
+const belowResolutionFactor = 4
+
 type ringRef struct {
 	TimezoneIdx int
 	PolygonIdx  int
@@ -98,6 +111,7 @@ type Stats struct {
 	SharedCacheHits         int
 	SharedCacheMisses       int
 	SegmentsSkippedShort    int
+	SegmentsSkippedSmall    int
 	SegmentInputPoints      int
 	SegmentOutputPoints     int
 	SegmentPointsLE10       int
@@ -109,13 +123,14 @@ type Stats struct {
 
 func (s Stats) String() string {
 	skippedPct := percent(s.SegmentsSkippedShort, s.Segments)
+	smallPct := percent(s.SegmentsSkippedSmall, s.Segments)
 	sharedPct := percent(s.SharedSegments, s.Segments)
 	cacheHitPct := percent(s.SharedCacheHits, s.SharedCacheHits+s.SharedCacheMisses)
 	segmentReduction := percent(s.SegmentInputPoints-s.SegmentOutputPoints, s.SegmentInputPoints)
 	return fmt.Sprintf(
 		"topology_rings: total=%d no_fixed=%d one_fixed=%d multi_fixed=%d fallback=%d hole_escape=%d resimplified=%d\n"+
 			"topology_points: input=%d snapped_inserted=%d fallback_points=%d fixed_vertices=%d\n"+
-			"topology_segments: total=%d shared=%d(%.2f%%) skipped_short=%d(%.2f%%) cache_hits=%d cache_misses=%d cache_hit_rate=%.2f%%\n"+
+			"topology_segments: total=%d shared=%d(%.2f%%) skipped_short=%d(%.2f%%) skipped_small=%d(%.2f%%) cache_hits=%d cache_misses=%d cache_hit_rate=%.2f%%\n"+
 			"topology_segment_points: input=%d output=%d reduction=%.2f%%\n"+
 			"topology_segment_length_buckets: le10=%d le25=%d le50=%d le100=%d gt100=%d",
 		s.InputRings,
@@ -134,6 +149,8 @@ func (s Stats) String() string {
 		sharedPct,
 		s.SegmentsSkippedShort,
 		skippedPct,
+		s.SegmentsSkippedSmall,
+		smallPct,
 		s.SharedCacheHits,
 		s.SharedCacheMisses,
 		cacheHitPct,
@@ -953,12 +970,7 @@ func simplifySegment(
 ) []*pb.Point {
 	key, reversed, ok := sharedSegmentCacheKey(segment, segmentEdges)
 	if !ok {
-		reduced := simplifyOpenPath(segment, epsilon)
-		recordSegmentStats(stats, len(segment), len(reduced), false)
-		if stats != nil && len(segment) <= minSimplifyPoints {
-			stats.SegmentsSkippedShort++
-		}
-		return reduced
+		return reduceSegment(segment, epsilon, false, stats)
 	}
 
 	if cached, exists := sharedCache[key]; exists {
@@ -975,11 +987,7 @@ func simplifySegment(
 		stats.SharedCacheMisses++
 	}
 
-	reduced := simplifyOpenPath(segment, epsilon)
-	recordSegmentStats(stats, len(segment), len(reduced), true)
-	if stats != nil && len(segment) <= minSimplifyPoints {
-		stats.SegmentsSkippedShort++
-	}
+	reduced := reduceSegment(segment, epsilon, true, stats)
 	if reversed {
 		sharedCache[key] = reverseOpenPath(reduced)
 		return reduced
@@ -1009,6 +1017,37 @@ func sharedSegmentCacheKey(
 		return sharedSegmentKey{Signature: reverse}, true, true
 	}
 	return sharedSegmentKey{Signature: forward}, false, true
+}
+
+// reduceSegment simplifies one open path and records its stats. Paths too
+// short to simplify (minSimplifyPoints) and paths below the resolution the
+// epsilon targets (belowResolutionFactor) are passed through unchanged.
+func reduceSegment(segment []*pb.Point, epsilon float64, shared bool, stats *Stats) []*pb.Point {
+	switch {
+	case len(segment) <= minSimplifyPoints:
+		if stats != nil {
+			stats.SegmentsSkippedShort++
+		}
+		recordSegmentStats(stats, len(segment), len(segment), shared)
+		return clonePoints(segment)
+	case segmentBelowResolution(segment, epsilon):
+		if stats != nil {
+			stats.SegmentsSkippedSmall++
+		}
+		recordSegmentStats(stats, len(segment), len(segment), shared)
+		return clonePoints(segment)
+	}
+	reduced := simplifyOpenPath(segment, epsilon)
+	recordSegmentStats(stats, len(segment), len(reduced), shared)
+	return reduced
+}
+
+// segmentBelowResolution reports whether the path's bounding box is at most
+// belowResolutionFactor epsilons in both axes.
+func segmentBelowResolution(segment []*pb.Point, epsilon float64) bool {
+	limit := belowResolutionFactor * epsilon
+	b := ringBound(segment)
+	return b.Max[0]-b.Min[0] <= limit && b.Max[1]-b.Min[1] <= limit
 }
 
 func simplifyOpenPath(points []*pb.Point, epsilon float64) []*pb.Point {

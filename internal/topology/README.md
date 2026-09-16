@@ -75,7 +75,15 @@ segment stores the result; the partner ring retrieves it and reverses the
 point order if necessary. This guarantees both sides of a shared boundary use
 identical simplified coordinates.
 
-Segments shorter than `minSimplifyPoints = 4` are passed through unchanged.
+Segments shorter than `minSimplifyPoints = 4` are passed through unchanged,
+and so are segments below the resolution epsilon targets: a bounding box at
+most `belowResolutionFactor = 4` epsilons wide and tall. Douglas-Peucker
+would fold such a feature onto its chord, and a ring made of such segments
+collapses while the holes inside it fall back and escape (a 230 m polygon
+with 22 building holes in TBB 2026d). The guard is per segment, so both
+sides of a shared border keep the same vertices. The factor was swept on
+2026c/2026d: fallbacks and re-simplified partners bottom out between 3
+and 4; beyond 4 retained points and file size grow again for no gain.
 
 A simplified ring is restored to its baseline geometry when it collapses to
 fewer than 3 unique points, gains a zero-length edge, or self-intersects.
@@ -132,7 +140,7 @@ if err := topology.Validate(output); err != nil { ... }
 ```
 topology_rings: total=2078 no_fixed=1476 one_fixed=16 multi_fixed=581 fallback=168 hole_escape=0 resimplified=0
 topology_points: input=8022588 snapped_inserted=100 fallback_points=5463 fixed_vertices=173757
-topology_segments: total=175226 shared=2300(1.31%) skipped_short=170247(97.16%) ...
+topology_segments: total=175226 shared=2300(1.31%) skipped_short=170247(97.16%) skipped_small=0(0.00%) ...
 topology_segment_points: input=8197799 output=1258366 reduction=84.65%
 topology_segment_length_buckets: le10=170732 le25=409 le50=424 le100=561 gt100=3100
 ```

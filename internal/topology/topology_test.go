@@ -390,7 +390,7 @@ func TestDo_RestoresExteriorWhenHoleEscapes(t *testing.T) {
 		},
 	}
 
-	output, stats := DoWithStats(input, 0.5)
+	output, stats := DoWithStats(input, 0.45)
 	if err := Validate(output); err != nil {
 		t.Fatalf("Validate returned error: %v", err)
 	}
@@ -462,7 +462,7 @@ func TestDo_RestoredExteriorPinsSharedBorder(t *testing.T) {
 		},
 	}
 
-	output, stats := DoWithStats(input, 0.5)
+	output, stats := DoWithStats(input, 0.45)
 	if err := Validate(output); err != nil {
 		t.Fatalf("Validate returned error: %v", err)
 	}
@@ -487,5 +487,29 @@ func TestDo_RestoredExteriorPinsSharedBorder(t *testing.T) {
 		if !samePoint(bumpedShared[idx], topShared[len(topShared)-1-idx]) {
 			t.Fatalf("shared border diverged at %d: bumped=%+v top=%+v", idx, bumpedShared[idx], topShared[len(topShared)-1-idx])
 		}
+	}
+}
+
+func TestDo_PassesThroughSegmentBelowResolution(t *testing.T) {
+	// A 0.0001° square with 30 steps per edge under epsilon 1: far below
+	// 4·epsilon in both axes, so the whole ring is passed through as source
+	// rather than simplified and then rescued by the fallback.
+	ring := subdividedSquareRing(10, 10, 0.0001, 30)
+	output, stats := DoWithStats(&pb.Timezones{
+		Version: "test",
+		Timezones: []*pb.Timezone{
+			{Name: "Tiny", Polygons: []*pb.Polygon{{Points: ring}}},
+		},
+	}, 1)
+	if err := Validate(output); err != nil {
+		t.Fatalf("Validate returned error: %v", err)
+	}
+	if stats.SegmentsSkippedSmall != 1 || stats.RingsFallbackOriginal != 0 {
+		t.Fatalf("SegmentsSkippedSmall = %d, RingsFallbackOriginal = %d, want 1 and 0", stats.SegmentsSkippedSmall, stats.RingsFallbackOriginal)
+	}
+	got := ringUniquePoints(output.Timezones[0].Polygons[0].Points)
+	want := ringUniquePoints(ring)
+	if len(got) != len(want) {
+		t.Fatalf("ring not passed through: %d points, want %d", len(got), len(want))
 	}
 }
