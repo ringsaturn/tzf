@@ -409,3 +409,83 @@ func TestDo_RestoresExteriorWhenHoleEscapes(t *testing.T) {
 		t.Fatalf("exterior not restored from source: %v", poly.Points)
 	}
 }
+
+func TestDo_RestoredExteriorPinsSharedBorder(t *testing.T) {
+	// A bumped polygon enclosed by neighbours: Top shares the five-point bump
+	// chain from (0,1) to (2,1), Right and Left make its endpoints three-ring
+	// junctions so the chain goes through the shared cache. Douglas-Peucker
+	// flattens the chain to its endpoints on both sides, the tiny hole in the
+	// bump falls back and escapes; the restored Bumped exterior must pull Top
+	// back onto the source chain instead of leaving it the straight edge.
+	input := &pb.Timezones{
+		Version: "test",
+		Timezones: []*pb.Timezone{
+			{
+				Name: "Bumped",
+				Polygons: []*pb.Polygon{
+					{
+						Points: lineToRing([][2]float32{
+							{0, 0}, {2, 0}, {2, 1}, {1.5, 1.2}, {1, 1.4}, {0.5, 1.2}, {0, 1}, {0, 0},
+						}),
+						Holes: []*pb.Polygon{
+							{Points: lineToRing([][2]float32{
+								{0.9, 1.1}, {0.9, 1.3}, {1.1, 1.3}, {1.1, 1.1}, {0.9, 1.1},
+							})},
+						},
+					},
+				},
+			},
+			{
+				Name: "Top",
+				Polygons: []*pb.Polygon{
+					{Points: lineToRing([][2]float32{
+						{0, 1}, {0.5, 1.2}, {1, 1.4}, {1.5, 1.2}, {2, 1}, {2, 3}, {0, 3}, {0, 1},
+					})},
+				},
+			},
+			{
+				Name: "Right",
+				Polygons: []*pb.Polygon{
+					{Points: lineToRing([][2]float32{
+						{2, 0}, {4, 0}, {4, 3}, {2, 3}, {2, 1}, {2, 0},
+					})},
+				},
+			},
+			{
+				Name: "Left",
+				Polygons: []*pb.Polygon{
+					{Points: lineToRing([][2]float32{
+						{-2, 0}, {0, 0}, {0, 1}, {0, 3}, {-2, 3}, {-2, 0},
+					})},
+				},
+			},
+		},
+	}
+
+	output, stats := DoWithStats(input, 0.5)
+	if err := Validate(output); err != nil {
+		t.Fatalf("Validate returned error: %v", err)
+	}
+	if stats.RingsFallbackHoleEscape != 1 {
+		t.Fatalf("RingsFallbackHoleEscape = %d, want 1", stats.RingsFallbackHoleEscape)
+	}
+	if stats.RingsResimplified != 1 {
+		t.Fatalf("RingsResimplified = %d, want 1 (Top)", stats.RingsResimplified)
+	}
+
+	bumped := output.Timezones[0].Polygons[0].Points
+	top := output.Timezones[1].Polygons[0].Points
+	if len(ringUniquePoints(bumped)) != 7 {
+		t.Fatalf("Bumped exterior not restored: %v", bumped)
+	}
+	bumpedShared := extractSubPath(bumped, [][2]float32{{2, 1}, {0, 1}})
+	topShared := extractSubPath(top, [][2]float32{{0, 1}, {2, 1}})
+	if len(bumpedShared) != 5 || len(topShared) != 5 {
+		t.Fatalf("shared chain mismatch: bumped=%v top=%v", bumpedShared, topShared)
+	}
+	for idx := range bumpedShared {
+		if !samePoint(bumpedShared[idx], topShared[len(topShared)-1-idx]) {
+			t.Fatalf("shared border diverged at %d: bumped=%+v top=%+v", idx, bumpedShared[idx], topShared[len(topShared)-1-idx])
+		}
+	}
+}

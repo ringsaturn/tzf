@@ -77,13 +77,22 @@ identical simplified coordinates.
 
 Segments shorter than `minSimplifyPoints = 4` are passed through unchanged.
 
-A simplified ring falls back to its source geometry when it collapses to
+A simplified ring is restored to its baseline geometry when it collapses to
 fewer than 3 unique points, gains a zero-length edge, or self-intersects.
-Rings are simplified independently, so a polygon-level pass
-(`restoreEscapedHoles`) then restores any exterior whose bounding box no
-longer contains all of its holes — the case of a tiny exterior collapsing
-around building-sized holes that themselves fell back — and any hole still
-outside the restored exterior. The `.tzb` encoder rejects such polygons.
+Rings are simplified independently, so a polygon-level check
+(`escapedHoleRings`) also restores any exterior whose bounding box no longer
+contains all of its holes — the case of a tiny exterior collapsing around
+building-sized holes that themselves fell back — and any hole still outside
+the restored exterior. The `.tzb` encoder rejects such polygons.
+
+Restoring one ring alone would break the shared borders the cache keeps
+identical, so a restored ring pins its shared chains in `sharedCache` to
+their source vertices (`pinSourceSegments`) and its partner rings are
+simplified again; they pick the pinned chains up and keep their other
+chains unchanged. A re-simplified partner may fail in turn, so the loop
+repeats until no ring is restored — every ring is restored at most once.
+Rings are visited in index order, which makes the first writer of each
+shared chain, and with it the output, deterministic.
 
 ### 6. Winding normalisation
 
@@ -121,7 +130,7 @@ if err := topology.Validate(output); err != nil { ... }
 `Stats.String()` returns a multi-line summary suitable for logging:
 
 ```
-topology_rings: total=2078 no_fixed=1476 one_fixed=16 multi_fixed=581 fallback=168 hole_escape=0
+topology_rings: total=2078 no_fixed=1476 one_fixed=16 multi_fixed=581 fallback=168 hole_escape=0 resimplified=0
 topology_points: input=8022588 snapped_inserted=100 fallback_points=5463 fixed_vertices=173757
 topology_segments: total=175226 shared=2300(1.31%) skipped_short=170247(97.16%) ...
 topology_segment_points: input=8197799 output=1258366 reduction=84.65%

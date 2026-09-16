@@ -3,6 +3,7 @@
 package topology
 
 import (
+	"cmp"
 	"fmt"
 	"hash/fnv"
 	"math"
@@ -91,6 +92,7 @@ type Stats struct {
 	RingsFallbackOriginal   int
 	RingsFallbackPoints     int
 	RingsFallbackHoleEscape int
+	RingsResimplified       int
 	Segments                int
 	SharedSegments          int
 	SharedCacheHits         int
@@ -111,7 +113,7 @@ func (s Stats) String() string {
 	cacheHitPct := percent(s.SharedCacheHits, s.SharedCacheHits+s.SharedCacheMisses)
 	segmentReduction := percent(s.SegmentInputPoints-s.SegmentOutputPoints, s.SegmentInputPoints)
 	return fmt.Sprintf(
-		"topology_rings: total=%d no_fixed=%d one_fixed=%d multi_fixed=%d fallback=%d hole_escape=%d\n"+
+		"topology_rings: total=%d no_fixed=%d one_fixed=%d multi_fixed=%d fallback=%d hole_escape=%d resimplified=%d\n"+
 			"topology_points: input=%d snapped_inserted=%d fallback_points=%d fixed_vertices=%d\n"+
 			"topology_segments: total=%d shared=%d(%.2f%%) skipped_short=%d(%.2f%%) cache_hits=%d cache_misses=%d cache_hit_rate=%.2f%%\n"+
 			"topology_segment_points: input=%d output=%d reduction=%.2f%%\n"+
@@ -122,6 +124,7 @@ func (s Stats) String() string {
 		s.RingsMultiFixed,
 		s.RingsFallbackOriginal,
 		s.RingsFallbackHoleEscape,
+		s.RingsResimplified,
 		s.InputPoints,
 		s.SnappedInsertedVertices,
 		s.RingsFallbackPoints,
@@ -186,91 +189,170 @@ func DoWithStatsAndBaseline(input *pb.Timezones, epsilon float64) (*pb.Timezones
 	markFixedVertices(rings, vertexIndex, &stats)
 	sharedCache := make(map[sharedSegmentKey][]*pb.Point)
 
-	for ref, ring := range rings {
-		simplified := simplifyRing(ring, epsilon, sharedCache, &stats)
-		result := cleanRing(simplified)
-		unique := ringUniquePoints(result)
-		needsFallback := false
-		if len(unique) < 3 {
-			// Simplification produced a degenerate ring (< 3 unique points).
-			needsFallback = true
-		} else if ringHasZeroLengthEdge(unique) {
-			// Two non-adjacent points became identical after float32 rounding,
-			// creating a zero-length edge that the validator would reject.
-			needsFallback = true
-		} else if len(unique) <= selfIntersectionMaxPoints && hasSelfIntersection(unique) {
-			// Simplification collapsed a complex local shape (e.g. a building
-			// outline with many tight turns) into a self-intersecting polygon.
-			// This happens when epsilon is large relative to the feature size.
-			// The check is O(n²) so it is skipped for large rings, which rarely
-			// self-intersect after Douglas-Peucker.
-			needsFallback = true
+	// Rings are visited in a fixed order so that the first writer of every
+	// shared chain, and with it the output, is deterministic.
+	//
+	// A ring that fails simplification is restored to its baseline geometry.
+	// Restoring one side of a shared border alone would break the topology
+	// the shared cache exists to preserve, so the restored ring pins its
+	// shared chains in the cache to their source vertices and the partner
+	// rings are simplified again; they pick the pinned chains up and keep
+	// their other chains as before. A re-simplified partner can fail in turn,
+	// so this iterates until no ring is restored. Every ring is restored at
+	// most once, so the loop terminates. Stats describe the first pass;
+	// later passes only add to the fallback and resimplified counters.
+	pending := sortedRingRefs(rings)
+	restored := make(map[ringRef]struct{})
+	for pass := 0; len(pending) > 0; pass++ {
+		passStats := &stats
+		if pass > 0 {
+			passStats = nil
+			stats.RingsResimplified += len(pending)
 		}
-		if needsFallback {
+		var fallbacks []ringRef
+		for _, ref := range pending {
+			result, ok := simplifyRingChecked(rings[ref], epsilon, sharedCache, passStats)
+			if !ok {
+				fallbacks = append(fallbacks, ref)
+				continue
+			}
+			assignRing(output, ref, result)
+		}
+		fallbacks = append(fallbacks, escapedHoleRings(output, restored, &stats)...)
+
+		pending = pending[:0]
+		for _, ref := range fallbacks {
+			if _, done := restored[ref]; done {
+				continue
+			}
+			restored[ref] = struct{}{}
+			ring := rings[ref]
 			stats.RingsFallbackOriginal++
 			stats.RingsFallbackPoints += ring.OriginalLen
-			// cleanRing removes consecutive duplicates; cleanRingRemoveZeroEdges
-			// then removes any remaining zero-length edges (including wrap-around)
-			// that may exist in the source data.
-			result = cleanRingRemoveZeroEdges(cleanRing(getOriginalRing(input, ref)))
+			assignRing(output, ref, cloneRing(ring.Points))
+			for _, partner := range pinSourceSegments(ring, sharedCache) {
+				if _, done := restored[partner]; !done {
+					pending = append(pending, partner)
+				}
+			}
 		}
-		assignRing(output, ref, result)
+		pending = uniqueSortedRingRefs(pending)
 	}
-	restoreEscapedHoles(input, output, &stats)
 	normalizeWindings(output)
 
 	return output, baseline, stats
 }
 
-// restoreEscapedHoles re-establishes the invariant that per-ring
-// simplification cannot see: an exterior's bounding box must contain every
-// hole. With epsilon large relative to the polygon, the exterior collapses to
-// a few vertices while its tiny holes (fallen back to source) keep their
-// shape and stick out of it; the embed encoder rejects such a polygon
-// because a polygon's bbox is its exterior's. The check is bbox-based, not
+// simplifyRingChecked simplifies one ring and reports whether the result is
+// usable. It is not when the ring collapsed to fewer than 3 unique points,
+// when two non-adjacent points became identical after float32 rounding
+// (a zero-length edge the validator would reject), or when a complex local
+// shape such as a building outline folded into a self-intersecting polygon
+// because epsilon is large relative to the feature. The O(n²) intersection
+// check is skipped for large rings, which rarely self-intersect after
+// Douglas-Peucker.
+func simplifyRingChecked(ring *ringData, epsilon float64, sharedCache map[sharedSegmentKey][]*pb.Point, stats *Stats) ([]*pb.Point, bool) {
+	result := cleanRing(simplifyRing(ring, epsilon, sharedCache, stats))
+	unique := ringUniquePoints(result)
+	switch {
+	case len(unique) < 3:
+		return nil, false
+	case ringHasZeroLengthEdge(unique):
+		return nil, false
+	case len(unique) <= selfIntersectionMaxPoints && hasSelfIntersection(unique):
+		return nil, false
+	}
+	return result, true
+}
+
+// escapedHoleRings returns the rings to restore so that every exterior's
+// bounding box contains its holes, an invariant per-ring simplification
+// cannot see and the embed encoder enforces (a polygon's bbox is its
+// exterior's). With epsilon large relative to the polygon, the exterior
+// collapses to a few vertices while its tiny holes, fallen back to source,
+// keep their shape and stick out of it. The check is bbox-based, not
 // point-in-ring, on purpose: hole vertices on a simplified shared chain sit
 // a hair outside the exterior by construction, and restoring a continent
 // sized exterior for that would undo most of the reduction. The exterior is
-// restored from the source, then any hole still outside its box; the source
-// geometry is valid, so this always converges.
-func restoreEscapedHoles(input, output *pb.Timezones, stats *Stats) {
+// restored first; a hole still outside a restored exterior follows on the
+// next pass. Rings already restored are never returned, so this converges.
+func escapedHoleRings(output *pb.Timezones, restored map[ringRef]struct{}, stats *Stats) []ringRef {
+	var refs []ringRef
 	for tzIdx, tz := range output.Timezones {
 		for polyIdx, poly := range tz.Polygons {
 			if len(poly.Holes) == 0 {
 				continue
 			}
 			ext := ringBound(poly.Points)
-			escaped := false
-			for _, hole := range poly.Holes {
-				if !boundContains(ext, ringBound(hole.Points)) {
-					escaped = true
-					break
-				}
-			}
-			if !escaped {
-				continue
-			}
-			ref := ringRef{TimezoneIdx: tzIdx, PolygonIdx: polyIdx, HoleIdx: -1}
-			restoreRing(input, output, ref, stats)
-			stats.RingsFallbackHoleEscape++
-			ext = ringBound(poly.Points)
+			extRef := ringRef{TimezoneIdx: tzIdx, PolygonIdx: polyIdx, HoleIdx: -1}
+			_, extRestored := restored[extRef]
 			for holeIdx, hole := range poly.Holes {
 				if boundContains(ext, ringBound(hole.Points)) {
 					continue
 				}
-				ref.HoleIdx = holeIdx
-				restoreRing(input, output, ref, stats)
+				ref := extRef
+				if extRestored {
+					ref.HoleIdx = holeIdx
+				}
+				if _, done := restored[ref]; done {
+					continue
+				}
+				refs = append(refs, ref)
 				stats.RingsFallbackHoleEscape++
+				if !extRestored {
+					break
+				}
 			}
 		}
 	}
+	return refs
 }
 
-func restoreRing(input, output *pb.Timezones, ref ringRef, stats *Stats) {
-	original := getOriginalRing(input, ref)
-	stats.RingsFallbackOriginal++
-	stats.RingsFallbackPoints += len(original)
-	assignRing(output, ref, cleanRingRemoveZeroEdges(cleanRing(original)))
+// pinSourceSegments pins every shared chain of a ring that was restored to
+// its baseline geometry to the chain's source vertices, so the partner rings
+// emit the same vertices along it, and returns those partners. Chains the
+// cache cannot key (mixed partners) are skipped: their partner segments
+// never went through the cache either.
+func pinSourceSegments(ring *ringData, sharedCache map[sharedSegmentKey][]*pb.Point) []ringRef {
+	partners := make(map[ringRef]struct{})
+	walkRingSegments(ring, nil, func(segment []*pb.Point, edges []edgeMeta) []*pb.Point {
+		key, reversed, ok := sharedSegmentCacheKey(segment, edges)
+		if !ok {
+			return segment
+		}
+		partners[edges[0].PartnerRing] = struct{}{}
+		if reversed {
+			sharedCache[key] = reverseOpenPath(segment)
+		} else {
+			sharedCache[key] = clonePoints(segment)
+		}
+		return segment
+	})
+	return sortedRingRefs(partners)
+}
+
+func compareRingRef(a, b ringRef) int {
+	if c := cmp.Compare(a.TimezoneIdx, b.TimezoneIdx); c != 0 {
+		return c
+	}
+	if c := cmp.Compare(a.PolygonIdx, b.PolygonIdx); c != 0 {
+		return c
+	}
+	return cmp.Compare(a.HoleIdx, b.HoleIdx)
+}
+
+func sortedRingRefs[V any](set map[ringRef]V) []ringRef {
+	refs := make([]ringRef, 0, len(set))
+	for ref := range set {
+		refs = append(refs, ref)
+	}
+	slices.SortFunc(refs, compareRingRef)
+	return refs
+}
+
+func uniqueSortedRingRefs(refs []ringRef) []ringRef {
+	slices.SortFunc(refs, compareRingRef)
+	return slices.CompactFunc(refs, func(a, b ringRef) bool { return a == b })
 }
 
 func ringBound(points []*pb.Point) orb.Bound {
@@ -705,15 +787,6 @@ func ringHasZeroLengthEdge(unique []*pb.Point) bool {
 	return false
 }
 
-func getOriginalRing(input *pb.Timezones, ref ringRef) []*pb.Point {
-	tz := input.Timezones[ref.TimezoneIdx]
-	poly := tz.Polygons[ref.PolygonIdx]
-	if ref.HoleIdx == -1 {
-		return poly.Points
-	}
-	return poly.Holes[ref.HoleIdx].Points
-}
-
 // isEntirelyShared returns true when every edge in the ring is shared with the
 // same single partner ring. This identifies complete enclaves: a hole ring
 // whose shape exactly matches another timezone's exterior polygon.
@@ -749,7 +822,24 @@ func findCanonicalStart(points []*pb.Point) int {
 	return best
 }
 
+// segmentFunc maps one open path of a ring — its source vertices between two
+// consecutive fixed vertices, or the whole ring opened at one vertex — and
+// the metadata of its edges to the output vertices for that path. The first
+// and last vertex are preserved.
+type segmentFunc func(segment []*pb.Point, edges []edgeMeta) []*pb.Point
+
 func simplifyRing(ring *ringData, epsilon float64, sharedCache map[sharedSegmentKey][]*pb.Point, stats *Stats) []*pb.Point {
+	return walkRingSegments(ring, stats, func(segment []*pb.Point, edges []edgeMeta) []*pb.Point {
+		return simplifySegment(segment, edges, epsilon, sharedCache, stats)
+	})
+}
+
+// walkRingSegments splits a ring at its fixed vertices exactly as the
+// simplifier does, applies fn to every open path and reassembles the closed
+// ring. Rings with at most 3 unique points are returned as they are. The
+// same decomposition is what keys the shared-segment cache, so a caller
+// pinning a ring's chains sees the keys its partners will look up.
+func walkRingSegments(ring *ringData, stats *Stats, fn segmentFunc) []*pb.Point {
 	points := ring.Points
 	fixed := ring.Fixed
 	if len(points) == 0 {
@@ -778,9 +868,9 @@ func simplifyRing(ring *ringData, epsilon float64, sharedCache map[sharedSegment
 		}
 	}
 
-	var simplified []*pb.Point
 	switch len(fixedIndices) {
 	case 0:
+		start := 0
 		if isEntirelyShared(ring.Edges) {
 			// The entire ring boundary is shared with one partner ring (classic
 			// enclave: a hole in an outer timezone whose shape matches the inner
@@ -788,33 +878,12 @@ func simplifyRing(ring *ringData, epsilon float64, sharedCache map[sharedSegment
 			// vertex so both this ring and its partner independently arrive at
 			// the same canonical open-path representation, enabling the shared
 			// segment cache to produce identical simplification results.
-			canonStart := findCanonicalStart(unique)
-			rotated := rotatePoints(unique, canonStart)
-			rotatedEdges := rotateEdges(ring.Edges, canonStart)
-			openPath := make([]*pb.Point, 0, len(rotated)+1)
-			openPath = append(openPath, clonePoints(rotated)...)
-			openPath = append(openPath, clonePoint(rotated[0]))
-			simplified = closeRing(simplifySegment(openPath, rotatedEdges, epsilon, sharedCache, stats))
-		} else {
-			simplified = simplifyClosedRing(unique, epsilon, stats)
+			start = findCanonicalStart(unique)
 		}
+		return closeRing(fn(openRingPath(unique, start), rotateEdges(ring.Edges, start)))
 	case 1:
 		start := fixedIndices[0]
-		rotated := rotatePoints(unique, start)
-		rotatedEdges := rotateEdges(ring.Edges, start)
-		openPath := make([]*pb.Point, 0, len(rotated)+1)
-		openPath = append(openPath, clonePoints(rotated)...)
-		openPath = append(openPath, clonePoint(rotated[0]))
-		if isEntirelyShared(rotatedEdges) {
-			simplified = closeRing(simplifySegment(openPath, rotatedEdges, epsilon, sharedCache, stats))
-		} else {
-			reduced := simplifyOpenPath(openPath, epsilon)
-			recordSegmentStats(stats, len(openPath), len(reduced), false)
-			if stats != nil && len(openPath) <= minSimplifyPoints {
-				stats.SegmentsSkippedShort++
-			}
-			simplified = closeRing(reduced)
-		}
+		return closeRing(fn(openRingPath(unique, start), rotateEdges(ring.Edges, start)))
 	default:
 		start := fixedIndices[0]
 		rotated := rotatePoints(unique, start)
@@ -828,19 +897,25 @@ func simplifyRing(ring *ringData, epsilon float64, sharedCache map[sharedSegment
 			adjusted = append(adjusted, idx-start)
 		}
 		slices.Sort(adjusted)
-		simplified = simplifyFixedSegments(rotated, rotatedEdges, adjusted, epsilon, sharedCache, stats)
+		return walkFixedSegments(rotated, rotatedEdges, adjusted, fn)
 	}
-
-	return simplified
 }
 
-func simplifyFixedSegments(
+// openRingPath rotates the unique vertices of a ring to start and closes the
+// path by repeating the start vertex.
+func openRingPath(unique []*pb.Point, start int) []*pb.Point {
+	rotated := rotatePoints(unique, start)
+	openPath := make([]*pb.Point, 0, len(rotated)+1)
+	openPath = append(openPath, rotated...)
+	openPath = append(openPath, clonePoint(rotated[0]))
+	return openPath
+}
+
+func walkFixedSegments(
 	points []*pb.Point,
 	edges []edgeMeta,
 	fixed []int,
-	epsilon float64,
-	sharedCache map[sharedSegmentKey][]*pb.Point,
-	stats *Stats,
+	fn segmentFunc,
 ) []*pb.Point {
 	if len(points) == 0 {
 		return nil
@@ -860,7 +935,7 @@ func simplifyFixedSegments(
 		for cursor := start; cursor < end; cursor++ {
 			segmentEdges = append(segmentEdges, edges[cursor%len(edges)])
 		}
-		reduced := simplifySegment(segment, segmentEdges, epsilon, sharedCache, stats)
+		reduced := fn(segment, segmentEdges)
 		if idx < len(fixed)-1 {
 			reduced = reduced[:len(reduced)-1]
 		}
@@ -934,18 +1009,6 @@ func sharedSegmentCacheKey(
 		return sharedSegmentKey{Signature: reverse}, true, true
 	}
 	return sharedSegmentKey{Signature: forward}, false, true
-}
-
-func simplifyClosedRing(points []*pb.Point, epsilon float64, stats *Stats) []*pb.Point {
-	path := make([]*pb.Point, 0, len(points))
-	path = append(path, clonePoints(points)...)
-	path = append(path, clonePoint(points[0]))
-	reduced := simplifyOpenPath(path, epsilon)
-	recordSegmentStats(stats, len(path), len(reduced), false)
-	if stats != nil && len(path) <= minSimplifyPoints {
-		stats.SegmentsSkippedShort++
-	}
-	return closeRing(reduced)
 }
 
 func simplifyOpenPath(points []*pb.Point, epsilon float64) []*pb.Point {
