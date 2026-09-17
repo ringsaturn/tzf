@@ -336,8 +336,11 @@ func collectRingArcs(arcs map[[sha256.Size]byte]*arc, baseline map[point]struct{
 		}
 		chosen := -1
 		for _, candidate := range candidates {
+			// A ring that pinches on itself visits the same (quantized)
+			// vertex twice, so a candidate may already lie a full lap behind
+			// the cursor; keep unwrapping until it is ahead of it.
 			unwrapped := candidate
-			if unwrapped <= previous {
+			for unwrapped <= previous {
 				unwrapped += len(original)
 			}
 			if chosen == -1 || unwrapped < chosen {

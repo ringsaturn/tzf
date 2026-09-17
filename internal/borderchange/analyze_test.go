@@ -113,3 +113,23 @@ func pbPoints(coords [][2]float32) []*pb.Point {
 	}
 	return result
 }
+
+func TestPinchedRingRevisitsVertex(t *testing.T) {
+	// Two squares joined at (1,1): the ring passes through that vertex twice.
+	// The candidate ring starts near the end of the baseline order so the
+	// walk has already wrapped when the vertex comes round the second time
+	// (TBB 2026d, an Asia/Hong_Kong building outline).
+	original := dataset([][2]float32{
+		{0, 0}, {0.5, 0.001}, {1, 0}, {1, 1}, {2, 1}, {2, 2}, {1, 2}, {1, 1}, {0, 1}, {0, 0},
+	})
+	simplified := dataset([][2]float32{
+		{0, 1}, {0, 0}, {1, 0}, {1, 1}, {2, 1}, {2, 2}, {1, 2}, {1, 1}, {0, 1},
+	})
+	report, err := Analyze(original, simplified, Options{CertificationToleranceM: 0.5})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.ChangedArcs != 1 {
+		t.Fatalf("changed arcs: got %d want 1", report.ChangedArcs)
+	}
+}
