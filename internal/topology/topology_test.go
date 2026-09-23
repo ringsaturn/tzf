@@ -469,8 +469,10 @@ func TestDo_RestoredExteriorPinsSharedBorder(t *testing.T) {
 	if stats.RingsFallbackHoleEscape != 1 {
 		t.Fatalf("RingsFallbackHoleEscape = %d, want 1", stats.RingsFallbackHoleEscape)
 	}
-	if stats.RingsResimplified != 1 {
-		t.Fatalf("RingsResimplified = %d, want 1 (Top)", stats.RingsResimplified)
+	if stats.RingsResimplified != 3 {
+		// Restoring Bumped pins its shared chains; its partners Top (the bump
+		// chain), Left and Right (the two side edges) are all resimplified.
+		t.Fatalf("RingsResimplified = %d, want 3 (Top, Left, Right)", stats.RingsResimplified)
 	}
 
 	bumped := output.Timezones[0].Polygons[0].Points

@@ -714,22 +714,22 @@ func markSharedEdges(rings map[ringRef]*ringData, edgeIndex map[edgeKey][]edgeUs
 }
 
 // markFixedVertices marks ring vertices that must not be moved during
-// Douglas-Peucker simplification. Only true multi-way topological nodes
-// (3+ distinct rings meeting at a point) are fixed. Two-ring transition
-// points (shared↔non-shared boundary, or partner-change) are intentionally
-// left unfixed so that D-P can see longer continuous segments.
+// Douglas-Peucker simplification. A vertex is fixed when it is a true
+// multi-way topological node (3+ distinct rings meeting at a point), when it
+// is a transition between a shared and a non-shared edge, or when the two
+// adjacent shared edges belong to different partners.
+//
+// Pinning the shared↔non-shared transitions (and partner changes) is what
+// guarantees that every decomposed segment is either entirely local or
+// entirely shared with a single partner. A segment mixing shared and local
+// edges cannot be keyed in the shared-segment cache (see
+// sharedSegmentCacheKey), so the two sides of a border would be simplified
+// independently and drift apart, opening coverage gaps / overlaps. The cost
+// is one pinned vertex per shared-chain end, which is exactly the vertex the
+// border needs to stay closed.
 func markFixedVertices(rings map[ringRef]*ringData, vertexIndex map[pointKey]map[ringRef]struct{}, stats *Stats) {
 	for ref, ring := range rings {
-		unique := ringUniquePoints(ring.Points)
-		if len(unique) == 0 {
-			continue
-		}
-		for idx, point := range unique {
-			vertexKey := newPointKey(point)
-			if len(vertexIndex[vertexKey]) > 2 {
-				ring.Fixed[idx] = struct{}{}
-			}
-		}
+		markFixedVerticesInRing(ring, vertexIndex)
 		if stats != nil {
 			stats.FixedVertices += len(ring.Fixed)
 		}
@@ -738,36 +738,39 @@ func markFixedVertices(rings map[ringRef]*ringData, vertexIndex map[pointKey]map
 }
 
 // markFixedVerticesForDedup marks ring vertices that serve as segment
-// boundaries for the shared-edge deduplication pass. Unlike the simplification
-// variant, this also fixes two-ring transition points so that rings are
-// correctly split into purely-shared vs purely-non-shared segments.
+// boundaries for the shared-edge deduplication pass. It shares its predicate
+// with markFixedVertices so the simplification and deduplication passes cut
+// every ring at exactly the same vertices.
 func markFixedVerticesForDedup(rings map[ringRef]*ringData, vertexIndex map[pointKey]map[ringRef]struct{}) {
 	for ref, ring := range rings {
-		unique := ringUniquePoints(ring.Points)
-		if len(unique) == 0 {
+		markFixedVerticesInRing(ring, vertexIndex)
+		rings[ref] = ring
+	}
+}
+
+func markFixedVerticesInRing(ring *ringData, vertexIndex map[pointKey]map[ringRef]struct{}) {
+	unique := ringUniquePoints(ring.Points)
+	if len(unique) == 0 {
+		return
+	}
+	for idx := range unique {
+		prev := ring.Edges[(idx-1+len(ring.Edges))%len(ring.Edges)]
+		next := ring.Edges[idx]
+
+		// Transition between a shared edge and a non-shared edge.
+		if prev.Shared != next.Shared {
+			ring.Fixed[idx] = struct{}{}
 			continue
 		}
-		for idx, point := range unique {
-			prev := ring.Edges[(idx-1+len(ring.Edges))%len(ring.Edges)]
-			next := ring.Edges[idx]
-			vertexKey := newPointKey(point)
-
-			// Transition between a shared edge and a non-shared edge.
-			if prev.Shared != next.Shared {
-				ring.Fixed[idx] = struct{}{}
-				continue
-			}
-			// Both adjacent edges are shared but with different partners.
-			if prev.Shared && next.Shared && prev.PartnerRing != next.PartnerRing {
-				ring.Fixed[idx] = struct{}{}
-				continue
-			}
-			// Three or more rings meet at this vertex.
-			if len(vertexIndex[vertexKey]) > 2 {
-				ring.Fixed[idx] = struct{}{}
-			}
+		// Both adjacent edges are shared but with different partners.
+		if prev.Shared && next.Shared && prev.PartnerRing != next.PartnerRing {
+			ring.Fixed[idx] = struct{}{}
+			continue
 		}
-		rings[ref] = ring
+		// Three or more rings meet at this vertex.
+		if len(vertexIndex[newPointKey(unique[idx])]) > 2 {
+			ring.Fixed[idx] = struct{}{}
+		}
 	}
 }
 
