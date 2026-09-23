@@ -2,8 +2,8 @@ github.com/ringsaturn/go-cities.json v0.6.13 h1:p5afPcJ/tEE6uzFCOzLSHJYXgWnGdPmw
 github.com/ringsaturn/go-cities.json v0.6.13/go.mod h1:VtklT4Sod9i6kvXXNZV63sfjeCX9l11OQfaAvPu+p4M=
 github.com/ringsaturn/orb v0.15.0 h1:+jLFo3JzHX2yg5kILpfcLHokKXywqNHBtgEDo6SJOuk=
 github.com/ringsaturn/orb v0.15.0/go.mod h1:kF8F7MSKFRPm0HxTzlLz8k/jkexsV3MVcultHKVFmzg=
-github.com/ringsaturn/tzf-dist v0.0.2026-d h1:wGOBONL3fNntnw7x+9vTCLW4FkAthG4JDDtWM2fSvcQ=
-github.com/ringsaturn/tzf-dist v0.0.2026-d/go.mod h1:MLn3mRLioai5ceZLV8k+uAr4cLxdVEHoTQIGKpuVS/c=
+github.com/ringsaturn/tzf-dist v0.0.2026-d-fix1 h1:lT6jQEwS7NRpBSG7lZ3Cwl16ADkZ6WfkDCWH/6usR58=
+github.com/ringsaturn/tzf-dist v0.0.2026-d-fix1/go.mod h1:MLn3mRLioai5ceZLV8k+uAr4cLxdVEHoTQIGKpuVS/c=
 github.com/tidwall/cities v0.1.0 h1:CVNkmMf7NEC9Bvokf5GoSsArHCKRMTgLuubRTHnH0mE=
 github.com/tidwall/cities v0.1.0/go.mod h1:lV/HDp2gCcRcHJWqgt6Di54GiDrTZwh1aG2ZUPNbqa4=
 github.com/tidwall/geoindex v1.7.0 h1:jtk41sfgwIt8MEDyC3xyKSj75iXXf6rjReJGDNPtR5o=
