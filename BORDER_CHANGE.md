@@ -2,8 +2,8 @@
 
 - Source input: `combined-with-oceans.dist.gob`
 - Candidate input: `generated with topology-aware simplification`
-- Source dataset version: `2026c`
-- Candidate dataset version: `2026c`
+- Source dataset version: `2026d`
+- Candidate dataset version: `2026d`
 - Douglas-Peucker epsilon: `0.001000 degrees`
 - Source points after topology normalization: `8183767`
 - Candidate points: `1118325`
@@ -15,7 +15,7 @@
 - Error strip area: `16495.223666 km2`
 - Maximum single strip area: `636.827392 km2`
 - Junction vertices inserted by shared-edge deduplication (dropped before arc matching): `0`, maximum offset from the baseline ring: `0.000 m`
-- Runtime: `18.383s`
+- Runtime: `17.213s`
 
 ### Boundary displacement
 

@@ -21,7 +21,7 @@ if [ "${1:-}" = "--shim-only" ]; then
   SHIM_ONLY=true
 fi
 
-TBB_VERSION="${TBB_VERSION:-2026c}"
+TBB_VERSION="${TBB_VERSION:-2026d}"
 WORK_DIR=tmp/tzf-dist-dev
 DIST_DIR=../tzf-dist
 
