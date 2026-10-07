@@ -50,7 +50,7 @@ jobs:
       # entries written by the old path cannot be restored either.
       - name: Cache pipeline outputs
         id: data-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             tzf/tmp/tzf-dist-dev
