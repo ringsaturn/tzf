@@ -57,7 +57,7 @@ jobs:
             tzf-dist/lite.tzb
             tzf-dist/lite.tzm
             tzf-dist/full.tzb
-          key: tzf-data-v2-2026c-${{ hashFiles('tzf/cmd/**', 'tzf/internal/**', 'tzf/scripts/build-tzf-dist-dev.sh') }}
+          key: tzf-data-v2-2026e-${{ hashFiles('tzf/cmd/**', 'tzf/internal/**', 'tzf/scripts/build-tzf-dist-dev.sh') }}
 
       # Runs on every job, cache hit or not: writes the shim while tzf-dist
       # still predates the v2 embeds, and removes it once the checkout
