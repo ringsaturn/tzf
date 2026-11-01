@@ -318,6 +318,26 @@ func (r *Reader) FuzzyZooms() (idxZoom, aggZoom int) {
 	return int(r.fuzzy.idxZoom), int(r.fuzzy.aggZoom)
 }
 
+// FuzzyKeys calls fn with every FUZZY tile key in file order, which is
+// strictly ascending (checked at open): the zoom lives in the key's high
+// bits, so all tiles of a coarser zoom come before any of a finer one.
+func (r *Reader) FuzzyKeys(fn func(key geom.TileID)) error {
+	if !r.fuzzy.present {
+		return ErrNoFuzzy
+	}
+	view := r.view()
+	defer r.release(view)
+	r = view
+	for i := uint32(0); i < r.fuzzy.tileCount; i++ {
+		key, err := r.fuzzyKeyAt(i)
+		if err != nil {
+			return err
+		}
+		fn(geom.TileID(key))
+	}
+	return nil
+}
+
 // FuzzyMaps materializes the FUZZY section into the two hash maps the in-RAM
 // fuzzy finder queries (single-timezone tiles and boundary tiles), one pass
 // over the sorted key array. Values are NAMES indices; multi groups keep
