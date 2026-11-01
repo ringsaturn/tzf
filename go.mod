@@ -7,7 +7,7 @@ require (
 	github.com/ringsaturn/orb v0.15.0
 	github.com/ringsaturn/tzf-dist v0.0.2026-f
 	github.com/tidwall/rtree v1.11.1
-	golang.org/x/sync v0.23.0
+	golang.org/x/sync v0.24.0
 )
 
 require github.com/tidwall/geoindex v1.7.0 // indirect
