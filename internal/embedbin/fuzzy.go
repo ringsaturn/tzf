@@ -338,6 +338,57 @@ func (r *Reader) FuzzyKeys(fn func(key geom.TileID)) error {
 	return nil
 }
 
+// FuzzyTileCount returns the number of FUZZY tiles, 0 without a FUZZY
+// section.
+func (r *Reader) FuzzyTileCount() int {
+	if !r.fuzzy.present {
+		return 0
+	}
+	return int(r.fuzzy.tileCount)
+}
+
+// FuzzyEntries calls fn with every FUZZY tile in file order (strictly
+// ascending keys, as FuzzyKeys) and the NAMES indices it carries: one for a
+// single-timezone tile, the stored group for a boundary tile. The indices
+// slice is reused between calls; fn must copy what it keeps.
+func (r *Reader) FuzzyEntries(fn func(key geom.TileID, indices []uint16)) error {
+	if !r.fuzzy.present {
+		return ErrNoFuzzy
+	}
+	view := r.view()
+	defer r.release(view)
+	r = view
+	buf := make([]uint16, 0, max(int(r.fuzzy.maxGroupLen), 1))
+	for i := uint32(0); i < r.fuzzy.tileCount; i++ {
+		key, err := r.fuzzyKeyAt(i)
+		if err != nil {
+			return err
+		}
+		value, err := r.fuzzyU16At(r.fuzzy.valuesOff + 2*uint64(i))
+		if err != nil {
+			return err
+		}
+		buf = buf[:0]
+		if value&fuzzyMulti == 0 {
+			buf = append(buf, value)
+		} else {
+			first, count, err := r.fuzzyGroupAt(uint32(value &^ fuzzyMulti))
+			if err != nil {
+				return err
+			}
+			for j := uint32(0); j < uint32(count); j++ {
+				v, err := r.fuzzyU16At(r.fuzzy.multiValuesOff + 2*uint64(uint32(first)+j))
+				if err != nil {
+					return err
+				}
+				buf = append(buf, v)
+			}
+		}
+		fn(geom.TileID(key), buf)
+	}
+	return nil
+}
+
 // FuzzyMaps materializes the FUZZY section into the two hash maps the in-RAM
 // fuzzy finder queries (single-timezone tiles and boundary tiles), one pass
 // over the sorted key array. Values are NAMES indices; multi groups keep
