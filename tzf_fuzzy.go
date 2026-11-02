@@ -1,133 +1,72 @@
 package tzf
 
 import (
+	"errors"
 	"math"
+	"slices"
+	"sort"
 
 	"github.com/ringsaturn/tzf/v2/internal/convert"
 	"github.com/ringsaturn/tzf/v2/internal/embedbin"
 	"github.com/ringsaturn/tzf/v2/internal/geom"
 )
 
-// fuzzyIndex answers queries from the preindex tile maps rebuilt out of a
-// file's FUZZY section. It is the fast path inside the composed finders and
-// is not a public mechanism in v2 (spec §5.2): a query it cannot answer
-// unambiguously falls through to the polygon finder.
+// fuzzyIndex answers queries from the preindex tiles of a file's FUZZY
+// section, rebuilt as a flat tile grid. It is the fast path inside the
+// composed finders and is not a public mechanism in v2 (spec §5.2): a query
+// it cannot answer unambiguously falls through to the polygon finder.
 //
-// Tiles are split into two maps for memory efficiency:
-//   - single: tiles that belong to exactly one timezone (vast majority); value is a names index.
-//   - multi:  tiles that straddle a timezone boundary; value is a slice of names indices.
+// The root is a dense 2^rootZoom × 2^rootZoom array of nodes. Below it,
+// every two zooms form one block level down to leafZoom, the finest zoom any
+// tile has: a node whose area holds finer tiles points to a block of 4 × 4
+// child nodes. A node is a names index (< blockBase), a block pointer
+// (blockBase + block), or noTile. A lookup is one root read plus one read per
+// block level, instead of a map probe per zoom.
+//
+// Answers are those of probing every zoom from aggZoom to idxZoom, coarsest
+// first, with boundary tiles resolving to their first name: the grid is
+// built finest tiles first, so a coarser tile overwrites any finer one under
+// it.
 type fuzzyIndex struct {
-	idxZoom int
-	aggZoom int
-	single  map[geom.TileID]uint16   // tile → single timezone index into names
-	multi   map[geom.TileID][]uint16 // tile → multiple timezone indices (boundary tiles only)
-	names   []string
+	idxZoom   uint8
+	rootZoom  uint8
+	leafZoom  uint8
+	blockBase uint16
+	root      []uint16
+	blocks    []uint16
+	names     []string
 
-	// zoomRanges holds, per 1°×1° cell (zoomCellsLng × zoomCellsLat,
-	// row-major from lat -90, lng -180), the coarsest and finest zoom of any
-	// tile touching the cell, packed as zmin | zmax<<8; noTiles when none
-	// does. A lookup probes only that zoom range: a tile covering a point
-	// always touches the point's cell, so the skipped zooms can never match,
-	// and the probe order (coarsest first) is unchanged.
-	zoomRanges []uint16
+	// The tiles in file order (ascending keys), kept for the preindex
+	// GeoJSON export: tile i names tileIdx[tileOff[i]:tileOff[i+1]].
+	tiles   []geom.TileID
+	tileOff []uint32
+	tileIdx []uint16
 }
 
 const (
-	zoomCellsLng = 360
-	zoomCellsLat = 180
-	noTiles      = math.MaxUint16
+	// blockSide is the side of a block: each block level refines a node by
+	// two zooms, into blockSide × blockSide children.
+	blockSide  = 4
+	blockCells = blockSide * blockSide
+	// maxRootZoom is the finest root zoom: 4^8 = 65,536 nodes (128 KB).
+	maxRootZoom = 8
+	// noTile marks a node no tile covers.
+	noTile = math.MaxUint16
+	// buildNoTile is noTile in the wider nodes used while building, before
+	// identical blocks are merged.
+	buildNoTile = math.MaxUint32
 )
 
-// zoomCell is the 1°×1° cell holding (lng, lat); the caller has
-// range-checked both. lng = 180 and lat = 90 fold into the last column / row.
-func zoomCell(lng, lat float64) int {
-	cx := min(int(lng+180), zoomCellsLng-1)
-	cy := min(int(lat+90), zoomCellsLat-1)
-	return cy*zoomCellsLng + cx
+// childSlot is the position inside a block of the child holding cell (x, y),
+// where the cells are below zooms finer than the block's children.
+func childSlot(x, y uint32, below uint8) int {
+	return int(((y>>below)&(blockSide-1))*blockSide + (x>>below)&(blockSide-1))
 }
 
-// buildZoomRanges builds fuzzyIndex.zoomRanges from the reader's FUZZY keys.
-//
-// The keys arrive in ascending order, so zooms arrive coarsest first: the
-// first zoom a cell sees is its minimum and the last is its maximum, and
-// each touched cell costs one store.
-func buildZoomRanges(reader *embedbin.Reader) ([]uint16, error) {
-	ranges := make([]uint16, zoomCellsLng*zoomCellsLat)
-	for i := range ranges {
-		ranges[i] = noTiles
-	}
-	var spans [32]*zoomSpans
-	err := reader.FuzzyKeys(func(t geom.TileID) {
-		x, y, z := t.XYZ()
-		s := spans[z]
-		if s == nil {
-			s = newZoomSpans(z)
-			spans[z] = s
-		}
-		cx, cy := s.col[x], s.row[y]
-		for r := int(cy[0]); r <= int(cy[1]); r++ {
-			row := ranges[r*zoomCellsLng+int(cx[0]) : r*zoomCellsLng+int(cx[1])+1]
-			for c, v := range row {
-				if v == noTiles {
-					row[c] = uint16(z) | uint16(z)<<8
-				} else {
-					row[c] = v&0xff | uint16(z)<<8
-				}
-			}
-		}
-	})
-	return ranges, err
-}
-
-// zoomSpans holds, per tile column (lng) and per tile row (lat) of one zoom,
-// the first and last 1° cell index the column / row touches. A zoom has 2^z
-// columns and rows but can hold up to 4^z tiles, so tiles share these.
-type zoomSpans struct {
-	col [][2]uint16
-	row [][2]uint16
-}
-
-func newZoomSpans(z uint8) *zoomSpans {
-	// Widen each tile by a hair so float error in the projection can only
-	// mark extra cells, never miss one.
-	const margin = 1e-7
-	// Every shifted value is > -1 (the margin is the only way below 0), so
-	// int() truncation equals floor once clamped at 0.
-	cell := func(v float64, limit int) uint16 {
-		return uint16(min(max(int(v), 0), limit-1))
-	}
-	rows := 1 << z
-	n := float64(rows)
-	// Row edge latitudes: the inverse of the Web-Mercator row in geom.tileXY.
-	edge := func(y int) float64 {
-		return math.Atan(math.Sinh(math.Pi*(1-2*float64(y)/n))) * 180 / math.Pi
-	}
-	s := &zoomSpans{col: make([][2]uint16, rows), row: make([][2]uint16, rows)}
-	for x := range rows {
-		lng0 := float64(x)/n*360 - 180 - margin
-		lng1 := float64(x+1)/n*360 - 180 + margin
-		s.col[x] = [2]uint16{cell(lng0+180, zoomCellsLng), cell(lng1+180, zoomCellsLng)}
-	}
-	for y := range rows {
-		// geom.tileXY clamps latitudes beyond ±85.0511° into the first / last
-		// row, so those rows reach the poles.
-		latTop := 90.0
-		if y != 0 {
-			latTop = edge(y) + margin
-		}
-		latBottom := -90.0
-		if y+1 < rows {
-			latBottom = edge(y+1) - margin
-		}
-		s.row[y] = [2]uint16{cell(latBottom+90, zoomCellsLat), cell(latTop+90, zoomCellsLat)}
-	}
-	return s
-}
-
-// newFuzzyIndexFromReader rebuilds the preindex hash maps from a file's FUZZY
-// section: one pass over the sorted tile keys (~2.4 MB heap on the bundled
-// preindex), plus a second pass for the ~130 KB zoomRanges table. The source
-// bytes are not retained. It fails when the file has no FUZZY section.
+// newFuzzyIndexFromReader rebuilds the preindex tile grid from a file's
+// FUZZY section (~0.5 MB on the bundled preindex) plus the compact tile list
+// the GeoJSON export reads. The source bytes are not retained. It fails when
+// the file has no FUZZY section.
 func newFuzzyIndexFromReader(reader *embedbin.Reader) (*fuzzyIndex, error) {
 	if !reader.HasFuzzy() {
 		return nil, embedbin.ErrNoFuzzy
@@ -140,47 +79,231 @@ func newFuzzyIndexFromReader(reader *embedbin.Reader) (*fuzzyIndex, error) {
 		}
 		names[i] = string(name)
 	}
-	single, multi, err := reader.FuzzyMaps()
+	if len(names) >= noTile {
+		return nil, errors.New("tzf: too many timezones for the FUZZY grid")
+	}
+	idx, agg := reader.FuzzyZooms()
+	idxZoom, aggZoom := uint8(idx), uint8(agg)
+
+	n := reader.FuzzyTileCount()
+	f := &fuzzyIndex{
+		idxZoom:   idxZoom,
+		blockBase: uint16(len(names)),
+		names:     names,
+		tiles:     make([]geom.TileID, 0, n),
+		tileOff:   make([]uint32, 1, n+1),
+		// Nearly every tile names one timezone.
+		tileIdx: make([]uint16, 0, n+n/16),
+	}
+	err := reader.FuzzyEntries(func(key geom.TileID, indices []uint16) {
+		f.tiles = append(f.tiles, key)
+		f.tileIdx = append(f.tileIdx, indices...)
+		f.tileOff = append(f.tileOff, uint32(len(f.tileIdx)))
+	})
 	if err != nil {
 		return nil, err
 	}
-	idxZoom, aggZoom := reader.FuzzyZooms()
-	zoomRanges, err := buildZoomRanges(reader)
-	if err != nil {
+	if err := f.buildGrid(aggZoom); err != nil {
 		return nil, err
 	}
-	return &fuzzyIndex{
-		idxZoom:    idxZoom,
-		aggZoom:    aggZoom,
-		single:     single,
-		multi:      multi,
-		names:      names,
-		zoomRanges: zoomRanges,
-	}, nil
+	return f, nil
+}
+
+// buildGrid builds root and blocks from the tile list. Only zooms in
+// aggZoom..idxZoom are ever probed, so only those tiles go in.
+func (f *fuzzyIndex) buildGrid(aggZoom uint8) error {
+	// The keys are ascending and the zoom lives in their high bits, so the
+	// tiles run coarsest zoom first and the finest probed zoom is the last
+	// in range.
+	f.leafZoom = aggZoom
+	for i := len(f.tiles) - 1; i >= 0; i-- {
+		if _, _, z := f.tiles[i].XYZ(); z <= f.idxZoom {
+			f.leafZoom = max(aggZoom, z)
+			break
+		}
+	}
+	// Block levels sit every two zooms above the leaf.
+	f.rootZoom = f.leafZoom
+	if f.leafZoom > maxRootZoom {
+		f.rootZoom = maxRootZoom - (f.leafZoom-maxRootZoom)%2
+	}
+
+	base := uint32(f.blockBase)
+	side := 1 << f.rootZoom
+	root := make([]uint32, side*side)
+	for i := range root {
+		root[i] = buildNoTile
+	}
+	// Tiles below the root zoom: the last ones in key order. Fewer blocks
+	// than those tiles get made, as most blocks hold several of them.
+	finer := len(f.tiles) - sort.Search(len(f.tiles), func(i int) bool {
+		_, _, z := f.tiles[i].XYZ()
+		return z > f.rootZoom
+	})
+	blocks := make([]uint32, 0, finer/2*blockCells)
+	// Finest first: a coarser tile then overwrites any finer one under it.
+	for i := len(f.tiles) - 1; i >= 0; i-- {
+		x, y, z := f.tiles[i].XYZ()
+		if z < aggZoom || z > f.idxZoom {
+			continue
+		}
+		value := uint32(f.tileIdx[f.tileOff[i]])
+		if z <= f.rootZoom {
+			span := uint32(1) << (f.rootZoom - z)
+			for ry := y * span; ry < (y+1)*span; ry++ {
+				row := int(ry) * side
+				for rx := x * span; rx < (x+1)*span; rx++ {
+					root[row+int(rx)] = value
+				}
+			}
+			continue
+		}
+		// The block level holding z: the shallowest level at or below it,
+		// the tile's top-left cell there, and the cells it spans.
+		level := f.rootZoom + (z-f.rootZoom+1)/2*2
+		span := uint32(1) << (level - z)
+		lx, ly := x*span, y*span
+		shift := level - f.rootZoom
+		nodes, pos := root, int(ly>>shift)*side+int(lx>>shift)
+		depth := f.rootZoom
+		for {
+			node := nodes[pos]
+			if node == buildNoTile {
+				// Descend into a fresh block.
+				node = base + uint32(len(blocks)/blockCells)
+				nodes[pos] = node
+				blocks = append(blocks, make([]uint32, blockCells)...)
+				for i := len(blocks) - blockCells; i < len(blocks); i++ {
+					blocks[i] = buildNoTile
+				}
+			} else if node < base {
+				// Already covered by a coarser tile, which wins.
+				break
+			}
+			b := int(node-base) * blockCells
+			depth += 2
+			if depth == level {
+				// span ≤ 2 here, and an aligned span never crosses the block.
+				for cy := ly; cy < ly+span; cy++ {
+					for cx := lx; cx < lx+span; cx++ {
+						blocks[b+childSlot(cx, cy, 0)] = value
+					}
+				}
+				break
+			}
+			nodes, pos = blocks, b+childSlot(lx, ly, level-depth)
+		}
+	}
+	var err error
+	f.root, f.blocks, err = compactGrid(root, blocks, base)
+	return err
+}
+
+// compactGrid merges identical blocks and narrows the nodes to uint16.
+//
+// The grid is read-only once built, so blocks with the same content can be
+// shared: on the bundled data about half of them repeat. A block is always
+// created after its parent, so walking blocks from the last one back meets
+// every child before its parent, and a parent's content is compared with its
+// child pointers already merged. Blocks no node reaches (their area was
+// overwritten by a coarser tile) are dropped.
+func compactGrid(root, blocks []uint32, base uint32) ([]uint16, []uint16, error) {
+	isBlock := func(v uint32) bool { return v != buildNoTile && v >= base }
+	count := len(blocks) / blockCells
+	reachable := make([]bool, count)
+	for _, v := range root {
+		if isBlock(v) {
+			reachable[v-base] = true
+		}
+	}
+	// Children have larger indices than their parents.
+	for b := range count {
+		if reachable[b] {
+			for _, v := range blocks[b*blockCells : (b+1)*blockCells] {
+				if isBlock(v) {
+					reachable[v-base] = true
+				}
+			}
+		}
+	}
+
+	errRange := errors.New("tzf: FUZZY grid exceeds its node range")
+	remap := make([]uint32, count)
+	narrow := func(v uint32) (uint16, bool) {
+		switch {
+		case v == buildNoTile:
+			return noTile, true
+		case isBlock(v):
+			v = base + remap[v-base]
+		}
+		return uint16(v), v < noTile
+	}
+	seen := make(map[[blockCells]uint16]uint32, count/2)
+	// Merged blocks in the order first met: children before parents.
+	merged := make([][blockCells]uint16, 0, count/2)
+	for b := count - 1; b >= 0; b-- {
+		if !reachable[b] {
+			continue
+		}
+		var cells [blockCells]uint16
+		for i, v := range blocks[b*blockCells : (b+1)*blockCells] {
+			n, ok := narrow(v)
+			if !ok {
+				return nil, nil, errRange
+			}
+			cells[i] = n
+		}
+		id, ok := seen[cells]
+		if !ok {
+			id = uint32(len(merged))
+			merged = append(merged, cells)
+			seen[cells] = id
+		}
+		remap[b] = id
+	}
+	outBlocks := make([]uint16, 0, len(merged)*blockCells)
+	for i := range merged {
+		outBlocks = append(outBlocks, merged[i][:]...)
+	}
+	outRoot := make([]uint16, len(root))
+	for i, v := range root {
+		n, ok := narrow(v)
+		if !ok {
+			return nil, nil, errRange
+		}
+		outRoot[i] = n
+	}
+	return outRoot, outBlocks, nil
+}
+
+// getIndex returns the names index of the tile answer, or -1 when no tile
+// covers the point (the caller falls back to polygons).
+func (f *fuzzyIndex) getIndex(lng float64, lat float64) int {
+	// NaN fails every comparison, so it is rejected here too.
+	if !(lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
+		return -1
+	}
+	// Derived from the idxZoom tile exactly as the per-zoom probe did, so
+	// float rounding at tile edges cannot change an answer.
+	x, y, _ := geom.NewTileID(lng, lat, uint(f.idxZoom)).Shift(f.idxZoom - f.leafZoom).XYZ()
+	shift := f.leafZoom - f.rootZoom
+	node := f.root[int(y>>shift)<<f.rootZoom|int(x>>shift)]
+	depth := f.rootZoom
+	for node != noTile && node >= f.blockBase {
+		depth += 2
+		node = f.blocks[int(node-f.blockBase)*blockCells+childSlot(x, y, f.leafZoom-depth)]
+	}
+	if node == noTile {
+		return -1
+	}
+	return int(node)
 }
 
 // getTimezoneName returns the tile answer, or "" when no tile covers the
-// point (including ambiguity-free misses); the caller falls back to polygons.
+// point; the caller falls back to polygons.
 func (f *fuzzyIndex) getTimezoneName(lng float64, lat float64) string {
-	// NaN fails every comparison, so it is rejected here too.
-	if !(lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
-		return ""
-	}
-	r := f.zoomRanges[zoomCell(lng, lat)]
-	if r == noTiles {
-		return ""
-	}
-	lo := max(int(r&0xff), f.aggZoom)
-	hi := min(int(r>>8), f.idxZoom)
-	tile := geom.NewTileID(lng, lat, uint(f.idxZoom))
-	for z := lo; z <= hi; z++ {
-		t := tile.Shift(uint8(f.idxZoom - z))
-		if idx, ok := f.single[t]; ok {
-			return f.names[idx]
-		}
-		if idxs, ok := f.multi[t]; ok {
-			return f.names[idxs[0]]
-		}
+	if i := f.getIndex(lng, lat); i >= 0 {
+		return f.names[i]
 	}
 	return ""
 }
@@ -198,7 +321,15 @@ func (f *fuzzyIndex) preindexFeature(tzName string) *convert.FeatureItem {
 	if len(targets) == 0 {
 		return nil
 	}
-	tiles := convert.PreindexTilesFor(f.single, f.multi, targets)
+	var tiles []geom.TileID
+	for i, key := range f.tiles {
+		for _, idx := range f.tileIdx[f.tileOff[i]:f.tileOff[i+1]] {
+			if slices.Contains(targets, idx) {
+				tiles = append(tiles, key)
+				break
+			}
+		}
+	}
 	if len(tiles) == 0 {
 		return nil
 	}
@@ -208,7 +339,12 @@ func (f *fuzzyIndex) preindexFeature(tzName string) *convert.FeatureItem {
 // preindexFeatures builds one Feature per timezone owning at least one
 // preindex tile, in dataset order.
 func (f *fuzzyIndex) preindexFeatures() []*convert.FeatureItem {
-	grouped := convert.PreindexTilesGrouped(f.single, f.multi)
+	grouped := make(map[uint16][]geom.TileID)
+	for i, key := range f.tiles {
+		for _, idx := range f.tileIdx[f.tileOff[i]:f.tileOff[i+1]] {
+			grouped[idx] = append(grouped[idx], key)
+		}
+	}
 	features := make([]*convert.FeatureItem, 0, len(grouped))
 	for i, name := range f.names {
 		tiles, ok := grouped[uint16(i)]
